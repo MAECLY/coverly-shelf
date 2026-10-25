@@ -17,6 +17,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "gen:libretro": "bun scripts/gen-libretro-map.ts",
+    "gen:vc": "bun scripts/gen-vc-map.ts",
     "e2e": "bun scripts/e2e.ts",
     "e2e:options": "bun scripts/e2e-options.ts",
     "e2e:lists": "bun scripts/e2e-lists.ts",

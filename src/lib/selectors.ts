@@ -42,6 +42,8 @@ export const SELECTORS = {
     infoLines: ':scope > .base-info > h4',
     /** Labelled values: first span = value, last span = label (`Product Code`, `Title ID`, …). */
     metaContent: ':scope > .meta > .meta-content',
+    /** Badge box inside `.base-info`: one single-span entry per flag (`Virtual Console: Game Boy`). */
+    badges: ':scope > .base-info > .meta > .meta-content',
   },
 } as const;
 
@@ -53,6 +55,9 @@ export const META_LABELS = {
 
 /** Text that starts the breadcrumb `<h4>` of a list row (`content in games ➞ japan`). */
 export const LIST_BREADCRUMB_PREFIX = 'content in';
+
+/** Text that starts a Virtual Console badge (`Virtual Console: Game Boy Color`); only read by scripts/gen-vc-map.ts. */
+export const VC_BADGE_PREFIX = 'Virtual Console:';
 
 /** Marker set on the anchor nodes once the extension has enhanced them. */
 export const ENHANCED_ATTR = 'data-hshop-enhanced';
