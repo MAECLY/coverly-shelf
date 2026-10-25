@@ -547,6 +547,45 @@ async function checkCoverZoom(page: Page, tag: string, expectedSrc: string | nul
   check((await zoomState(page)).focusOnStage, `${tag}: focus is back on the cover after Space + Escape`);
 }
 
+/**
+ * Opens the cover zoom at the current viewport and checks that the image box
+ * has the art's own aspect ratio (within 2%), so no grey band shows above,
+ * below or beside the box art. Saves `cover-zoom-{w}.png` when `shot` is set.
+ */
+async function checkZoomFit(page: Page, w: number, shot: boolean): Promise<void> {
+  const stage = page.locator(`${COVER_HOST} .cs-stage`);
+  await stage.scrollIntoViewIfNeeded();
+  await stage.click();
+  await page
+    .waitForFunction(
+      (host) => {
+        const i = document.querySelector(host)?.shadowRoot?.querySelector<HTMLImageElement>('[role="dialog"] img.cs-lightbox-img');
+        return !!i && i.complete && i.naturalWidth > 0 && i.style.getPropertyValue('--cs-art-ratio') !== '';
+      },
+      COVER_HOST,
+      { timeout: 10_000 },
+    )
+    .catch(() => null);
+  await sleep(400); // let the 180 ms fade-in finish
+  const fit = await page.evaluate((host) => {
+    const i = document.querySelector(host)?.shadowRoot?.querySelector<HTMLImageElement>('[role="dialog"] img.cs-lightbox-img');
+    if (!i || i.naturalWidth === 0) return null;
+    const r = i.getBoundingClientRect();
+    return { w: Math.round(r.width), h: Math.round(r.height), nw: i.naturalWidth, nh: i.naturalHeight, vw: innerWidth, vh: innerHeight };
+  }, COVER_HOST);
+  const ok =
+    !!fit &&
+    fit.w > 0 &&
+    fit.h > 0 &&
+    Math.abs(fit.w / fit.h / (fit.nw / fit.nh) - 1) < 0.02 &&
+    fit.w <= fit.vw &&
+    fit.h <= fit.vh;
+  check(ok, `${w}: the zoomed box art box matches the art's aspect ratio (no letterbox bands)`, JSON.stringify(fit));
+  if (shot) await page.screenshot({ style: HIDE_DOWNLOAD_QR, path: join(shotsDir, `cover-zoom-${w}.png`) });
+  await page.keyboard.press('Escape');
+  await sleep(200);
+}
+
 async function main(): Promise<void> {
   mkdirSync(shotsDir, { recursive: true });
   const headless = process.env.E2E_HEADED !== '1';
@@ -875,6 +914,7 @@ async function main(): Promise<void> {
         }, COVER_HOST);
         check(!!geo && geo.coverH > 0 && geo.coverBottom <= geo.pTop + 0.5, '390: cover sits above the technical table', JSON.stringify(geo));
       }
+      await checkZoomFit(page, w, w === 390);
 
       await context.addCookies([{ name: 'colormode', value: 'light', domain: 'hshop.erista.me', path: '/' }]);
       await goto(page, '/t/1814');
@@ -911,6 +951,12 @@ async function main(): Promise<void> {
         await page.keyboard.press('Escape');
       }
     }
+    // Tablet width: the art box still fits the art (the old fixed height left bands here).
+    await page.setViewportSize({ width: 768, height: 1024 });
+    await goto(page, '/t/1814');
+    await waitForCover(page);
+    await checkZoomFit(page, 768, false);
+    await page.setViewportSize({ width: 1440, height: 900 });
     check(true, 'screenshots saved to docs/screenshots/');
 
     // ── 10. Listing pages
