@@ -120,9 +120,10 @@
 
 .cs-stage {
   perspective: 900px;
-  perspective-origin: 30% 50%;
-  /* Room for the tilt and the shadow so nothing is clipped by the card. */
-  padding: 4px 6px 12px 10px;
+  /* The eye sits right of centre so the right-hand side face (the spine) is in view. */
+  perspective-origin: 70% 50%;
+  /* Room for the tilt, the spine and the shadow so nothing is clipped by the card. */
+  padding: 4px 12px 12px 6px;
 }
 
 .cs-box {
@@ -138,19 +139,24 @@
   transition: transform 180ms var(--cs-ease);
 }
 
-/* The case spine: a real side face standing on the left edge. */
+/*
+ * The case spine: a real side face hinged on the RIGHT edge. rotateY(-18deg)
+ * brings the right edge toward the viewer, so this is the side that shows;
+ * rotateY(-90deg) swings it back from that edge, behind the front face's
+ * plane, like the depth of a real case (about 10% of its width).
+ */
 .cs-box::before {
   content: "";
   position: absolute;
   top: 0;
   bottom: 0;
-  left: 0;
-  width: 6%;
-  transform-origin: left center;
-  transform: rotateY(90deg);
-  border-radius: 2px 0 0 2px;
+  right: 0;
+  width: 10%;
+  transform-origin: right center;
+  transform: rotateY(-90deg);
+  border-radius: 0 2px 2px 0;
   background: linear-gradient(
-    to right,
+    to left,
     var(--cs-shade),
     color-mix(in srgb, var(--cs-shade) 60%, var(--clevel-2))
   );
