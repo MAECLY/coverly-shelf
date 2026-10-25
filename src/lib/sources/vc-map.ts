@@ -147,6 +147,20 @@ const EXCLUDED_TAGS = /\((?:[^)]*\b)?(?:Beta|Proto|Demo|Sample|Kiosk|Pirate|Unl|
 const RERELEASE_TAGS =
   /\((?:[^)]*\b)?(?:e-Reader|Animal Crossing|Evercade|Switch|Classic Mini|Limited Run Games|Collector's Series|Collection|Arcade Archives)\b/i;
 
+/**
+ * No-Intro names whose Libretro Named_Boxarts thumbnail exists but shows
+ * another product, reviewed by eye. The generator never picks them, so the
+ * title keeps the placeholder instead of wrong art. `(… Virtual Console)`
+ * dumps are the usual suspects: Libretro often fills them with another
+ * release's box. Add a name here with the reason, then run `bun run gen:vc`.
+ */
+export const VC_ART_DENYLIST: ReadonlyMap<string, string> = new Map([
+  [
+    'Donkey Kong - Original Edition (USA, Europe) (3DS Virtual Console)',
+    'shows the PAL "Donkey Kong Classics" box (Donkey Kong + Donkey Kong Jr.), another product (reviewed 2026-10-25)',
+  ],
+]);
+
 /** `game ( name "…" … )` names of a No-Intro DAT. */
 export function parseDatNames(dat: string): string[] {
   const out: string[] = [];
@@ -161,7 +175,7 @@ export function parseDatNames(dat: string): string[] {
 export function indexDat(names: readonly string[]): Map<string, NoIntroName[]> {
   const index = new Map<string, NoIntroName[]>();
   for (const name of names) {
-    if (EXCLUDED_TAGS.test(name) || RERELEASE_TAGS.test(name)) continue;
+    if (EXCLUDED_TAGS.test(name) || RERELEASE_TAGS.test(name) || VC_ART_DENYLIST.has(name)) continue;
     const parsed = parseNoIntroName(name);
     if (!parsed.key || parsed.regions.length === 0) continue;
     let list = index.get(parsed.key);

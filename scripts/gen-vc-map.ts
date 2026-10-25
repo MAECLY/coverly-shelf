@@ -14,7 +14,10 @@
  *    The region variants are ordered by the code's region letter.
  * 4. HEADs each candidate's Named_Boxarts thumbnail on thumbnails.libretro.com
  *    one at a time and keeps the first that exists.
- * 5. Writes only verified hits and prints coverage per region and system.
+ * 5. Writes only verified hits and prints coverage per region and system,
+ *    then every chosen `(… Virtual Console)` name for a visual review: a
+ *    thumbnail that exists can still show another product, and such names go
+ *    to VC_ART_DENYLIST (src/lib/sources/vc-map.ts), which step 3 honours.
  *
  * Env: GEN_VC_CACHE=dir keeps the hShop pages, DATs and HEAD answers there so
  * a re-run sends no request twice.
@@ -234,4 +237,10 @@ function table(title: string, key: (o: (typeof outcomes)[number]) => string): vo
 }
 table('Coverage per hShop region', (o) => o.row.slug);
 table('Coverage per original system', (o) => o.system ?? `unknown (${o.row.badge ?? 'no badge'})`);
+const toReview = Object.entries(map)
+  .filter(([, e]) => /Virtual Console\)/i.test(e.name))
+  .sort(([a], [b]) => (a < b ? -1 : 1));
+console.log(`\n${toReview.length} chosen names carry a Virtual Console tag: review each box by eye, and add`);
+console.log('any that shows another product to VC_ART_DENYLIST in src/lib/sources/vc-map.ts.');
+for (const [code, e] of toReview) console.log(`  ${code}  ${libretroUrl('cover', e.name, e.system)}`);
 console.log(`\nWrote ${OUT}: ${Object.keys(map).length} game codes, ${json.length} bytes`);

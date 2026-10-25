@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { LIBRETRO_VC_SYSTEMS, VC_CODE_LETTERS } from '../src/lib/config';
 import {
+  VC_ART_DENYLIST,
   VC_LETTER_SYSTEMS,
   indexDat,
   normaliseTitle,
@@ -136,6 +137,16 @@ describe('vc-map DAT index', () => {
     expect(index.get('ice climber')?.map((n) => n.name)).toEqual(['Ice Climber (USA, Europe, Asia) (En)']);
     expect(index.get('excitebike')?.map((n) => n.name)).not.toContain('Excitebike (World) (Switch Online)');
   });
+
+  it('never offers a name whose Libretro box shows another product', () => {
+    const dk = 'Donkey Kong - Original Edition (USA, Europe) (3DS Virtual Console)';
+    expect(VC_ART_DENYLIST.has(dk)).toBe(true);
+    const idx = indexDat([dk, 'Donkey Kong - Original Edition (Europe) (Wii Virtual Console)']);
+    expect(idx.get('donkey kong - original edition')?.map((n) => n.name)).toEqual([
+      'Donkey Kong - Original Edition (Europe) (Wii Virtual Console)',
+    ]);
+    expect(vcCandidates(idx, ['donkey kong - original edition'], 'E')).toEqual([]);
+  });
 });
 
 describe('vc-map region choice', () => {
@@ -226,6 +237,11 @@ describe('public/libretro-vc.json', () => {
       expect(entry.name).toMatch(/ \([^)]+\)/);
       expect(Object.keys(entry).sort()).toEqual(['name', 'system']);
     }
+  });
+
+  it('holds no denylisted name (TAFE showed the Donkey Kong Classics box)', () => {
+    for (const entry of Object.values(map)) expect(VC_ART_DENYLIST.has(entry.name)).toBe(false);
+    expect(map.TAFE).toBeUndefined();
   });
 
   it('is serialised stably', () => {
