@@ -34,6 +34,7 @@ export const REGION_BY_CHAR: Readonly<Record<string, GameTdbRegion>> = {
   // C — JMKC, JREC 404 in ZH, EN, US, JA and other (the only C codes on hShop);
   // R — APNR 404 in RU, EN, US and other (the only R code);
   // U — no 3DS code on hShop ends in U (Australian games use Z; U is DSiWare only).
+  // TODO(reference): C, R and U have no verified folder.
 };
 
 /** Regions tried after the game's own region, in order. */
