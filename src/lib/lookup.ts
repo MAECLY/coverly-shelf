@@ -130,9 +130,12 @@ export function parseTitlePage(html: string): Outcome {
   }
 }
 
-async function fetchTitle(id: string, now: () => number): Promise<FetchResult> {
+async function fetchTitle(id: string, now: () => number, signal?: AbortSignal): Promise<FetchResult> {
+  if (signal?.aborted) return { outcome: undefined };
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), LOOKUP.timeoutMs);
+  const onAbort = (): void => ctrl.abort();
+  signal?.addEventListener('abort', onAbort, { once: true });
   try {
     const res = await fetch(`${HSHOP_ORIGIN}/t/${id}`, {
       method: 'GET',
@@ -154,17 +157,20 @@ async function fetchTitle(id: string, now: () => number): Promise<FetchResult> {
     return { outcome: undefined };
   } finally {
     clearTimeout(timer);
+    signal?.removeEventListener('abort', onAbort);
   }
 }
 
-async function lookup(id: string, now: () => number): Promise<GameInfo | null> {
+async function lookup(id: string, now: () => number, signal?: AbortSignal): Promise<GameInfo | null> {
   const cached = await getCached<unknown>(lookupKey(id), now, LOOKUP.ttlMs);
   if (isRecord(cached)) return cached.info;
-  if (await coolingDown(now)) return null;
+  if (signal?.aborted || (await coolingDown(now))) return null;
 
   // Checked again when the limiter starts the task: an earlier request may have hit a 429.
-  const { outcome, cooldownMs } = await limitHshop(async (): Promise<FetchResult> =>
-    (await coolingDown(now)) ? { outcome: undefined } : fetchTitle(id, now),
+  // A task still queued when `signal` aborts never runs (the limiter rejects it).
+  const { outcome, cooldownMs } = await limitHshop(
+    async (): Promise<FetchResult> => (await coolingDown(now)) ? { outcome: undefined } : fetchTitle(id, now, signal),
+    signal,
   );
   if (cooldownMs !== undefined) await startCooldown(cooldownMs, now);
   if (outcome === undefined) return null;
@@ -172,19 +178,36 @@ async function lookup(id: string, now: () => number): Promise<GameInfo | null> {
   return outcome;
 }
 
+export interface LookupOptions {
+  now?: () => number;
+  /**
+   * Aborting it (the page's run was torn down) drops the lookup if it is still
+   * queued and cancels its request if it is in flight; it resolves null and
+   * nothing is cached. Callers sharing one in-flight lookup share its signal,
+   * which is fine within one run; a later caller starts afresh.
+   */
+  signal?: AbortSignal;
+}
+
 /**
  * GameInfo of hShop title `hshopId`, from the cache or hShop's title page;
- * null when it has no usable product code or hShop could not be reached.
- * Never rejects.
+ * null when it has no usable product code, hShop could not be reached or
+ * `signal` aborted. Never rejects.
  */
-export function lookupGameInfo(hshopId: string, opts: { now?: () => number } = {}): Promise<GameInfo | null> {
-  if (!ID_RE.test(hshopId)) return Promise.resolve(null);
+export function lookupGameInfo(hshopId: string, opts: LookupOptions = {}): Promise<GameInfo | null> {
+  if (!ID_RE.test(hshopId) || opts.signal?.aborted) return Promise.resolve(null);
   let pending = inflight.get(hshopId);
   if (!pending) {
-    pending = lookup(hshopId, opts.now ?? Date.now).catch(() => null);
-    inflight.set(hshopId, pending);
+    const own: Promise<GameInfo | null> = lookup(hshopId, opts.now ?? Date.now, opts.signal).catch(() => null);
+    pending = own;
+    inflight.set(hshopId, own);
+    const forget = (): void => {
+      if (inflight.get(hshopId) === own) inflight.delete(hshopId);
+    };
     // Only the in-flight request is shared; the storage cache keeps the answer.
-    void pending.finally(() => inflight.delete(hshopId));
+    void own.finally(forget);
+    // An aborted lookup is never handed to a later caller.
+    opts.signal?.addEventListener('abort', forget, { once: true });
   }
   return pending;
 }

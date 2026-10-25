@@ -154,6 +154,52 @@ describe('lookupGameInfo', () => {
     ]);
   });
 
+  it('drops queued lookups and cancels in-flight ones when the signal aborts', async () => {
+    const ctrl = new AbortController();
+    const seen: Array<AbortSignal | null | undefined> = [];
+    fetchMock.mockImplementation(
+      (_url, init) =>
+        new Promise<Response>((resolve, reject) => {
+          seen.push(init?.signal);
+          init?.signal?.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError')));
+          setTimeout(() => resolve(response(RETAIL)), 50);
+        }),
+    );
+    const all = Promise.all(['11', '12', '13', '14'].map((id) => lookupGameInfo(id, { signal: ctrl.signal })));
+    await new Promise((r) => setTimeout(r, 0));
+    ctrl.abort();
+    await expect(all).resolves.toEqual([null, null, null, null]);
+    // Only the two in-flight requests went out, and both were cancelled.
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(seen.every((sig) => sig?.aborted)).toBe(true);
+    for (const id of ['11', '12', '13', '14']) await expect(storage.getItem(`local:lookup:${id}`)).resolves.toBeNull();
+  });
+
+  it('sends nothing for an already aborted signal, and a later caller starts afresh', async () => {
+    const ctrl = new AbortController();
+    ctrl.abort();
+    fetchMock.mockResolvedValue(response(RETAIL));
+    await expect(lookupGameInfo('1814', { signal: ctrl.signal })).resolves.toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
+    await expect(lookupGameInfo('1814')).resolves.toMatchObject({ gameCode: 'AZEE' });
+  });
+
+  it('does not hand an aborted in-flight lookup to a new caller', async () => {
+    const ctrl = new AbortController();
+    fetchMock.mockImplementation(
+      (_url, init) =>
+        new Promise<Response>((resolve, reject) => {
+          init?.signal?.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError')));
+          setTimeout(() => resolve(response(RETAIL)), 20);
+        }),
+    );
+    const old = lookupGameInfo('1814', { signal: ctrl.signal });
+    ctrl.abort();
+    const fresh = lookupGameInfo('1814');
+    await expect(old).resolves.toBeNull();
+    await expect(fresh).resolves.toMatchObject({ gameCode: 'AZEE' });
+  });
+
   it('reads Retry-After as seconds or an HTTP date, clamped', () => {
     expect(cooldownFromRetryAfter(null, 0)).toBe(LOOKUP.cooldownMs);
     expect(cooldownFromRetryAfter('garbage', 0)).toBe(LOOKUP.cooldownMs);

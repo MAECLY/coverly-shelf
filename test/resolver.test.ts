@@ -139,6 +139,28 @@ describe('resolveCover', () => {
     await expect(storage.getItem('local:cover:BX2K')).resolves.toBeNull();
   });
 
+  it('stops before the next probe once the signal aborts and caches nothing', async () => {
+    const ctrl = new AbortController();
+    probe.mockImplementation(async () => {
+      ctrl.abort();
+      return false;
+    });
+    await expect(resolveCover(game(), { size: 'thumb', signal: ctrl.signal })).resolves.toEqual({ kind: 'placeholder' });
+    expect(probe).toHaveBeenCalledTimes(1);
+    expect(names).not.toHaveBeenCalled();
+    await expect(storage.getItem('local:thumb:AZEE')).resolves.toBeNull();
+  });
+
+  it('probes nothing for an already aborted signal, and a later call still resolves', async () => {
+    const ctrl = new AbortController();
+    ctrl.abort();
+    const url = `${GT}/cover/US/AZEE.jpg`;
+    hits(url);
+    await expect(resolveCover(game(), { size: 'thumb', signal: ctrl.signal })).resolves.toEqual({ kind: 'placeholder' });
+    expect(probe).not.toHaveBeenCalled();
+    await expect(resolveCover(game(), { size: 'thumb' })).resolves.toEqual({ kind: 'image', url, source: 'gametdb' });
+  });
+
   it('falls back to the hShop icon, then to the placeholder', async () => {
     const icon = 'https://hshop.erista.me/static/icon.png';
     await expect(resolveCover(game(), { hshopIconUrl: icon })).resolves.toEqual({

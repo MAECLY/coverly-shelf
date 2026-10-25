@@ -33,6 +33,11 @@ export interface ResolveOptions {
   now?: () => number;
   /** `thumb` for list rows: small images only and a separate cache entry. Default `full`. */
   size?: CoverSize;
+  /**
+   * Aborting it (the row's page run was torn down) stops the chain before its
+   * next probe and drops queued ones; the partial answer is never cached.
+   */
+  signal?: AbortSignal;
 }
 
 const PLACEHOLDER: CoverResult = { kind: 'placeholder' };
@@ -43,25 +48,39 @@ const KINDS: readonly ImageKind[] = ['cover', 'snap', 'title'];
 /** Tracks whether any step of one resolution failed for a transport reason. */
 interface Run {
   transient: boolean;
+  signal?: AbortSignal | undefined;
 }
 
 /** One probe per URL per page, whoever asks for it. */
 const probeMemo = new Map<string, Promise<ProbeOutcome>>();
 
-function probeOnce(url: string): Promise<ProbeOutcome> {
+function probeOnce(url: string, signal?: AbortSignal): Promise<ProbeOutcome> {
   let pending = probeMemo.get(url);
   if (!pending) {
-    pending = probeOutcome(url).then(
+    const own = probeOutcome(url, signal ? { signal } : {}).then(
       (o): ProbeOutcome => (o === 'hit' || o === 'miss' ? o : 'error'),
       (): ProbeOutcome => 'error',
     );
-    probeMemo.set(url, pending);
+    pending = own;
+    probeMemo.set(url, own);
+    // An aborted probe answers nothing: never hand it to a later caller.
+    signal?.addEventListener(
+      'abort',
+      () => {
+        if (probeMemo.get(url) === own) probeMemo.delete(url);
+      },
+      { once: true },
+    );
   }
   return pending;
 }
 
 async function probeIn(run: Run, url: string): Promise<boolean> {
-  const outcome = await probeOnce(url);
+  if (run.signal?.aborted) {
+    run.transient = true;
+    return false;
+  }
+  const outcome = await probeOnce(url, run.signal);
   if (outcome === 'error') run.transient = true;
   return outcome === 'hit';
 }
@@ -139,6 +158,10 @@ async function libretroNames(run: Run, info: GameInfo): Promise<string[]> {
 /** First candidate whose probe succeeds, probing strictly one after another. */
 async function firstHit(run: Run, candidates: readonly ImageCandidate[]): Promise<ImageCandidate | null> {
   for (const candidate of candidates) {
+    if (run.signal?.aborted) {
+      run.transient = true;
+      return null;
+    }
     if (await probeIn(run, candidate.url)) return candidate;
   }
   return null;
@@ -154,6 +177,11 @@ async function resolveArtwork(run: Run, info: GameInfo, size: CoverSize): Promis
   const gametdb = await firstHit(run, gametdbCandidates(info, size));
   if (gametdb) return { kind: 'image', url: gametdb.url, source: gametdb.source };
   if (!usesLibretro(info)) return PLACEHOLDER;
+  if (run.signal?.aborted) {
+    // Libretro was never asked: not a definite miss.
+    run.transient = true;
+    return PLACEHOLDER;
+  }
 
   const names = await libretroNames(run, info);
   const libretro = await firstHit(run, libretroCandidates(names, 'cover'));
@@ -199,7 +227,7 @@ export async function resolveCover(info: GameInfo, opts: ResolveOptions = {}): P
       }
     }
 
-    const run: Run = { transient: false };
+    const run: Run = { transient: false, signal: opts.signal };
     const result = await resolveArtwork(run, info, size);
     // A hit is always worth keeping; a miss only when every step really answered.
     if (result.kind === 'image' || !run.transient) await setCached(key, result, now);

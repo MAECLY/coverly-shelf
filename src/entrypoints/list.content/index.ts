@@ -43,7 +43,11 @@ interface Run {
   rows: Row[];
   observer: IntersectionObserver | null;
   removeStyle: (() => void) | null;
+  /** Aborted on teardown: queued hShop lookups and artwork probes of this run never go out. */
+  abort: AbortController;
 }
+
+const newRun = (): Run => ({ rows: [], observer: null, removeStyle: null, abort: new AbortController() });
 
 const ROOT_MARGIN = '400px 0px';
 
@@ -56,9 +60,10 @@ export default defineContentScript({
   cssInjectionMode: 'ui',
   runAt: 'document_idle',
   main(ctx) {
-    let current: Run = { rows: [], observer: null, removeStyle: null };
+    let current: Run = newRun();
 
     const teardown = (run: Run): void => {
+      run.abort.abort();
       run.observer?.disconnect();
       run.observer = null;
       for (const row of run.rows.splice(0)) unmountRow(row);
@@ -68,7 +73,7 @@ export default defineContentScript({
 
     const start = (): void => {
       teardown(current);
-      const run: Run = { rows: [], observer: null, removeStyle: null };
+      const run = newRun();
       current = run;
       if (!isListingPath(location.pathname)) return;
       const isStale = (): boolean => ctx.isInvalid || current !== run;
@@ -189,14 +194,16 @@ function dropRow(run: Run, row: Row): void {
 
 async function fill(run: Run, row: Row, isStale: () => boolean): Promise<void> {
   try {
-    const info = row.info ?? (await lookupGameInfo(row.hshopId));
+    if (isStale()) return;
+    const { signal } = run.abort;
+    const info = row.info ?? (await lookupGameInfo(row.hshopId, { signal }));
     if (isStale()) return;
     if (!info) {
       // Theme, homebrew or anything without a usable code: give the row back untouched.
       dropRow(run, row);
       return;
     }
-    const result = await resolveCover(info, { size: 'thumb' });
+    const result = await resolveCover(info, { size: 'thumb', signal });
     const shown = await toDisplayable(result);
     if (isStale() || !row.thumb) return;
     updateThumb(row.thumb, shown.result, shown.src);
