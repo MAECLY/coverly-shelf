@@ -5,7 +5,8 @@
  *    content-script scope, CSS that cannot leak, the Libretro serial map).
  * 2. Loads it into a real Chromium (Playwright, new headless) and drives the
  *    LIVE hshop.erista.me title pages: cover, regions, digital titles, themes,
- *    gallery + lightbox keyboard, idempotence, request concurrency, cache and
+ *    gallery + lightbox keyboard, cover zoom, Related Content thumbnails and
+ *    the base-title fallback, idempotence, request concurrency, cache and
  *    responsive screenshots (saved to docs/screenshots/).
  * 3. Drives LIVE listing pages (/c/*, /search/results): row thumbnails, row
  *    links, layout overflow, DSiWare art, themes left untouched, idempotence
@@ -132,6 +133,8 @@ check(mapOk, 'libretro-3ds.json maps product codes to 1-3 No-Intro names');
 class ArtTracker {
   inFlight = 0;
   maxInFlight = 0;
+  /** Peak in-flight count per mark, to tell which step went over the cap. */
+  peaks: Record<string, number> = {};
   log: { url: string; method: string; status: number | null; failed: boolean; mark: string }[] = [];
   private live = new Set<Request>();
   mark = '';
@@ -142,6 +145,7 @@ class ArtTracker {
       this.live.add(req);
       this.inFlight += 1;
       this.maxInFlight = Math.max(this.maxInFlight, this.inFlight);
+      this.peaks[this.mark] = Math.max(this.peaks[this.mark] ?? 0, this.inFlight);
     });
     const settle = (req: Request, failed: boolean): void => {
       if (!this.live.delete(req)) return;
@@ -439,7 +443,10 @@ async function checkCoverZoom(page: Page, tag: string, expectedSrc: string | nul
   check(z1.dialog && z1.imgLoaded, `${tag}: clicking the cover opens the full-size art in a dialog`, JSON.stringify({ src: z1.imgSrc, loaded: z1.imgLoaded }));
   if (expectedSrc) check(z1.imgSrc === expectedSrc, `${tag}: the viewer shows the resolved full-size art`, String(z1.imgSrc));
   check(z1.focusInDialog, `${tag}: focus moves into the dialog`);
-  if (tag === '1814') await page.screenshot({ style: HIDE_DOWNLOAD_QR, path: join(shotsDir, 'cover-zoom-1440.png') });
+  if (tag === '1814') {
+    await sleep(400); // let the 180 ms fade-in finish
+    await page.screenshot({ style: HIDE_DOWNLOAD_QR, path: join(shotsDir, 'cover-zoom-1440.png') });
+  }
 
   let trapped = true;
   for (let i = 0; i < 4; i += 1) {
@@ -683,6 +690,101 @@ async function main(): Promise<void> {
     check(!(await page.locator('[data-hshop-enhanced]').count()), '15834: no enhanced marker');
     check(art.during('15834').length === 0, '15834: no requests to the art hosts');
 
+    // ── 4b. Related Content and the base-title fallback
+    console.log('\n── 4b. related content + base-title fallback');
+    const AXXP_HQ = 'https://art.gametdb.com/3ds/coverHQ/EN/AXXP.jpg';
+    const relatedThumbs = (p: Page) =>
+      p.evaluate((host) => {
+        const rows = [...document.querySelectorAll<HTMLAnchorElement>('.related > a.list-entry')];
+        return rows.map((a) => {
+          const h = a.querySelector(`:scope > ${host}`);
+          const img = h?.shadowRoot?.querySelector<HTMLImageElement>('img.cs-thumb-art') ?? null;
+          return {
+            href: a.getAttribute('href'),
+            first: a.firstElementChild === h && !!h,
+            state: h?.shadowRoot?.querySelector('.cs-thumb')?.getAttribute('data-state') ?? 'none',
+            src: img && img.complete && img.naturalWidth > 0 ? img.currentSrc || img.src : null,
+            interactive: h?.shadowRoot?.querySelectorAll('a, button, [tabindex], [role="button"]').length ?? 0,
+          };
+        });
+      }, THUMB_HOST);
+
+    // /t/6881 (Demo A, CTR-T-AXXP): rows 6882 (Demo B, CTR-T-AZVP: no art anywhere) and 650 (Base Title, CTR-P-AXXP).
+    art.mark = 'related-6881';
+    await goto(page, '/t/6881');
+    check(await waitForCover(page), '6881: cover settled');
+    await page.locator('.related').scrollIntoViewIfNeeded();
+    const relSettled = await waitForThumbs(page, 45_000);
+    const rel = await relatedThumbs(page);
+    const relState = await listState(page);
+    check(relSettled, '6881: every related thumbnail left its loading state', JSON.stringify(rel.map((r) => r.state)));
+    check(rel.length === 2 && rel.every((r) => r.first), '6881: one thumbnail as the first child of each related row', JSON.stringify(rel));
+    check(relState.a11yLeaks.length === 0, '6881: related thumbnails are decorative', relState.a11yLeaks.join(' | '));
+    check(rel.every((r) => r.interactive === 0), '6881: nothing interactive inside the related row links');
+    check(relState.styleTags === 1, '6881: exactly one row layout <style>', `found ${relState.styleTags}`);
+    check(relState.overflow <= 0, '6881: no horizontal overflow at 1440', `${relState.overflow}px`);
+    const demoB = rel.find((r) => r.href === '/t/6882');
+    const base650 = rel.find((r) => r.href === '/t/650');
+    check(!!demoB?.src && demoB.src.includes('/AXXP.'), '6881: Demo B row (CTR-T-AZVP, no own art) shows the same game\'s art', String(demoB?.src));
+    check(!!base650?.src && base650.src.includes('/AXXP.'), '6881: Base Title row shows its art', String(base650?.src));
+    check(
+      art.during('related-6881').every((e) => !e.url.includes('/AZVP.') || e.method === 'HEAD' || e.status === 404 || e.failed),
+      '6881: AZVP was only probed, never displayed',
+    );
+    // The card only: a full-page capture would paint hShop's fixed nav bar mid-page.
+    await page.locator('.landing.sectioned-l').screenshot({ style: HIDE_DOWNLOAD_QR, path: join(shotsDir, 'related-6881-dark-1440.png') });
+
+    // Clicking a related thumbnail follows its row link (to /t/6882).
+    const demoHost = page.locator(`.related > a.list-entry[href="/t/6882"] > ${THUMB_HOST}`);
+    await demoHost.scrollIntoViewIfNeeded();
+    await tracker?.idle();
+    await demoHost.click();
+    await page.waitForURL((u) => u.pathname === '/t/6882', { timeout: 15_000 }).catch(() => null);
+    check(new URL(page.url()).pathname === '/t/6882', 'related: clicking a thumbnail opens the row title page', new URL(page.url()).pathname);
+
+    // /t/6882 itself: CTR-T-AZVP has no art; its Base Title CTR-P-AXXP does.
+    check(await waitForCover(page), '6882: cover settled');
+    const s6882 = await coverState(page);
+    check(s6882.src === AXXP_HQ && !s6882.placeholder, '6882: demo without art shows its Base Title cover (coverHQ/EN/AXXP)', String(s6882.src));
+    await checkCoverZoom(page, '6882', AXXP_HQ);
+
+    // /t/20600: a demo whose base (CTR-N-KLRJ) has no art either: placeholder, no zoom affordance.
+    art.mark = 'related-20600';
+    await goto(page, '/t/20600');
+    check(await waitForCover(page), '20600: cover settled');
+    const s20600 = await coverState(page);
+    check(s20600.placeholder, '20600: no verified art anywhere: the placeholder is shown', String(s20600.src));
+    const z20600 = await zoomState(page);
+    check(z20600.role === null && z20600.tabindex === null, '20600: the placeholder has no zoom affordance (no role, no tabindex)', JSON.stringify(z20600));
+    await page.locator(`${COVER_HOST} .cs-stage`).click();
+    await sleep(300);
+    check(!(await zoomState(page)).dialog, '20600: clicking the placeholder opens nothing');
+    await page.locator('.related').scrollIntoViewIfNeeded();
+    await waitForThumbs(page, 30_000);
+    const rel20600 = await relatedThumbs(page);
+    check(rel20600.length === 1 && rel20600[0]?.state === 'placeholder', '20600: Base Title row without art keeps the placeholder', JSON.stringify(rel20600));
+
+    // /t/20778 (DLC CTR-M-ALZE-00): its code already embeds the base game code ALZE.
+    await goto(page, '/t/20778');
+    check(await waitForCover(page), '20778: cover settled');
+    const s20778 = await coverState(page);
+    check(!!s20778.src && s20778.src.includes('/ALZE.') && !s20778.placeholder, '20778: DLC shows its base game art (ALZE)', String(s20778.src));
+    await page.locator('.related').scrollIntoViewIfNeeded();
+    await waitForThumbs(page, 30_000);
+    const rel20778 = await relatedThumbs(page);
+    check(rel20778.length === 2 && rel20778.every((r) => !!r.src && r.src.includes('/ALZE.')), '20778: Base Title and Update rows show the ALZE art', JSON.stringify(rel20778.map((r) => r.src)));
+
+    // Phone width: related rows keep the listing layout without overflow.
+    await page.setViewportSize({ width: 390, height: 844 });
+    await goto(page, '/t/6881');
+    await waitForCover(page);
+    await page.locator('.related').scrollIntoViewIfNeeded();
+    await waitForThumbs(page, 20_000);
+    const relPhone = await listState(page);
+    check(relPhone.overflow <= 0, '6881: no horizontal overflow at 390', `${relPhone.overflow}px`);
+    await page.locator('.related').screenshot({ style: HIDE_DOWNLOAD_QR, path: join(shotsDir, 'related-6881-dark-390.png') });
+    await page.setViewportSize({ width: 1440, height: 900 });
+
     // ── 9. Viewports and screenshots
     console.log('\n── 9. viewports and screenshots');
     for (const vp of [
@@ -844,7 +946,7 @@ async function main(): Promise<void> {
 
     // ── 7. Concurrency (whole run)
     console.log('\n── 7. concurrency');
-    check(art.maxInFlight <= MAX_IN_FLIGHT, `max simultaneous in-flight art requests <= ${MAX_IN_FLIGHT}`, `observed ${art.maxInFlight}`);
+    check(art.maxInFlight <= MAX_IN_FLIGHT, `max simultaneous in-flight art requests <= ${MAX_IN_FLIGHT}`, `observed ${art.maxInFlight}; peaks ${JSON.stringify(art.peaks)}`);
 
     const allNew = watch.pageErrors.filter((e) => !baselineErrors.includes(e));
     check(allNew.length === 0, 'whole run: no page errors beyond the baseline', allNew.join(' | '));
