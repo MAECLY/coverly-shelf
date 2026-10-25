@@ -3,6 +3,10 @@
     "message": "Coverly Shelf settings",
     "description": "Page title of the options page"
   },
+  "lang": {
+    "message": "en",
+    "description": "BCP 47 language of this locale; sets <html lang> and number formatting"
+  },
   "optionsSubtitle": {
     "message": "Settings",
     "description": "Shown under the product name"
@@ -16,7 +20,7 @@
     "description": "Explains what is stored"
   },
   "usageEmpty": {
-    "message": "Nothing cached yet. Open a game page on hShop to fill the shelf.",
+    "message": "Nothing cached yet. Open a game on hShop.",
     "description": "Usage readout when the cache is empty"
   },
   "usageOne": {
@@ -54,7 +58,7 @@
     "description": "While usage loads"
   },
   "retentionLegend": {
-    "message": "Remember artwork for",
+    "message": "Keep cached artwork",
     "description": "Legend of the retention radio group"
   },
   "retentionSession": {
@@ -97,14 +101,29 @@
     "message": "Kept until you clear the cache here.",
     "description": "Hint for forever"
   },
-  "retentionSaved": {
-    "message": "Saved. Artwork is now remembered for: $CHOICE$.",
-    "description": "Live announcement after saving",
-    "placeholders": {
-      "choice": {
-        "content": "$1"
-      }
-    }
+  "retentionSavedSession": {
+    "message": "Saved: artwork is kept until you close the browser.",
+    "description": "Live announcement after choosing 'This session'"
+  },
+  "retentionSaved1d": {
+    "message": "Saved: artwork is kept for 1 day.",
+    "description": "Live announcement after choosing 1 day"
+  },
+  "retentionSaved7d": {
+    "message": "Saved: artwork is kept for 7 days.",
+    "description": "Live announcement after choosing 7 days"
+  },
+  "retentionSaved30d": {
+    "message": "Saved: artwork is kept for 30 days.",
+    "description": "Live announcement after choosing 30 days"
+  },
+  "retentionSavedForever": {
+    "message": "Saved: artwork is kept until you clear the cache.",
+    "description": "Live announcement after choosing 'Until I clear it'"
+  },
+  "retentionSaveFailed": {
+    "message": "Couldn't save this choice. Try again.",
+    "description": "Error when the retention setting cannot be saved"
   },
   "clearButton": {
     "message": "Clear cache",

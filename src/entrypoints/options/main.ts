@@ -18,12 +18,13 @@ function t(key: string, subs?: string | string[]): string {
   }
 }
 
-function uiLanguage(): string {
-  try {
-    return browser.i18n.getUILanguage() || 'en';
-  } catch {
-    return 'en';
-  }
+/**
+ * Language of the strings actually shown: the served locale's own `lang`
+ * message, not the browser UI language (a French browser gets the English
+ * fallback and must be marked, read and formatted as English).
+ */
+export function pageLanguage(): string {
+  return t('lang') || 'en';
 }
 
 const $ = <T extends HTMLElement>(id: string): T => {
@@ -32,12 +33,12 @@ const $ = <T extends HTMLElement>(id: string): T => {
   return el as T;
 };
 
-const LABEL_KEY: Record<Retention, string> = {
-  session: 'retentionSession',
-  '1d': 'retention1d',
-  '7d': 'retention7d',
-  '30d': 'retention30d',
-  forever: 'retentionForever',
+const SAVED_KEY: Record<Retention, string> = {
+  session: 'retentionSavedSession',
+  '1d': 'retentionSaved1d',
+  '7d': 'retentionSaved7d',
+  '30d': 'retentionSaved30d',
+  forever: 'retentionSavedForever',
 };
 const HINT_KEY: Record<Retention, string> = {
   session: 'retentionHintSession',
@@ -51,8 +52,7 @@ const MAX_SPINES = 24;
 const reducedMotion = (): boolean => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 function localize(): void {
-  const lang = uiLanguage();
-  document.documentElement.lang = lang.split(/[-_]/)[0] ?? 'en';
+  document.documentElement.lang = pageLanguage();
   const title = t('optionsTitle');
   if (title) document.title = title;
   for (const el of document.querySelectorAll<HTMLElement>('[data-i18n]')) {
@@ -136,7 +136,7 @@ let lastUsage: CacheUsage | null = null;
 async function refreshUsage(): Promise<void> {
   const usage = await cacheUsage();
   lastUsage = usage;
-  const lang = uiLanguage();
+  const lang = pageLanguage();
   const usageEl = $('usage');
   if (usage.games === 0) {
     usageEl.textContent = t('usageEmpty') || 'Nothing cached yet.';
@@ -182,8 +182,12 @@ function wireRetention(): void {
     const r = input.value;
     showRetention(r);
     void setSettings({ retention: r }).then(
-      () => setStatus(t('retentionSaved', t(LABEL_KEY[r])) || 'Saved.'),
-      () => setStatus(t('clearFailed'), true),
+      () => setStatus(t(SAVED_KEY[r]) || 'Saved.'),
+      async () => {
+        // Put the control back on what is really stored, and say what failed.
+        showRetention((await getSettings()).retention);
+        setStatus(t('retentionSaveFailed') || "Couldn't save this choice. Try again.", true);
+      },
     );
   });
 }
