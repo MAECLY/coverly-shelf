@@ -226,6 +226,26 @@ describe('background image preflight (image:head)', async () => {
     expect(await headImage(ART)).toBeNull();
   });
 
+  it('reports a host that never answers as a 408 instead of hanging', async () => {
+    vi.useFakeTimers();
+    try {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(
+          (_input: RequestInfo | URL, init?: RequestInit) =>
+            new Promise<Response>((_resolve, reject) => {
+              init?.signal?.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError')));
+            }),
+        ),
+      );
+      const pending = headImage(ART);
+      await vi.advanceTimersByTimeAsync(8_000);
+      expect(await pending).toEqual({ ok: false, status: 408, contentType: null, length: null });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('is reachable through the message handler', async () => {
     stubHead(200, { 'content-type': 'image/jpeg' });
     expect(await handleMessage({ type: 'image:head', url: ART })).toMatchObject({ ok: true, status: 200 });

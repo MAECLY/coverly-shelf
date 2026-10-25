@@ -10,6 +10,8 @@ import { isAllowedImageUrl, isImageType, mediaType } from '../image-url';
 import type { ImageHead } from '../messages';
 
 const HEAD_TIMEOUT_MS = 8_000;
+/** Reported when the host does not answer in time (as for HTTP 408): unknown, and not worth a second, slower probe. */
+export const HEAD_TIMEOUT_STATUS = 408;
 
 /** Parses a Content-Length header; null when absent or not a plain integer. */
 function contentLength(header: string | null): number | null {
@@ -22,8 +24,11 @@ function contentLength(header: string | null): number | null {
  * HEAD `url` and describe the answer. `ok` is true only for a 2xx `image/*`
  * response that ended on an allowed origin and does not declare an empty body.
  * A URL outside the allow-list is answered `{ ok: false, status: 0 }` without
- * any request. Returns null when there was no answer (network error, timeout),
- * so the caller can fall back to another probe. Never rejects.
+ * any request. A host that does not answer within HEAD_TIMEOUT_MS is reported
+ * as `{ ok: false, status: 408 }`: an <img> would hang just the same, so the
+ * caller treats it as unknown instead of waiting again. Returns null when the
+ * request failed outright (DNS, offline, blocked), so the caller can fall back
+ * to another probe. Never rejects.
  */
 export async function headImage(url: string): Promise<ImageHead | null> {
   if (!isAllowedImageUrl(url)) return { ok: false, status: 0, contentType: null, length: null };
@@ -41,6 +46,7 @@ export async function headImage(url: string): Promise<ImageHead | null> {
     const ok = res.ok && isAllowedImageUrl(res.url || url) && isImageType(type) && length !== 0;
     return { ok, status: res.status, contentType: type || null, length };
   } catch {
+    if (ctrl.signal.aborted) return { ok: false, status: HEAD_TIMEOUT_STATUS, contentType: null, length: null };
     return null;
   } finally {
     clearTimeout(timer);

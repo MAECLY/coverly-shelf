@@ -55,7 +55,7 @@ export async function requestImageData(url: string): Promise<string | null> {
 export interface ImageHead {
   /** 2xx, `image/*`, still on an allowed origin and not declared empty. */
   ok: boolean;
-  /** HTTP status; 0 when the URL was refused without a request. */
+  /** HTTP status; 0 when the URL was refused without a request, 408 when the host did not answer in time. */
   status: number;
   /** Bare lower-cased media type, or null when the response had none. */
   contentType: string | null;
