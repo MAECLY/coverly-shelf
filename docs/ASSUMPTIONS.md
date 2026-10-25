@@ -1,6 +1,6 @@
 # Assumptions to verify
 
-What Coverly Shelf 0.1.0 assumes about hShop, GameTDB and Libretro that has
+What Coverly Shelf 0.2.0 assumes about hShop, GameTDB and Libretro that has
 not been fully confirmed, and how to check each one on the real site. Facts
 that *were* verified live on 2026-10-25 are in [REFERENCE.md](REFERENCE.md).
 
@@ -78,10 +78,7 @@ worth one look in an everyday Chrome with the unpacked build:
 
 ## Releases and the landing page
 
-- There is no GitHub release yet, so `releases/latest` links (README and the
-  landing) show an empty page until v0.1.0 is published with
-  `coverly-shelf-0.1.0-chrome.zip` attached (`bun run zip`).
-- The custom domain `coverly-shelf.maecly.com` needs its DNS record: run
-  `scripts/ops/add_dns.sh` in the landing repository
-  ([MAECLY/coverly-shelf-landing](https://github.com/MAECLY/coverly-shelf-landing)).
-  Until then the landing is at `https://coverly-shelf-landing.vercel.app`.
+- Each release attaches `coverly-shelf-{version}-chrome.zip` (`bun run zip`);
+  the README and the landing link to `releases/latest`.
+- The landing ([MAECLY/coverly-shelf-landing](https://github.com/MAECLY/coverly-shelf-landing))
+  is served at `https://coverly-shelf.maecly.com` (Cloudflare CNAME to Vercel).

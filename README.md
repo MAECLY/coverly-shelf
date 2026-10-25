@@ -37,7 +37,7 @@
 </p>
 
 > [!NOTE]
-> **Early days, said plainly.** Coverly Shelf 0.1.0 enhances title pages
+> **Early days, said plainly.** Coverly Shelf 0.2.0 enhances title pages
 > (`/t/…`) and listing pages (`/c/…`, search results). It has been tested end
 > to end in Chromium on the live site, not yet in Firefox. If a page looks wrong, an
 > [issue](https://github.com/MAECLY/coverly-shelf/issues) with its URL helps a lot.

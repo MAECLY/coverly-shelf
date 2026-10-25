@@ -37,7 +37,7 @@
 </p>
 
 > [!NOTE]
-> **Primeros pasos, dicho claro.** Coverly Shelf 0.1.0 mejora las páginas de
+> **Primeros pasos, dicho claro.** Coverly Shelf 0.2.0 mejora las páginas de
 > cada título (`/t/…`) y los listados (`/c/…` y los resultados de búsqueda).
 > Está probada de punta a punta en Chromium sobre el sitio real, todavía no en
 > Firefox. Si una página se
