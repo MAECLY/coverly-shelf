@@ -9,6 +9,7 @@
 import './style.css';
 import { createShadowRootUi, defineContentScript, type ContentScriptContext, type ShadowRootContentScriptUi } from '#imports';
 import { extractGameInfo } from '../../lib/extract';
+import { createPathWatcher } from '../../lib/navigation';
 import { displaySrc } from '../../lib/probe';
 import { resolveCover, resolveGallery } from '../../lib/resolver';
 import { ENHANCED_ATTR, SELECTORS } from '../../lib/selectors';
@@ -56,7 +57,17 @@ export default defineContentScript({
     };
 
     ctx.onInvalidated(() => teardown(current));
-    ctx.addEventListener(window, 'wxt:locationchange', () => start());
+    // Only a committed path change re-runs the enhancement: link clicks, form
+    // submits and download clicks that merely START a navigation leave the UI alone.
+    const watcher = createPathWatcher({
+      initialPath: location.pathname,
+      currentPath: () => location.pathname,
+      defer: (fn) => {
+        ctx.setTimeout(fn, 0);
+      },
+      onChange: () => start(),
+    });
+    ctx.addEventListener(window, 'wxt:locationchange', (event) => watcher.handle(event));
     start();
   },
 });
