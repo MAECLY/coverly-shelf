@@ -169,7 +169,13 @@ export function openLightbox(opts: LightboxOptions): LightboxHandle {
     img.removeAttribute('src');
     img.classList.add('is-broken');
   });
-  img.addEventListener('load', () => img.classList.remove('is-broken'));
+  img.addEventListener('load', () => {
+    img.classList.remove('is-broken');
+    // Box art is sized by its own aspect ratio (style.css), so no band shows around it.
+    if (variant === 'art' && img.naturalWidth > 0 && img.naturalHeight > 0) {
+      img.style.setProperty('--cs-art-ratio', String(img.naturalWidth / img.naturalHeight));
+    }
+  });
 
   render();
   container.append(overlay);

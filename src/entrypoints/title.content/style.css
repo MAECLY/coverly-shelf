@@ -363,20 +363,30 @@
 }
 
 .cs-lightbox-img {
-  /* Upscale the 400×240 (or stacked 400×480) snaps; contain letterboxes on narrow screens. */
-  height: min(calc(100vh - 160px), 600px);
-  width: auto;
   /* Fit the panel's content box (64px side padding) so the prev/next buttons never cover the shot. */
-  max-width: min(calc(100vw - 128px), 1000px);
+  --cs-lb-max-w: min(calc(100vw - 128px), 1000px);
+  --cs-lb-max-h: min(calc(100vh - 160px), 600px);
+  /* Upscale the 400×240 (or stacked 400×480) snaps; contain letterboxes on narrow screens. */
+  height: var(--cs-lb-max-h);
+  width: auto;
+  max-width: var(--cs-lb-max-w);
   object-fit: contain;
   border-radius: 10px;
   background: var(--clevel-2);
   /* Native-resolution snaps: keep the pixels crisp when upscaled. */
   image-rendering: pixelated;
 }
-/* Box art: a 768×680 scan, scaled smoothly rather than as pixel art. */
+/*
+ * Box art: a 768×680 (or 497×680, …) scan, scaled smoothly rather than as
+ * pixel art. Sized by its own aspect ratio (--cs-art-ratio, set by the
+ * lightbox once the image loads) so the box fits the art exactly at every
+ * width: no grey bands above and below it on phones and tablets.
+ */
 .cs-lightbox.is-art .cs-lightbox-img {
-  height: min(calc(100vh - 160px), 680px);
+  --cs-lb-max-h: min(calc(100vh - 160px), 680px);
+  width: min(var(--cs-lb-max-w), calc(var(--cs-lb-max-h) * var(--cs-art-ratio, 1)));
+  height: auto;
+  max-height: var(--cs-lb-max-h);
   image-rendering: auto;
 }
 .cs-lightbox-img.is-broken {
@@ -428,7 +438,7 @@
     padding: 64px 8px 72px;
   }
   .cs-lightbox-img {
-    max-width: calc(100vw - 16px);
+    --cs-lb-max-w: calc(100vw - 16px);
   }
   .cs-lightbox-prev,
   .cs-lightbox-next {

@@ -130,6 +130,25 @@ describe('cover zoom', () => {
     expect(root.querySelector('[role="dialog"] img')?.getAttribute('src')).toBe('https://art.gametdb.com/3ds/coverHQ/EN/AXXP.jpg');
   });
 
+  it('sizes the zoomed art by its own aspect ratio once it loads (no letterbox bands)', () => {
+    const { root, stage } = zoomable();
+    stage.click();
+    const img = root.querySelector<HTMLImageElement>('[role="dialog"] img')!;
+    Object.defineProperty(img, 'naturalWidth', { value: 768, configurable: true });
+    Object.defineProperty(img, 'naturalHeight', { value: 680, configurable: true });
+    img.dispatchEvent(new Event('load'));
+    expect(Number(img.style.getPropertyValue('--cs-art-ratio'))).toBeCloseTo(768 / 680, 5);
+
+    // Screenshots keep their fixed-height, contain-fit layout.
+    const shots = openLightbox({ container: shadowHost(), images: [{ src: 'https://x/1.png', alt: 'shot' }], index: 0, label: 'Shots' });
+    const shot = shots.element.querySelector<HTMLImageElement>('img')!;
+    Object.defineProperty(shot, 'naturalWidth', { value: 400, configurable: true });
+    Object.defineProperty(shot, 'naturalHeight', { value: 240, configurable: true });
+    shot.dispatchEvent(new Event('load'));
+    expect(shot.style.getPropertyValue('--cs-art-ratio')).toBe('');
+    shots.close();
+  });
+
   it('opens on Enter and Space, keeps those keys from the page, and ignores other keys', () => {
     for (const k of ['Enter', ' ']) {
       const { root, stage } = zoomable();
