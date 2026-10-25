@@ -23,6 +23,8 @@ import { chromium, type BrowserContext, type Page, type Request } from 'playwrig
 
 // hShop's QR code encodes a live download token; keep it out of committed screenshots.
 const HIDE_DOWNLOAD_QR = '.landing-dl img { visibility: hidden !important; }';
+// hShop's fixed top and bottom bars, for element captures taller than the viewport.
+const HIDE_FIXED_BARS = 'body > header, body > footer { visibility: hidden !important; }';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const out = join(root, '.output', 'chrome-mv3');
@@ -135,6 +137,8 @@ class ArtTracker {
   maxInFlight = 0;
   /** Peak in-flight count per mark, to tell which step went over the cap. */
   peaks: Record<string, number> = {};
+  /** The open requests (method, page or worker, URL tail) the first time the overall peak was reached. */
+  peakSnapshot: string[] = [];
   log: { url: string; method: string; status: number | null; failed: boolean; mark: string }[] = [];
   private live = new Set<Request>();
   mark = '';
@@ -144,6 +148,12 @@ class ArtTracker {
       if (!isArt(req.url())) return;
       this.live.add(req);
       this.inFlight += 1;
+      if (this.inFlight > this.maxInFlight) {
+        this.peakSnapshot = [...this.live].map((r) => {
+          const from = r.serviceWorker() ? 'worker' : 'page';
+          return `${this.mark} ${r.method()} ${from} ${r.url().split('/').slice(-3).join('/')}`;
+        });
+      }
       this.maxInFlight = Math.max(this.maxInFlight, this.inFlight);
       this.peaks[this.mark] = Math.max(this.peaks[this.mark] ?? 0, this.inFlight);
     });
@@ -731,8 +741,8 @@ async function main(): Promise<void> {
       art.during('related-6881').every((e) => !e.url.includes('/AZVP.') || e.method === 'HEAD' || e.status === 404 || e.failed),
       '6881: AZVP was only probed, never displayed',
     );
-    // The card only: a full-page capture would paint hShop's fixed nav bar mid-page.
-    await page.locator('.landing.sectioned-l').screenshot({ style: HIDE_DOWNLOAD_QR, path: join(shotsDir, 'related-6881-dark-1440.png') });
+    // The box only, with hShop's fixed bars hidden: a long capture would paint them mid-image.
+    await page.locator('.related').screenshot({ style: `${HIDE_DOWNLOAD_QR} ${HIDE_FIXED_BARS}`, path: join(shotsDir, 'related-6881-dark-1440.png') });
 
     // Clicking a related thumbnail follows its row link (to /t/6882).
     const demoHost = page.locator(`.related > a.list-entry[href="/t/6882"] > ${THUMB_HOST}`);
@@ -782,7 +792,7 @@ async function main(): Promise<void> {
     await waitForThumbs(page, 20_000);
     const relPhone = await listState(page);
     check(relPhone.overflow <= 0, '6881: no horizontal overflow at 390', `${relPhone.overflow}px`);
-    await page.locator('.related').screenshot({ style: HIDE_DOWNLOAD_QR, path: join(shotsDir, 'related-6881-dark-390.png') });
+    await page.locator('.related').screenshot({ style: `${HIDE_DOWNLOAD_QR} ${HIDE_FIXED_BARS}`, path: join(shotsDir, 'related-6881-dark-390.png') });
     await page.setViewportSize({ width: 1440, height: 900 });
 
     // ── 9. Viewports and screenshots
@@ -870,6 +880,13 @@ async function main(): Promise<void> {
     );
     check(na.overflow <= 0, 'list NA: no horizontal overflow at 1440', `${na.overflow}px`);
     check(na.styleTags === 1, 'list NA: exactly one layout <style> in the document', `found ${na.styleTags}`);
+    {
+      const gets = art.during('list-na').filter((e) => e.method === 'GET');
+      const seen = new Map<string, number>();
+      for (const e of gets) seen.set(e.url, (seen.get(e.url) ?? 0) + 1);
+      const twice = [...seen.values()].filter((n) => n > 1).length;
+      console.log(`info list NA: ${gets.length} art GET(s) for ${seen.size} URL(s); ${twice} URL(s) requested more than once`);
+    }
     await page.screenshot({ path: join(shotsDir, 'list-na-dark-1440.png') });
 
     const stored2 = await worker.evaluate(async () => {
@@ -898,6 +915,8 @@ async function main(): Promise<void> {
     const firstHost = page.locator(THUMB_HOST).first();
     const rowHref = await firstHost.evaluate((h) => h.parentElement?.getAttribute('href') ?? '');
     await firstHost.scrollIntoViewIfNeeded();
+    // Like goto(): the listing's last HEAD preflights run in the worker and would count against the next page.
+    await tracker?.idle();
     await firstHost.click();
     await page.waitForURL((u) => u.pathname === rowHref, { timeout: 15_000 }).catch(() => null);
     check(new URL(page.url()).pathname === rowHref, 'list: clicking a thumbnail opens the row title page', `${rowHref} -> ${new URL(page.url()).pathname}`);
@@ -946,7 +965,7 @@ async function main(): Promise<void> {
 
     // ── 7. Concurrency (whole run)
     console.log('\n── 7. concurrency');
-    check(art.maxInFlight <= MAX_IN_FLIGHT, `max simultaneous in-flight art requests <= ${MAX_IN_FLIGHT}`, `observed ${art.maxInFlight}; peaks ${JSON.stringify(art.peaks)}`);
+    check(art.maxInFlight <= MAX_IN_FLIGHT, `max simultaneous in-flight art requests <= ${MAX_IN_FLIGHT}`, `observed ${art.maxInFlight}; peaks ${JSON.stringify(art.peaks)}; at peak: ${art.peakSnapshot.join(' | ')}`);
 
     const allNew = watch.pageErrors.filter((e) => !baselineErrors.includes(e));
     check(allNew.length === 0, 'whole run: no page errors beyond the baseline', allNew.join(' | '));
