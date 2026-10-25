@@ -132,7 +132,7 @@ check(mapOk, 'libretro-3ds.json maps product codes to 1-3 No-Intro names');
 class ArtTracker {
   inFlight = 0;
   maxInFlight = 0;
-  log: { url: string; status: number | null; failed: boolean; mark: string }[] = [];
+  log: { url: string; method: string; status: number | null; failed: boolean; mark: string }[] = [];
   private live = new Set<Request>();
   mark = '';
 
@@ -148,14 +148,24 @@ class ArtTracker {
       this.inFlight -= 1;
       void (async () => {
         const res = failed ? null : await req.response().catch(() => null);
-        this.log.push({ url: req.url(), status: res?.status() ?? null, failed, mark: this.mark });
+        this.log.push({ url: req.url(), method: req.method(), status: res?.status() ?? null, failed, mark: this.mark });
       })();
     };
     context.on('requestfinished', (req) => settle(req, false));
     context.on('requestfailed', (req) => settle(req, true));
   }
 
-  during(mark: string): { url: string; status: number | null; failed: boolean }[] {
+  /**
+   * Waits (bounded) until no art request is open. The HEAD preflights run in the
+   * service worker and outlive the page that asked for them, so navigating while
+   * one hangs would count the old page's request against the next page's cap.
+   */
+  async idle(timeout = 12_000): Promise<void> {
+    const until = Date.now() + timeout;
+    while (this.inFlight > 0 && Date.now() < until) await sleep(100);
+  }
+
+  during(mark: string): { url: string; method: string; status: number | null; failed: boolean }[] {
     return this.log.filter((e) => e.mark === mark);
   }
 }
@@ -249,7 +259,11 @@ function downloadBoxHtml(page: Page): Promise<string> {
     });
 }
 
+/** Set once the extension context exists, so navigations wait for the previous page's art requests. */
+let tracker: ArtTracker | null = null;
+
 async function goto(page: Page, path: string): Promise<void> {
+  await tracker?.idle();
   await page.goto(`${SITE}${path}`, { waitUntil: 'load', timeout: 60_000 });
 }
 
@@ -392,6 +406,7 @@ async function main(): Promise<void> {
   });
   const art = new ArtTracker();
   art.attach(context);
+  tracker = art;
   const worker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker', { timeout: 15_000 }));
   check(!!worker, 'extension service worker is running');
 
@@ -512,7 +527,11 @@ async function main(): Promise<void> {
     // ── 8. Cache (second navigation in the same profile)
     console.log('\n── 8. cache');
     const first = art.during('1814-first');
-    const misses = new Set(first.filter((e) => e.failed || (e.status !== null && e.status >= 400)).map((e) => e.url));
+    // Playwright reports the service worker's HEAD preflights as failed (ERR_ABORTED)
+    // whatever the answer, so only a failed GET or an HTTP error counts as a miss here.
+    const misses = new Set(
+      first.filter((e) => (e.failed && e.method !== 'HEAD') || (e.status !== null && e.status >= 400)).map((e) => e.url),
+    );
     const stored = await worker.evaluate(async () => {
       // @ts-expect-error chrome is the extension global inside the service worker
       return (await chrome.storage.local.get(null)) as Record<string, unknown>;
@@ -536,6 +555,8 @@ async function main(): Promise<void> {
     const gametdbOthers = second.filter((e) => e.url.includes('art.gametdb.com') && e.url !== s1.src);
     check(s2.src === s1.src && s2.naturalWidth > 0, 'cache: second visit reuses the winner', String(s2.src));
     check(gametdbOthers.length === 0, 'cache: no other GameTDB probes on the second visit', gametdbOthers.map((e) => e.url).join(', '));
+    const heads = second.filter((e) => e.method === 'HEAD');
+    check(heads.length === 0, 'cache: no HEAD preflights on the second visit', heads.map((e) => e.url).join(', '));
     check(s2.hosts === 1, 'idempotence: one cover host after reload', `hosts=${s2.hosts}`);
 
     // ── 2. EU retail

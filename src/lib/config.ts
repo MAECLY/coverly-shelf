@@ -148,7 +148,7 @@ export const NO_ART_CATEGORIES: readonly string[] = ['themes'];
 
 /**
  * Expired and old-version cache entries are deleted by the background worker
- * at most this often (on worker start-up, see pruneCacheIfDue).
+ * at most this often (on worker start-up, see sweepIfDue in src/lib/cache.ts).
  */
 export const CACHE_PRUNE = {
   intervalMs: 24 * 60 * 60 * 1000,

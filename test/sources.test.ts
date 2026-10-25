@@ -157,6 +157,126 @@ describe('background image fetch', async () => {
   });
 });
 
+describe('background image preflight (image:head)', async () => {
+  const { headImage } = await import('../src/lib/background/head');
+  const { handleMessage } = await import('../src/entrypoints/background');
+  const { mediaType, isImageType } = await import('../src/lib/image-url');
+  const { vi, afterEach } = await import('vitest');
+  afterEach(() => vi.unstubAllGlobals());
+
+  const ART = 'https://art.gametdb.com/3ds/coverHQ/US/AZEE.jpg';
+
+  const stubHead = (status: number, headers: Record<string, string>, url = ART) => {
+    const f = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) => {
+      const res = new Response(null, { status, headers });
+      Object.defineProperty(res, 'url', { value: url });
+      return res;
+    });
+    vi.stubGlobal('fetch', f);
+    return f;
+  };
+
+  it('parses media types', () => {
+    expect(mediaType('Image/JPEG; charset=x')).toBe('image/jpeg');
+    expect(mediaType(null)).toBe('');
+    expect(isImageType('image/png')).toBe(true);
+    expect(isImageType('image/svg+xml')).toBe(true);
+    expect(isImageType('text/html')).toBe(false);
+  });
+
+  it('sends a credential-less, referrer-less HEAD and reports an image hit', async () => {
+    const f = stubHead(200, { 'content-type': 'image/jpeg', 'content-length': '188576' });
+    expect(await headImage(ART)).toEqual({ ok: true, status: 200, contentType: 'image/jpeg', length: 188576 });
+    const init = f.mock.calls[0]?.[1];
+    expect(f.mock.calls[0]?.[0]).toBe(ART);
+    expect(init?.method).toBe('HEAD');
+    expect(init?.credentials).toBe('omit');
+    expect(init?.referrerPolicy).toBe('no-referrer');
+  });
+
+  it('reports a 404 as a definite non-image', async () => {
+    stubHead(404, { 'content-type': 'text/html', 'content-length': '0' });
+    expect(await headImage(ART)).toEqual({ ok: false, status: 404, contentType: 'text/html', length: 0 });
+  });
+
+  it('rejects a 200 that is not an image, is declared empty or left the allowed hosts', async () => {
+    stubHead(200, { 'content-type': 'text/html; charset=iso-8859-1' });
+    expect(await headImage(ART)).toMatchObject({ ok: false, status: 200, contentType: 'text/html', length: null });
+    stubHead(200, { 'content-type': 'image/png', 'content-length': '0' });
+    expect((await headImage(ART))?.ok).toBe(false);
+    stubHead(200, { 'content-type': 'image/png' }, 'https://evil.test/a.png');
+    expect((await headImage(ART))?.ok).toBe(false);
+  });
+
+  it('ignores a malformed Content-Length', async () => {
+    stubHead(200, { 'content-type': 'image/png', 'content-length': '12abc' });
+    expect(await headImage(ART)).toEqual({ ok: true, status: 200, contentType: 'image/png', length: null });
+  });
+
+  it('refuses other hosts without a request', async () => {
+    const f = vi.fn();
+    vi.stubGlobal('fetch', f);
+    expect(await headImage('https://example.com/a.png')).toEqual({ ok: false, status: 0, contentType: null, length: null });
+    expect(await headImage('http://art.gametdb.com/a.png')).toMatchObject({ ok: false, status: 0 });
+    expect(f).not.toHaveBeenCalled();
+  });
+
+  it('returns null when the network fails, so the page can fall back', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => Promise.reject(new TypeError('Failed to fetch'))));
+    expect(await headImage(ART)).toBeNull();
+  });
+
+  it('reports a host that never answers as a 408 instead of hanging', async () => {
+    vi.useFakeTimers();
+    try {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(
+          (_input: RequestInfo | URL, init?: RequestInit) =>
+            new Promise<Response>((_resolve, reject) => {
+              init?.signal?.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError')));
+            }),
+        ),
+      );
+      const pending = headImage(ART);
+      await vi.advanceTimersByTimeAsync(8_000);
+      expect(await pending).toEqual({ ok: false, status: 408, contentType: null, length: null });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('is reachable through the message handler', async () => {
+    stubHead(200, { 'content-type': 'image/jpeg' });
+    expect(await handleMessage({ type: 'image:head', url: ART })).toMatchObject({ ok: true, status: 200 });
+    expect(handleMessage({ type: 'image:head', url: 42 })).toBeUndefined();
+  });
+});
+
+describe('requestImageHead', async () => {
+  const { fakeBrowser } = await import('wxt/testing/fake-browser');
+  const { requestImageHead } = await import('../src/lib/messages');
+  const { vi, afterEach } = await import('vitest');
+  afterEach(() => {
+    vi.restoreAllMocks();
+    fakeBrowser.reset();
+  });
+
+  it('passes a well-formed answer through and turns anything else into null', async () => {
+    type Send = (message: unknown) => Promise<unknown>;
+    const send = vi.spyOn(fakeBrowser.runtime, 'sendMessage') as unknown as import('vitest').MockInstance<Send>;
+    send.mockResolvedValueOnce({ ok: true, status: 200, contentType: 'image/png', length: 5, extra: 1 });
+    expect(await requestImageHead('https://art.gametdb.com/a.png')).toEqual({ ok: true, status: 200, contentType: 'image/png', length: 5 });
+    expect(send).toHaveBeenCalledWith({ type: 'image:head', url: 'https://art.gametdb.com/a.png' });
+    send.mockResolvedValueOnce(null);
+    expect(await requestImageHead('https://art.gametdb.com/a.png')).toBeNull();
+    send.mockResolvedValueOnce({ ok: 'yes', status: 200 });
+    expect(await requestImageHead('https://art.gametdb.com/a.png')).toBeNull();
+    send.mockRejectedValueOnce(new Error('Receiving end does not exist'));
+    expect(await requestImageHead('https://art.gametdb.com/a.png')).toBeNull();
+  });
+});
+
 describe('gametdb sizes and DSiWare', () => {
   const fire: GameInfo = {
     ...batman,

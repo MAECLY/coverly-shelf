@@ -1,35 +1,24 @@
 /**
- * Background service worker: answers the two typed messages from
- * src/lib/messages.ts, and prunes stale cache entries at most once a day
- * when it starts (pruneCacheIfDue).
+ * Background service worker: answers the typed messages from
+ * src/lib/messages.ts.
  * - `libretro:names` → No-Intro names for a serial, from the packaged map.
  * - `image:fetch`    → a data URL for an image on one of the two artwork hosts.
+ * - `image:head`     → HEAD preflight of an artwork URL (src/lib/background/head.ts).
  *
  * It uses `sendResponse` + `return true` rather than returning a Promise, which
  * works the same in Chrome (no polyfill since WXT 0.20) and Firefox.
  */
 import { browser } from 'wxt/browser';
 import { defineBackground } from 'wxt/utils/define-background';
-import { pruneCacheIfDue } from '../lib/cache';
+import { headImage } from '../lib/background/head';
+import { initCacheRetention } from '../lib/background/sweep';
 import { LIBRETRO } from '../lib/config';
+import { isAllowedImageUrl, isImageType, mediaType } from '../lib/image-url';
 import type { ExtMessage } from '../lib/messages';
 
-/** Only these origins may be fetched on behalf of a content script. */
-export const ALLOWED_IMAGE_ORIGINS: readonly string[] = [
-  'https://art.gametdb.com',
-  'https://thumbnails.libretro.com',
-];
+export { ALLOWED_IMAGE_ORIGINS, isAllowedImageUrl } from '../lib/image-url';
 export const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 const FETCH_TIMEOUT_MS = 15_000;
-
-export function isAllowedImageUrl(raw: string): boolean {
-  try {
-    const u = new URL(raw);
-    return u.protocol === 'https:' && !u.username && !u.password && ALLOWED_IMAGE_ORIGINS.includes(u.origin);
-  } catch {
-    return false;
-  }
-}
 
 export function bytesToBase64(bytes: Uint8Array): string {
   let binary = '';
@@ -69,8 +58,8 @@ export async function fetchImageAsDataUrl(url: string): Promise<string | null> {
       signal: ctrl.signal,
     });
     if (!res.ok || !isAllowedImageUrl(res.url || url)) return null;
-    const type = (res.headers.get('content-type') ?? '').split(';')[0]?.trim().toLowerCase() ?? '';
-    if (!/^image\/[a-z0-9.+-]+$/.test(type)) return null;
+    const type = mediaType(res.headers.get('content-type'));
+    if (!isImageType(type)) return null;
     const declared = Number(res.headers.get('content-length'));
     if (Number.isFinite(declared) && declared > MAX_IMAGE_BYTES) return null;
     const buf = await res.arrayBuffer();
@@ -88,12 +77,13 @@ export function handleMessage(msg: unknown): Promise<unknown> | undefined {
   const m = msg as Partial<ExtMessage>;
   if (m.type === 'libretro:names' && typeof m.serial === 'string') return libretroNames(m.serial);
   if (m.type === 'image:fetch' && typeof m.url === 'string') return fetchImageAsDataUrl(m.url);
+  if (m.type === 'image:head' && typeof m.url === 'string') return headImage(m.url);
   return undefined;
 }
 
 export default defineBackground(() => {
-  // Expired and old-version cache entries would otherwise stay in storage for good.
-  void pruneCacheIfDue();
+  // Cache retention setting: session-area access, startup sweep, setting changes.
+  initCacheRetention();
   browser.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     // Only our own extension pages and content scripts may ask.
     if (sender.id !== browser.runtime.id) return false;
