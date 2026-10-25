@@ -1,6 +1,7 @@
 # Chrome Web Store assets
 
-Listing images for the store, plus the scripts that generate them.
+Listing images for the store, plus the scripts that generate them. The
+listing text (summary, description, category) is in [LISTING.md](LISTING.md).
 
 ## Which file goes in which store field
 
