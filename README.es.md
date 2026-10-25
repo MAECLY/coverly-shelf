@@ -5,7 +5,7 @@
 <h1 align="center">Cada juego en la estantería, con su portada.</h1>
 
 <p align="center">
-  <b>Coverly Shelf</b> es una extensión de navegador que añade carátulas y capturas a las páginas de juegos de 3DS en hShop.<br>
+  <b>Coverly Shelf</b> es una extensión de navegador que añade carátulas y capturas a las páginas y los listados de juegos de 3DS en hShop.<br>
   Solo cambia el aspecto: nunca toca las descargas ni el funcionamiento del sitio.
 </p>
 
@@ -37,9 +37,10 @@
 </p>
 
 > [!NOTE]
-> **Primeros pasos, dicho claro.** Coverly Shelf 0.1.0 mejora solo las páginas
-> de cada título (`/t/…`); los listados vienen después. Está probada de punta a
-> punta en Chromium sobre el sitio real, todavía no en Firefox. Si una página se
+> **Primeros pasos, dicho claro.** Coverly Shelf 0.1.0 mejora las páginas de
+> cada título (`/t/…`) y los listados (`/c/…` y los resultados de búsqueda).
+> Está probada de punta a punta en Chromium sobre el sitio real, todavía no en
+> Firefox. Si una página se
 > ve mal, abrir un [issue](https://github.com/MAECLY/coverly-shelf/issues) con
 > su URL ayuda mucho.
 
@@ -52,6 +53,28 @@ junto a la tabla técnica como una pequeña caja en 3D, girada para que se vea e
 lomo. Sigue el tema claro u oscuro de hShop y, en el móvil, se coloca encima de
 la tabla.
 
+**Portada a tamaño completo.** Pulsa la caja, o llega a ella con Tab y pulsa
+Intro o Espacio, para ver la portada en grande (el escaneo de alta calidad de
+GameTDB cuando existe). Esc cierra el visor y el foco vuelve a la caja. La
+portada de reserva no se puede pulsar.
+
+**Miniaturas en todos los listados.** Cada listado (juegos, actualizaciones,
+DLC, Virtual Console, DSiWare, vídeos, extras y resultados de búsqueda) muestra
+una miniatura de la portada al principio de cada fila, en la lista principal y
+en la de “Top content”. Las filas cargan su imagen solo cuando se acercan a la
+pantalla.
+
+**También el contenido relacionado.** En la página de un título, cada fila del
+bloque Related Content (sus demos, actualización, DLC o juego base) lleva la
+misma miniatura.
+
+**Demos, actualizaciones y DLC usan la portada de su juego.** Si una demo,
+actualización, DLC o versión de exposición no tiene imagen propia, muestra la
+portada de la fila que hShop marca como su Base Title (por ejemplo, la segunda
+demo de Project X Zone muestra la portada de Project X Zone). Una fila
+relacionada solo toma prestada una imagen cuando hShop dice que es el mismo
+juego; nunca se adivina una portada por el nombre.
+
 **Capturas, cuando las hay.** Bajo la descripción, una sección de capturas
 muestra la pantalla de título y escenas del juego. Al pulsar una se abre en
 grande: las flechas izquierda y derecha pasan de una a otra, Esc cierra y el
@@ -59,7 +82,8 @@ foco no sale del visor hasta que lo cierras.
 
 **Primero la región correcta.** La portada sale de la región del propio juego
 (leída de su código de producto, por ejemplo `CTR-P-AZEE` → EE. UU.), después
-de las otras regiones en inglés y después de las carátulas de Libretro. Si no
+de las otras regiones en inglés y después de las carátulas de Libretro. Los
+juegos de DSiWare usan las portadas de DS de GameTDB. Si no
 hay nada, ocupa su sitio una portada sencilla con las iniciales del juego, así
 la página nunca muestra una imagen rota.
 
@@ -71,9 +95,19 @@ ediciones en caja.
 “Art: Libretro”).
 
 **Discreta y rápida.** La portada elegida y la lista de capturas se guardan en
-caché 7 días, fallos incluidos, así que una segunda visita no hace peticiones
-nuevas y no se vuelve a pedir lo que no existe. Nunca hay más de 4 peticiones
-de imagen a la vez.
+caché (7 días por defecto), fallos incluidos, así que una segunda visita no
+hace peticiones nuevas y no se vuelve a pedir lo que no existe. Cada imagen
+candidata se comprueba antes con una pequeña petición HEAD, así que lo que no
+existe se descarta sin descargarlo. Nunca hay más de 4 peticiones de imagen a
+la vez, ni más de 2 al propio hShop (solo para filas de “Top content” que no
+muestran código de producto). Las entradas caducadas se borran una vez al día,
+así que la caché no crece sin fin.
+
+**Ajustes.** Pulsa el botón de la extensión en la barra de herramientas para
+abrir su página de ajustes (en inglés y en español). Elige cuánto tiempo se
+guardan las imágenes: esta sesión, 1 día, 7 días, 30 días o hasta que la
+borres. La página muestra cuántos juegos hay en caché y cuánto ocupan, y
+**Borrar caché** la vacía al momento (tras confirmarlo).
 
 <table>
   <tr>
@@ -88,18 +122,23 @@ de imagen a la vez.
 
 ## Por qué es segura
 
-- **Solo aspecto.** Añade dos elementos a la página, cada uno en su propio
-  shadow root, más la marca `data-hshop-enhanced`, y nada más. No lee, cambia
+- **Solo aspecto.** Añade sus propios elementos a la página (la portada, las
+  capturas, una miniatura por fila), cada uno en su propio shadow root, más
+  marcas `data-hshop-enhanced` y, en las páginas con miniaturas, un pequeño
+  `<style>` que les hace sitio, y nada más. No lee, cambia
   ni pulsa los botones de descarga, el código QR ni ningún enlace. Si algo
   falla (cambió la maquetación, falta una imagen, no hay red), quita lo que
   añadió y la página queda exactamente como estaba.
-- **Permisos mínimos.** El manifiesto pide `storage` (la caché de 7 días) y
-  acceso solo a dos servidores de imágenes: `art.gametdb.com` y
-  `thumbnails.libretro.com`. El content script solo se ejecuta en
-  `hshop.erista.me/t/*`. Sin `tabs`, sin `<all_urls>`, sin acceso a otros
-  sitios.
+- **Permisos mínimos.** El manifiesto pide `storage` (la caché y los ajustes)
+  y acceso solo a dos servidores de imágenes: `art.gametdb.com` y
+  `thumbnails.libretro.com`. Los content scripts solo se ejecutan en
+  `hshop.erista.me/t/*`, `/c/*` y `/search/results*`. Sin `tabs`, sin
+  `<all_urls>`, sin acceso a otros sitios. El botón de la barra de
+  herramientas no necesita ningún permiso.
 - **Sin rastreo.** Sin analítica, sin telemetría, sin cuenta y sin servidor
-  propio. Las únicas peticiones que hace son imágenes de esos dos servidores. La
+  propio. Las únicas peticiones que hace son imágenes de esos dos servidores,
+más la página de un título del propio hShop para una fila de “Top content” que
+no muestra código de producto. La
   tabla que relaciona códigos de producto con nombres de Libretro va dentro de
   la extensión.
 - **Código abierto.** Todo el código está aquí, bajo la AGPL-3.0.
@@ -115,8 +154,8 @@ publicada:
 2. Abre `chrome://extensions` (o `edge://extensions`, `brave://extensions`) y
    activa el **Modo de desarrollador**.
 3. Pulsa **Cargar descomprimida** y elige la carpeta descomprimida.
-4. Abre cualquier juego en [hShop](https://hshop.erista.me/), por ejemplo una
-   página bajo `/t/`.
+4. Abre cualquier juego o listado en [hShop](https://hshop.erista.me/), por
+   ejemplo una página bajo `/t/` o `/c/`.
 
 Para actualizar, descomprime la nueva versión sobre la misma carpeta y pulsa el
 botón de recargar en la tarjeta de la extensión.
@@ -133,6 +172,8 @@ bun run build          # genera .output/chrome-mv3
 bun run zip            # genera el zip de la versión en .output/
 bun run gen:libretro   # regenera public/libretro-3ds.json desde libretro-database
 bun run e2e            # compila y prueba la extensión en el sitio real con Playwright
+bun run e2e:lists      # recorre todos los listados con la extensión compilada (largo)
+bun run e2e:options    # comprueba la página de ajustes y el botón de la barra
 bun scripts/icons.ts   # vuelve a generar public/icon/*.png desde design/icon/
 ```
 
@@ -156,21 +197,21 @@ extract  →  sources  →  resolver  →  ui
 
 | Paso | Archivos | Qué hace |
 |---|---|---|
-| **extract** | `src/lib/extract.ts`, `selectors.ts` | Lee de la página el título, el código de producto, el Title ID y la región. Sin código de producto (temas, homebrew) no hay nada que hacer. |
+| **extract** | `src/lib/extract.ts`, `selectors.ts`, `lookup.ts` | Lee el título, el código de producto, el Title ID y la región de las páginas de título, de las filas de los listados y de las filas de Related Content. Sin código de producto (temas, homebrew) no hay nada que hacer. |
 | **sources** | `src/lib/sources/gametdb.ts`, `libretro.ts`, `public/libretro-3ds.json` | Convierte un juego en URLs de imagen ordenadas: portadas de GameTDB por región y carátulas, pantallas de título y capturas de Libretro por nombre No-Intro. |
-| **resolver** | `src/lib/resolver.ts`, `probe.ts`, `queue.ts`, `cache.ts` | Prueba los candidatos en orden (gana el primero que existe, como mucho 4 a la vez) y guarda el resultado 7 días. |
-| **ui** | `src/ui/*`, `src/entrypoints/title.content/` | Dibuja la caja, la portada de reserva, la galería y el visor en shadow roots, con los colores del propio hShop. |
+| **resolver** | `src/lib/resolver.ts`, `related.ts`, `probe.ts`, `queue.ts`, `cache.ts`, `settings.ts` | Prueba los candidatos en orden (primero con HEAD, gana el primero que existe, como mucho 4 a la vez), aplica el respaldo del juego base y guarda el resultado el tiempo elegido. |
+| **ui** | `src/ui/*`, `src/entrypoints/{title,list}.content/`, `options/` | Dibuja la caja, el visor a tamaño completo, la portada de reserva, la galería, las miniaturas de las filas y la página de ajustes, con los colores del propio hShop. |
 
-El service worker (`src/entrypoints/background.ts`) responde a dos mensajes:
-los nombres de Libretro de un código de producto y una descarga de imagen que
-queda de reserva para el día en que hShop añada una Content Security Policy
-(`IMAGE_MODE` en `src/lib/config.ts`).
+El service worker (`src/entrypoints/background.ts`) responde a tres mensajes:
+los nombres de Libretro de un código de producto, la comprobación HEAD de una
+URL de imagen (`image:head`) y una descarga de imagen que queda de reserva para
+el día en que hShop añada una Content Security Policy (`IMAGE_MODE` en
+`src/lib/config.ts`). También abre la página de ajustes desde el botón de la
+barra y borra las entradas caducadas de la caché.
 
 Cada selector, color y patrón de URL que usa el código está anotado en
 [docs/REFERENCE.md](docs/REFERENCE.md). Lo que aún hay que comprobar en el sitio
 real está en [docs/ASSUMPTIONS.md](docs/ASSUMPTIONS.md).
-
-**Siguiente paso:** portadas en los listados (`/c/…`), con el mismo resolver.
 
 ## Créditos
 
