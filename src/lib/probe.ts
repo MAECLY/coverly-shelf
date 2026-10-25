@@ -6,69 +6,93 @@
  * request.
  */
 import { IMAGE_MODE } from './config';
-import { requestImageData } from './messages';
+import { requestImageDataResult, type ImageDataResult } from './messages';
 import { limit } from './queue';
 
 const PROBE_TIMEOUT_MS = 10_000;
 
-/** Background mode only: url → data URL (or null) from the service worker. */
-const dataUrls = new Map<string, Promise<string | null>>();
+/**
+ * What a probe found out:
+ * - `hit`: the URL serves a non-empty image;
+ * - `miss`: a definite answer that it does not (load error, 404, empty image);
+ * - `error`: no answer (timeout, messaging failure). Not worth caching as a miss.
+ */
+export type ProbeOutcome = 'hit' | 'miss' | 'error';
 
-function fetchData(url: string): Promise<string | null> {
+/** Background mode only: url → data URL (or null) from the service worker. */
+const dataUrls = new Map<string, Promise<ImageDataResult>>();
+
+function fetchData(url: string): Promise<ImageDataResult> {
   let pending = dataUrls.get(url);
   if (!pending) {
-    pending = limit(() => requestImageData(url)).catch(() => null);
+    pending = limit(() => requestImageDataResult(url)).catch((): ImageDataResult => ({ ok: false }));
     dataUrls.set(url, pending);
+    // A transport failure is not remembered: a later call may reach the worker.
+    void pending.then((res) => {
+      if (!res.ok && dataUrls.get(url) === pending) dataUrls.delete(url);
+    });
   }
   return pending;
 }
 
-function loadDirect(url: string): Promise<boolean> {
-  return new Promise<boolean>((resolve) => {
+function loadDirect(url: string): Promise<ProbeOutcome> {
+  return new Promise<ProbeOutcome>((resolve) => {
     let img: HTMLImageElement;
     try {
       img = new Image();
     } catch {
-      resolve(false);
+      resolve('error');
       return;
     }
     let done = false;
-    const finish = (ok: boolean): void => {
+    const finish = (outcome: ProbeOutcome): void => {
       if (done) return;
       done = true;
       clearTimeout(timer);
       img.onload = null;
       img.onerror = null;
-      if (!ok) img.src = '';
-      resolve(ok);
+      if (outcome !== 'hit') img.src = '';
+      resolve(outcome);
     };
-    const timer = setTimeout(() => finish(false), PROBE_TIMEOUT_MS);
-    img.onload = () => finish(img.naturalWidth > 0);
-    img.onerror = () => finish(false);
+    const timer = setTimeout(() => finish('error'), PROBE_TIMEOUT_MS);
+    img.onload = () => finish(img.naturalWidth > 0 ? 'hit' : 'miss');
+    img.onerror = () => finish('miss');
     try {
       img.referrerPolicy = 'no-referrer';
       img.decoding = 'async';
       img.src = url;
     } catch {
-      finish(false);
+      finish('error');
     }
   });
 }
 
-/** True when `url` loads as a non-empty image. Runs through the shared limiter; never rejects. */
-export async function probeImage(url: string): Promise<boolean> {
+/** Probe `url` and say whether it is a hit, a definite miss or unknown. Runs through the shared limiter; never rejects. */
+export async function probeOutcome(url: string): Promise<ProbeOutcome> {
   try {
-    if (IMAGE_MODE === 'background') return (await fetchData(url)) !== null;
+    if (IMAGE_MODE === 'background') {
+      const res = await fetchData(url);
+      if (!res.ok) return 'error';
+      return res.data !== null ? 'hit' : 'miss';
+    }
     return await limit(() => loadDirect(url));
   } catch {
-    return false;
+    return 'error';
   }
+}
+
+/** True when `url` loads as a non-empty image. Runs through the shared limiter; never rejects. */
+export async function probeImage(url: string): Promise<boolean> {
+  return (await probeOutcome(url)) === 'hit';
 }
 
 /** The value to put in `img.src` for `url`, or null when it cannot be shown. Never rejects. */
 export async function displaySrc(url: string): Promise<string | null> {
   try {
-    if (IMAGE_MODE === 'background') return await fetchData(url);
+    if (IMAGE_MODE === 'background') {
+      const res = await fetchData(url);
+      return res.ok ? res.data : null;
+    }
     return url;
   } catch {
     return null;
