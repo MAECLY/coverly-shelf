@@ -1,0 +1,24 @@
+body.light-mode {
+	--bw: white;
+	--wb: black;
+	--bg: #ececec;
+	--clevel-1: #cecece;
+	--clevel-1-hover: #b0b0b0;
+	--clevel-2: #eee;
+	--clevel-2-hover: white;
+	--clevel-3: #9f9f9f;
+	--invert: 100%;
+	--invert-dice: 13%;
+	--green: #036011;
+	--yellow: #605503;
+	--blue: #00595e;
+	--red: #7d0101;
+	--serr-red: #ff4747;
+	--serr-red-btn: #c43737;
+	--serr-yellow: #eac607;
+	--serr-yellow-btn: #ae9305;
+	--pink: #80267e;
+	--orange: #f95b0e;
+	--nav-footer-border: var(--wb);
+	--selector-arrow: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='black' width='12' height='12'><path d='M5.995 9.75 0 3.683 1.416 2.25l4.579 4.635 4.59-4.635L12 3.683Z' style='stroke-width:1.00655615'/></svg>");
+}

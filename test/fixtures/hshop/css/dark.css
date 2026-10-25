@@ -1,0 +1,24 @@
+body.dark-mode {
+	--bw: black;
+	--wb: white;
+	--bg: #1c2020;
+	--clevel-1: #373737;
+	--clevel-1-hover: #404040;
+	--clevel-2: #535353;
+	--clevel-2-hover: #717171;
+	--clevel-3: #202020;
+	--invert: 0%;
+	--invert-dice: 0%;
+	--green: #3fff4f;
+	--yellow: #ffe300;
+	--blue: #00f3ff;
+	--red: #ff8e8e;
+	--serr-red: #b00000;
+	--serr-red-btn: #800000;
+	--serr-yellow: #a88e05;
+	--serr-yellow-btn: #806c04;
+	--pink: #ff66fd;
+	--orange: #ff8800;
+	--nav-footer-border: var(--green);
+	--selector-arrow: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='white' width='12' height='12'><path d='M5.995 9.75 0 3.683 1.416 2.25l4.579 4.635 4.59-4.635L12 3.683Z' style='stroke-width:1.00655615'/></svg>");
+}
