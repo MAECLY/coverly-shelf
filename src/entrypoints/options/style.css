@@ -228,7 +228,9 @@
     margin-top: 12px;
     font-size: 16px;
     font-weight: 600;
-    min-height: 1.55em;
+    line-height: 1.55;
+    /* Two lines reserved: the async readout may wrap on phones without pushing the page down. */
+    min-height: calc(2 * 1.55em);
   }
   .intro {
     margin-top: 6px;
@@ -366,7 +368,9 @@
   }
   .status {
     margin-top: 12px;
-    min-height: 1.55em;
+    line-height: 1.55;
+    /* Always takes room (two lines on phones), so announcements never move the footer. */
+    min-height: calc(2 * 1.55em);
     font-size: 14px;
     font-weight: 600;
     color: var(--cr-success);
@@ -391,13 +395,5 @@
   }
   .footer .credits {
     gap: 0 0.3em;
-  }
-}
-
-/* The live region stays in the tree but takes no room until it speaks. */
-@layer components {
-  .status:empty {
-    min-height: 0;
-    margin-top: 0;
   }
 }
