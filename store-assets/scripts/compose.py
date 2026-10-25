@@ -105,10 +105,10 @@ def save_rgb(img: Image.Image, name: str, size: tuple[int, int]) -> None:
     print(f'  wrote {path.relative_to(ROOT)}  {final.size[0]}x{final.size[1]} {final.mode}')
 
 
-def screenshot(raw_name: str, title: str, subtitle: str, out_name: str) -> None:
+def screenshot(raw_name: str, title: str, subtitle: str, out_name: str, max_w: int = 680, max_h: int = 660) -> None:
     size = (1280, 800)
     bg = gradient(size)
-    capture = fit(Image.open(RAW / raw_name), 680, 660)
+    capture = fit(Image.open(RAW / raw_name), max_w, max_h)
     x_card = 1280 - capture.size[0] - 60
     paste_card(bg, capture, (x_card, (800 - capture.size[1]) // 2))
 
@@ -156,7 +156,7 @@ def promo_marquee() -> None:
     brand(bg, (x, 130), 84, 58)
     d.rounded_rectangle([x, 262, x + 64, 270], 4, fill=MANILA)
     d.text((x, 294), 'Every game on the shelf gets its cover.', font=font(30, bold=True), fill=TEXT)
-    d.text((x, 344), '3D box art and screenshots for 3DS game pages.', font=font(24), fill=MUTED)
+    d.text((x, 344), 'Covers and screenshots for 3DS games and lists.', font=font(24), fill=MUTED)
     d.text((x, 380), 'Purely cosmetic · No tracking · Open source', font=font(20), fill=TEAL_LIGHT)
     save_rgb(bg, 'promo-marquee.png', size)
 
@@ -170,27 +170,29 @@ def main() -> None:
         'screenshot-1.png',
     )
     screenshot(
-        'lightbox.png',
-        'Screenshots,\nfull size',
-        'A gallery under the description,\nwith a keyboard-friendly viewer.',
+        'list-dark.png',
+        'Covers on\nevery list',
+        'Games, updates, DLC,\nVirtual Console and\nDSiWare.',
         'screenshot-2.png',
+        max_w=780,
+    )
+    screenshot(
+        'cover-zoom.png',
+        'Zoom into\nthe cover',
+        'Click the box to see the art\nfull size. Esc closes it.',
+        'screenshot-3.png',
+        max_w=780,
+    )
+    screenshot(
+        'options-dark.png',
+        'You decide\nhow long',
+        'Keep artwork for a session,\na day, a week, a month or\nuntil you clear it. One click\nempties the cache.',
+        'screenshot-4.png',
     )
     screenshot(
         'card-light.png',
         'Light or dark,\nit fits in',
         'Built from the site’s own colours,\nso it follows the theme toggle.',
-        'screenshot-3.png',
-    )
-    screenshot(
-        'card-digital.png',
-        'Digital releases\ntoo',
-        'eShop titles get their own art.\nIf nothing is found, the page\nstays exactly as it was.',
-        'screenshot-4.png',
-    )
-    screenshot(
-        'mobile.png',
-        'Small screens\nincluded',
-        'Below 768 px the cover moves\nabove the details.',
         'screenshot-5.png',
     )
     promo_small()
