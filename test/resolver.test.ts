@@ -105,6 +105,40 @@ describe('resolveCover', () => {
     expect(result).toEqual({ kind: 'image', url: `${LR}/Named_Boxarts/${FILE}.png`, source: 'libretro' });
   });
 
+  it('asks Libretro for the base game of DLC and update rows (retail, then digital)', async () => {
+    const bx2k = 'Project Cross Zone 2 (Korea)';
+    const url = `${LR}/Named_Boxarts/${encodeURIComponent(bx2k)}.png`;
+    names.mockImplementation(async (serial: string) => (serial === 'CTR-P-BX2K' ? [bx2k] : []));
+    hits(url);
+    const base = { platform: 'CTR' as const, gameCode: 'BX2K', regionChar: 'K', region: 'KO', hshopRegion: 'korea' };
+    for (const [productCode, distribution] of [
+      ['CTR-M-BX2K', 'M'],
+      ['CTR-U-BX2K', 'U'],
+    ] as const) {
+      // DLC and update share the game code, hence one cache key: start each from scratch.
+      fakeBrowser.reset();
+      names.mockClear();
+      await expect(resolveCover(game({ ...base, productCode, distribution }), { size: 'thumb' })).resolves.toEqual({
+        kind: 'image',
+        url,
+        source: 'libretro',
+      });
+      expect(names.mock.calls.map((c) => c[0])).toEqual(['CTR-P-BX2K', 'CTR-N-BX2K', productCode]);
+    }
+  });
+
+  it('keeps one Libretro request for retail and digital rows', async () => {
+    await resolveCover(game({ productCode: 'CTR-N-AZEE', distribution: 'N' }));
+    expect(names.mock.calls.map((c) => c[0])).toEqual(['CTR-N-AZEE']);
+  });
+
+  it('does not cache a placeholder when one of the base-game Libretro requests fails', async () => {
+    names.mockImplementation(async (serial: string) => (serial === 'CTR-N-BX2K' ? null : []) as string[]);
+    const info = game({ productCode: 'CTR-M-BX2K', distribution: 'M', gameCode: 'BX2K', regionChar: 'K', region: 'KO' });
+    await expect(resolveCover(info)).resolves.toEqual({ kind: 'placeholder' });
+    await expect(storage.getItem('local:cover:BX2K')).resolves.toBeNull();
+  });
+
   it('falls back to the hShop icon, then to the placeholder', async () => {
     const icon = 'https://hshop.erista.me/static/icon.png';
     await expect(resolveCover(game(), { hshopIconUrl: icon })).resolves.toEqual({

@@ -139,4 +139,4 @@ export const LOOKUP = {
 export const NO_ART_CATEGORIES: readonly string[] = ['themes'];
 
 /** Bump when the cache shape or the fallback chain changes. */
-export const CACHE_VERSION = 2;
+export const CACHE_VERSION = 3;

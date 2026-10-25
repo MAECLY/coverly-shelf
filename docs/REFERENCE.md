@@ -411,7 +411,10 @@ Measured 2026-10-25 for the listing pages. Sample: the first 10 rows (fewer
 when the subcategory is smaller) of all 19 `/c/games` subcategories plus
 `/c/virtual-console`, `/c/dsiware`, `/c/updates` and `/c/dlc` region
 subcategories: 332 rows. DLC and update rows carry the parent game's code
-(`CTR-M-ABEP-00`, `CTR-U-AX3P`), so they resolve like the game.
+(`CTR-M-ABEP-00`, `CTR-U-AX3P`), so they resolve like the game: GameTDB
+only uses the 4-character game code, and the Libretro step asks for the base
+game's `CTR-P-…` then `CTR-N-…` serial before the row's own code (the No-Intro
+map has almost no `M`/`U`/`T`/`B`/`H` serials).
 
 How "exists" was decided: GameTDB banned this machine's IP after a burst of
 HEAD requests (see the rate-limit note below), so the bulk check used the

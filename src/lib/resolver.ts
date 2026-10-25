@@ -102,15 +102,38 @@ function isCandidateList(value: unknown): value is ImageCandidate[] {
   );
 }
 
-async function libretroNames(run: Run, info: GameInfo): Promise<string[]> {
-  try {
-    const names = await requestLibretroNamesResult(info.productCode);
-    if (Array.isArray(names)) return names;
-  } catch {
-    /* treated as a transport failure below */
+/** Retail and digital: the only distributions Libretro's No-Intro map has many serials for. */
+const BASE_DISTRIBUTIONS: readonly string[] = ['P', 'N'];
+
+/**
+ * Serials to ask Libretro about, best first. DLC (`M`), updates (`U`), demos
+ * (`T`) and kiosk builds (`B`/`H`) are almost never keys of the map, so the
+ * base game's retail then digital serial come first, like GameTDB, which only
+ * uses the 4-character game code.
+ */
+export function libretroSerials(info: GameInfo): string[] {
+  const serials: string[] = [];
+  if (!BASE_DISTRIBUTIONS.includes(info.distribution)) {
+    for (const d of BASE_DISTRIBUTIONS) serials.push(`${info.platform}-${d}-${info.gameCode}`);
   }
-  run.transient = true;
-  return [];
+  if (!serials.includes(info.productCode)) serials.push(info.productCode);
+  return serials;
+}
+
+async function libretroNames(run: Run, info: GameInfo): Promise<string[]> {
+  const answers = await Promise.all(
+    libretroSerials(info).map(async (serial) => {
+      try {
+        const names = await requestLibretroNamesResult(serial);
+        if (Array.isArray(names)) return names;
+      } catch {
+        /* treated as a transport failure below */
+      }
+      run.transient = true;
+      return [];
+    }),
+  );
+  return [...new Set(answers.flat())];
 }
 
 /** First candidate whose probe succeeds, probing strictly one after another. */
