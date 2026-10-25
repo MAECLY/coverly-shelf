@@ -18,7 +18,15 @@ export const REGION_BY_CHAR: Readonly<Record<string, GameTdbRegion>> = {
   F: 'EN', // AD3F, AF9F, AFJF, AH8F, AKKF, AL5F, AL6F → 200 in EN, none in FR
   S: 'EN', // AFJS, AKKS, AL5S, AL6S, AL8S, ALAS, ALZS → 200 in EN, none in ES
   H: 'EN', // AKKH, AL6H → 200 in EN, none in NL
-  // TODO(reference): U/R/C/W/Z variants are unverified on GameTDB (APNR → 404 in RU and EN).
+  // Verified 2026-10-25 (live 200s; see "Coverage" in docs/REFERENCE.md).
+  W: 'ZH', // Taiwan/Hong Kong: ABRW, ADAW, KC2W, AJJW → 200 in ZH, 404 in ZHTW/TW/EN/US/JA
+  V: 'EN', // BLJV, BTMV, ALEV → 200 in EN
+  X: 'EN', // BLSX, BLJX → 200 in EN (404 in ES)
+  Y: 'EN', // BLSY, KFPY → 200 in EN (404 in FR, KO)
+  A: 'EN', // BNDA, A2AA, KRXA → 200 in EN
+  // Z is left to the slug fallback on purpose: AAHZ, ARMZ, BMMZ → 200 in EN (already in
+  // FALLBACK_REGIONS), but Z is a mixed bucket (ALBZ, ABZZ, AMQZ have no art anywhere).
+  // TODO(reference): C (JMKC, JREC → 404 in ZH/EN/JA), R (APNR → 404 in RU/EN) and U have no verified folder.
 };
 
 /** Regions tried after the game's own region, in order. */
@@ -62,6 +70,25 @@ export const GAMETDB = {
   digitalDistribution: 'N',
 } as const;
 
+/**
+ * GameTDB for DSiWare (`TWL-N-XXXX` product codes), same URL pattern under `/ds/`.
+ * Verified 2026-10-25: KQ9E has cover, coverS (png), coverM, coverHQ and box in US;
+ * KF8E → US, KG4J → JA, KASV/KMQF/KBID/KFMU/KNRH/KKGP → EN. GameTDB files every
+ * DSiWare letter except E and J under EN (no DE/FR/AU/NL/KO hits); Korean K codes
+ * (KZIK, …) have no art. Not wired yet: the product-code regex only accepts CTR/KTR.
+ */
+export const GAMETDB_DS = {
+  base: 'https://art.gametdb.com/ds',
+  /** `cover` is 160×144 (~11 KB), the right size for list rows. */
+  coverTypes: [
+    { type: 'cover', ext: 'jpg', retailOnly: false },
+    { type: 'coverHQ', ext: 'jpg', retailOnly: false },
+  ] satisfies GameTdbType[],
+  regionByChar: { E: 'US', J: 'JA' } as Readonly<Record<string, GameTdbRegion>>,
+  /** Every other DSiWare letter (P, V, D, F, I, S, H, U, T, O…) lives under EN. */
+  fallbackRegions: ['EN', 'US'] as readonly GameTdbRegion[],
+} as const;
+
 export const LIBRETRO = {
   base: 'https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%203DS',
   folders: {
@@ -85,4 +112,4 @@ export const IMAGE_MODE: 'direct' | 'background' = 'direct';
 export const MAX_CONCURRENT_REQUESTS = 4;
 export const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 /** Bump when the cache shape or the fallback chain changes. */
-export const CACHE_VERSION = 1;
+export const CACHE_VERSION = 2;
