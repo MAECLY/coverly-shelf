@@ -4,7 +4,7 @@
  * unexpected markup.
  */
 import { FALLBACK_REGIONS, GAMETDB_DS, NO_ART_CATEGORIES, REGION_BY_CHAR, REGION_BY_HSHOP_SLUG } from './config';
-import { LIST_BREADCRUMB_PREFIX, META_LABELS, SELECTORS } from './selectors';
+import { LIST_BREADCRUMB_PREFIX, META_LABELS, RELATION_PREFIX, SELECTORS } from './selectors';
 import type { GameInfo, GameTdbRegion, Platform } from './types';
 
 /**
@@ -237,6 +237,45 @@ export function extractListEntries(root: ParentNode, opts: ExtractListOptions = 
       else entry.needsLookup = lookups && !shownCode.has(entry.hshopId);
     }
     return entries;
+  } catch {
+    return [];
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Related Content (`/t/*`)
+// ---------------------------------------------------------------------------
+
+export interface RelatedEntry extends ListEntry {
+  /** What hShop says the row is to this page (`Base Title`, `Demo Title`, …), or null when unreadable. */
+  relation: string | null;
+}
+
+/** `Base Title` from a row's `Relation: Base Title` badge, or null. */
+function rowRelation(anchor: Element): string | null {
+  for (const badge of anchor.querySelectorAll(SELECTORS.related.relation)) {
+    const value = text(badge);
+    if (!value.startsWith(RELATION_PREFIX)) continue;
+    return value.slice(RELATION_PREFIX.length).trim() || null;
+  }
+  return null;
+}
+
+/**
+ * Rows of a title page's "Related Content" box, read like listing rows
+ * (extractListEntries) plus their relation. Rows never borrow codes from
+ * elsewhere and are never looked up: a row without a usable code keeps
+ * `info: null`. Empty when the page has no such box. Never throws.
+ */
+export function extractRelatedEntries(doc: ParentNode): RelatedEntry[] {
+  try {
+    const box = doc.querySelector(SELECTORS.related.container);
+    if (!box) return [];
+    return extractListEntries(box, { pathname: '/t/' }).map((entry) => ({
+      ...entry,
+      needsLookup: false,
+      relation: rowRelation(entry.anchor),
+    }));
   } catch {
     return [];
   }
