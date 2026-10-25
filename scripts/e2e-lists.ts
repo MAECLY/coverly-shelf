@@ -105,6 +105,8 @@ class Flight {
   private seen = new Set<string>();
   /** Later loads of a URL already counted: the shown <img> re-reading the probe's (cacheable) response. */
   repeats = 0;
+  /** Loads the browser answered from its HTTP cache (art fetched on an earlier page): no request reached the host. */
+  cached = 0;
 
   constructor(private readonly match: (url: string, type?: string) => boolean) {}
 
@@ -124,6 +126,13 @@ class Flight {
       const span = this.spans.get(e.requestId);
       if (span && span.end === null) span.end = e.timestamp;
     };
+    const fromCache = (requestId: string): void => {
+      if (this.spans.delete(requestId)) this.cached += 1;
+    };
+    cdp.on('Network.requestServedFromCache', (e) => fromCache(e.requestId));
+    cdp.on('Network.responseReceived', (e) => {
+      if (e.response.fromDiskCache || e.response.fromPrefetchCache) fromCache(e.requestId);
+    });
     cdp.on('Network.loadingFinished', settle);
     cdp.on('Network.loadingFailed', settle);
     await cdp.send('Network.enable');
@@ -152,6 +161,7 @@ class Flight {
     this.spans.clear();
     this.seen.clear();
     this.repeats = 0;
+    this.cached = 0;
   }
 
   /** Waits until nothing of this class is in flight (requests of the previous page). */
@@ -529,7 +539,7 @@ async function main(): Promise<void> {
       if (noArt) check(a.styleTags === 0 && a.topHosts === 0, `${p}: no-art category gets no thumbnail and no <style>`);
       else check(a.styleTags === (a.coded + a.topHosts > 0 ? 1 : 0), `${p}: one layout <style> at most`, `found ${a.styleTags}`);
       check(lookups.peak <= MAX_LOOKUPS_IN_FLIGHT, `${p}: hShop lookups in flight <= ${MAX_LOOKUPS_IN_FLIGHT}`, `peak ${lookups.peak}, total ${lookups.total}${lookups.peak > MAX_LOOKUPS_IN_FLIGHT ? `: ${lookups.dump()}` : ''}`);
-      check(art.peak <= MAX_ART_IN_FLIGHT, `${p}: artwork requests in flight <= ${MAX_ART_IN_FLIGHT}`, `peak ${art.peak}, ${art.total} request(s), ${art.repeats} cached re-read(s)${art.peak > MAX_ART_IN_FLIGHT ? `: ${art.dump()}` : ''}`);
+      check(art.peak <= MAX_ART_IN_FLIGHT, `${p}: artwork requests in flight <= ${MAX_ART_IN_FLIGHT}`, `peak ${art.peak}, ${art.total} request(s), ${art.repeats} re-read(s), ${art.cached} from the HTTP cache${art.peak > MAX_ART_IN_FLIGHT ? `: ${art.dump()}` : ''}`);
       check(a.overflow <= 0, `${p}: no horizontal overflow at 1440`, `${a.overflow}px`);
       check(overflow390 <= 0, `${p}: no horizontal overflow at 390`, `${overflow390}px`);
 
