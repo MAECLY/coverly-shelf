@@ -903,6 +903,7 @@ async function main(): Promise<void> {
     );
 
     // Idempotence: in-page path changes must not double any row.
+    art.mark = 'list-na-rerun';
     await page.evaluate(() => history.pushState(null, '', '/c/games/s/north-america/'));
     await sleep(1_500);
     await page.evaluate(() => history.pushState(null, '', '/c/games/s/north-america'));
@@ -923,6 +924,7 @@ async function main(): Promise<void> {
 
     // Phone width: no overflow.
     await page.setViewportSize({ width: 390, height: 844 });
+    art.mark = 'list-na-390';
     await goto(page, '/c/games/s/north-america');
     await page.waitForSelector(THUMB_HOST, { state: 'attached', timeout: 20_000 }).catch(() => null);
     await waitForThumbs(page, 20_000);
