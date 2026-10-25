@@ -335,11 +335,10 @@
 }
 
 .cs-lightbox-img {
-  max-width: min(92vw, 1000px);
-  max-height: calc(100vh - 160px);
+  /* Upscale the 400×240 (or stacked 400×480) snaps; contain letterboxes on narrow screens. */
+  height: min(calc(100vh - 160px), 600px);
   width: auto;
-  height: auto;
-  min-width: min(400px, 80vw);
+  max-width: min(92vw, 1000px);
   object-fit: contain;
   border-radius: 10px;
   background: var(--clevel-2);
