@@ -131,35 +131,55 @@ check(mapOk, 'libretro-3ds.json maps product codes to 1-3 No-Intro names');
 
 // ─── 2. Live browser checks ────────────────────────────────────────────────
 
+/**
+ * Overlap below this many milliseconds is clock noise, not a fifth request: the
+ * page and the service worker are timed by separate targets, and a request that
+ * starts the instant another ends can land up to a fraction of a millisecond
+ * before it. A real fifth request overlaps by a whole response time (~180 ms+).
+ */
+const OVERLAP_TOLERANCE_MS = 2;
+
+interface ArtSpan {
+  /** Epoch ms, from the browser's own timing of the request. */
+  start: number;
+  end: number;
+  mark: string;
+  label: string;
+}
+
 /** Network bookkeeping for the two artwork hosts, shared by every page of a context. */
 class ArtTracker {
+  /** Open art requests by Playwright's events; used only to wait for quiet. */
   inFlight = 0;
-  maxInFlight = 0;
-  /** Peak in-flight count per mark, to tell which step went over the cap. */
-  peaks: Record<string, number> = {};
-  /** The open requests (method, page or worker, URL tail) the first time the overall peak was reached. */
-  peakSnapshot: string[] = [];
+  /** Peak of `inFlight`: reported, not checked (event order across page and worker is not request order). */
+  eventPeak = 0;
   log: { url: string; method: string; status: number | null; failed: boolean; mark: string }[] = [];
-  private live = new Set<Request>();
+  private live = new Map<Request, { at: number; mark: string }>();
+  /** Every settled art request as the browser timed it. */
+  spans: ArtSpan[] = [];
   mark = '';
 
   attach(context: BrowserContext): void {
     context.on('request', (req) => {
       if (!isArt(req.url())) return;
-      this.live.add(req);
+      this.live.set(req, { at: Date.now(), mark: this.mark });
       this.inFlight += 1;
-      if (this.inFlight > this.maxInFlight) {
-        this.peakSnapshot = [...this.live].map((r) => {
-          const from = r.serviceWorker() ? 'worker' : 'page';
-          return `${this.mark} ${r.method()} ${from} ${r.url().split('/').slice(-3).join('/')}`;
-        });
-      }
-      this.maxInFlight = Math.max(this.maxInFlight, this.inFlight);
-      this.peaks[this.mark] = Math.max(this.peaks[this.mark] ?? 0, this.inFlight);
+      this.eventPeak = Math.max(this.eventPeak, this.inFlight);
     });
     const settle = (req: Request, failed: boolean): void => {
-      if (!this.live.delete(req)) return;
+      const open = this.live.get(req);
+      if (!open) return;
+      this.live.delete(req);
       this.inFlight -= 1;
+      // Playwright reports the worker's HEADs as failed once their unread
+      // Response is dropped, well after the answer arrived: a HEAD has no body,
+      // so its response start is its end.
+      const t = req.timing();
+      const rel = req.method() === 'HEAD' ? t.responseStart : Math.max(t.responseEnd, t.responseStart);
+      const start = t.startTime > 0 ? t.startTime : open.at;
+      const end = t.startTime > 0 && rel >= 0 ? t.startTime + rel : Date.now();
+      const label = `${open.mark} ${req.method()} ${req.serviceWorker() ? 'worker' : 'page'} ${req.url().split('/').slice(-3).join('/')}`;
+      this.spans.push({ start, end: Math.max(end, start), mark: open.mark, label });
       void (async () => {
         const res = failed ? null : await req.response().catch(() => null);
         this.log.push({ url: req.url(), method: req.method(), status: res?.status() ?? null, failed, mark: this.mark });
@@ -167,6 +187,44 @@ class ArtTracker {
     };
     context.on('requestfinished', (req) => settle(req, false));
     context.on('requestfailed', (req) => settle(req, true));
+  }
+
+  /**
+   * Most art requests open at one instant by the browser's timing, per step and
+   * overall, with the requests open at the overall peak. Requests still open
+   * count until the end of the run.
+   */
+  peak(): { peak: number; perMark: Record<string, number>; at: string[] } {
+    const spans: ArtSpan[] = [
+      ...this.spans,
+      ...[...this.live].map(([req, o]) => ({ start: o.at, end: Number.POSITIVE_INFINITY, mark: o.mark, label: `${o.mark} ${req.method()} ${req.url()} (never settled)` })),
+    ];
+    // A span no longer than the tolerance (a memory-cache hit) overlaps nothing.
+    const events = spans.flatMap((sp, i) =>
+      sp.end - OVERLAP_TOLERANCE_MS > sp.start
+        ? [
+            { t: sp.start, d: 1, i },
+            { t: sp.end - OVERLAP_TOLERANCE_MS, d: -1, i },
+          ]
+        : [],
+    );
+    // Ends before starts at the same instant: back-to-back requests do not overlap.
+    events.sort((x, y) => x.t - y.t || x.d - y.d);
+    const open = new Set<number>();
+    const perMark: Record<string, number> = {};
+    let peak = 0;
+    let at: string[] = [];
+    for (const e of events) {
+      if (e.d > 0) open.add(e.i);
+      else open.delete(e.i);
+      const mark = spans[e.i]!.mark;
+      perMark[mark] = Math.max(perMark[mark] ?? 0, open.size);
+      if (open.size > peak) {
+        peak = open.size;
+        at = [...open].map((j) => spans[j]!.label);
+      }
+    }
+    return { peak, perMark, at };
   }
 
   /**
@@ -967,7 +1025,12 @@ async function main(): Promise<void> {
 
     // ── 7. Concurrency (whole run)
     console.log('\n── 7. concurrency');
-    check(art.maxInFlight <= MAX_IN_FLIGHT, `max simultaneous in-flight art requests <= ${MAX_IN_FLIGHT}`, `observed ${art.maxInFlight}; peaks ${JSON.stringify(art.peaks)}; at peak: ${art.peakSnapshot.join(' | ')}`);
+    const flight = art.peak();
+    check(
+      flight.peak <= MAX_IN_FLIGHT,
+      `max simultaneous in-flight art requests <= ${MAX_IN_FLIGHT}`,
+      `observed ${flight.peak} by browser timing over ${art.spans.length} request(s) (${art.eventPeak} by event order); peaks ${JSON.stringify(flight.perMark)}; at peak: ${flight.at.join(' | ')}`,
+    );
 
     const allNew = watch.pageErrors.filter((e) => !baselineErrors.includes(e));
     check(allNew.length === 0, 'whole run: no page errors beyond the baseline', allNew.join(' | '));
