@@ -4,9 +4,17 @@
  * resolver. In `background` mode the service worker fetches the bytes and the
  * resulting data URL is memoised so a probe and the later display share one
  * request.
+ *
+ * In `direct` mode an artwork URL is first preflighted with a HEAD request made
+ * by the background (`image:head`), so 404s and non-images are discarded
+ * without downloading any image bytes. Only when that HEAD gets no usable
+ * answer (messaging failure, network error, a host that refuses HEAD) does the
+ * probe fall back to loading the image in an <img>. HEAD and fallback share one
+ * slot of the shared limiter, so the hosts still see at most 4 requests at once.
  */
 import { IMAGE_MODE } from './config';
-import { requestImageDataResult, type ImageDataResult } from './messages';
+import { isAllowedImageUrl } from './image-url';
+import { requestImageDataResult, requestImageHead, type ImageDataResult, type ImageHead } from './messages';
 import { limit } from './queue';
 
 const PROBE_TIMEOUT_MS = 10_000;
@@ -67,6 +75,28 @@ function loadDirect(url: string): Promise<ProbeOutcome> {
   });
 }
 
+/**
+ * Turns a HEAD preflight into a probe outcome, or `fallback` when it says
+ * nothing and the image itself must be loaded:
+ * - no answer, a refused request (status 0) or a host without HEAD (405/501) → `fallback`;
+ * - an `ok` answer (2xx `image/*` on an allowed origin) → `hit`;
+ * - a timeout, rate limit or server error (408/429/5xx) → `error`, so it is not cached as a miss;
+ * - anything else (404, 200 text/html, off-host redirect, empty body) → `miss`.
+ */
+export function headVerdict(head: ImageHead | null): ProbeOutcome | 'fallback' {
+  if (!head || head.status === 0 || head.status === 405 || head.status === 501) return 'fallback';
+  if (head.ok) return 'hit';
+  if (head.status === 408 || head.status === 429 || head.status >= 500) return 'error';
+  return 'miss';
+}
+
+/** Direct mode: HEAD preflight through the background, <img> load only when it gives no answer. */
+async function probeDirect(url: string): Promise<ProbeOutcome> {
+  if (!isAllowedImageUrl(url)) return loadDirect(url);
+  const verdict = headVerdict(await requestImageHead(url).catch(() => null));
+  return verdict === 'fallback' ? loadDirect(url) : verdict;
+}
+
 /** Probe `url` and say whether it is a hit, a definite miss or unknown. Runs through the shared limiter; never rejects. */
 export async function probeOutcome(url: string): Promise<ProbeOutcome> {
   try {
@@ -75,7 +105,7 @@ export async function probeOutcome(url: string): Promise<ProbeOutcome> {
       if (!res.ok) return 'error';
       return res.data !== null ? 'hit' : 'miss';
     }
-    return await limit(() => loadDirect(url));
+    return await limit(() => probeDirect(url));
   } catch {
     return 'error';
   }
