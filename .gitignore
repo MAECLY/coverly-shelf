@@ -9,3 +9,5 @@ web-ext.config.ts
 test-results/
 playwright-report/
 .e2e-profile/
+.venv/
+__pycache__/
