@@ -381,6 +381,97 @@ async function waitForThumbs(page: Page, timeout = 45_000): Promise<boolean> {
     .catch(() => false);
 }
 
+/** State of the cover's zoom affordance (the `.cs-stage` button) and its dialog. */
+function zoomState(page: Page) {
+  return page.evaluate((host) => {
+    const h = document.querySelector(host);
+    const root = h?.shadowRoot;
+    const stage = root?.querySelector<HTMLElement>('.cs-stage') ?? null;
+    const dialog = root?.querySelector<HTMLElement>('[role="dialog"]') ?? null;
+    const img = dialog?.querySelector<HTMLImageElement>('img.cs-lightbox-img') ?? null;
+    const active = root?.activeElement ?? null;
+    return {
+      role: stage?.getAttribute('role') ?? null,
+      tabindex: stage?.getAttribute('tabindex') ?? null,
+      label: stage?.getAttribute('aria-label') ?? null,
+      cursor: stage ? getComputedStyle(stage).cursor : '',
+      dialog: !!dialog,
+      dialogLabel: dialog?.getAttribute('aria-label') ?? null,
+      imgSrc: img?.getAttribute('src') ?? null,
+      imgLoaded: !!img && img.complete && img.naturalWidth > 0,
+      focusInDialog: document.activeElement === h && !!active && !!dialog && dialog.contains(active),
+      focusOnStage: document.activeElement === h && !!stage && active === stage,
+      outline: stage && active === stage ? getComputedStyle(stage).outlineStyle : '',
+    };
+  }, COVER_HOST);
+}
+
+/**
+ * Cover zoom on a title page whose cover shows real art: the box is a labelled
+ * button, click / Enter / Space open the full-size art in the lightbox, Tab is
+ * trapped, Esc closes and focus goes back to the box. Clicks elsewhere on the
+ * page never open it.
+ */
+async function checkCoverZoom(page: Page, tag: string, expectedSrc: string | null): Promise<void> {
+  const stage = page.locator(`${COVER_HOST} .cs-stage`);
+  const z0 = await zoomState(page);
+  check(z0.role === 'button' && z0.tabindex === '0', `${tag}: cover is a focusable button (role=button, tabindex=0)`, JSON.stringify(z0));
+  check(!!z0.label && z0.label.includes('full size'), `${tag}: cover button has an accessible label`, String(z0.label));
+  check(z0.cursor === 'zoom-in', `${tag}: cover shows a zoom-in cursor`, z0.cursor);
+
+  // A click elsewhere on the card (the technical table) opens nothing.
+  await page.locator('.basic-meta > p').last().click();
+  check(!(await zoomState(page)).dialog, `${tag}: clicking the technical table does not open the viewer`);
+
+  await stage.scrollIntoViewIfNeeded();
+  await stage.click();
+  await page
+    .waitForFunction(
+      (host) => {
+        const i = document.querySelector(host)?.shadowRoot?.querySelector<HTMLImageElement>('[role="dialog"] img.cs-lightbox-img');
+        return !!i && i.complete && i.naturalWidth > 0;
+      },
+      COVER_HOST,
+      { timeout: 10_000 },
+    )
+    .catch(() => null);
+  const z1 = await zoomState(page);
+  check(z1.dialog && z1.imgLoaded, `${tag}: clicking the cover opens the full-size art in a dialog`, JSON.stringify({ src: z1.imgSrc, loaded: z1.imgLoaded }));
+  if (expectedSrc) check(z1.imgSrc === expectedSrc, `${tag}: the viewer shows the resolved full-size art`, String(z1.imgSrc));
+  check(z1.focusInDialog, `${tag}: focus moves into the dialog`);
+  if (tag === '1814') await page.screenshot({ style: HIDE_DOWNLOAD_QR, path: join(shotsDir, 'cover-zoom-1440.png') });
+
+  let trapped = true;
+  for (let i = 0; i < 4; i += 1) {
+    await page.keyboard.press('Tab');
+    if (!(await zoomState(page)).focusInDialog) trapped = false;
+  }
+  check(trapped, `${tag}: Tab keeps focus inside the cover viewer (4 presses)`);
+  await page.keyboard.press('Escape');
+  await sleep(200);
+  const z2 = await zoomState(page);
+  check(!z2.dialog, `${tag}: Escape closes the cover viewer`);
+  check(z2.focusOnStage, `${tag}: focus returns to the cover`);
+  check(z2.outline !== '' && z2.outline !== 'none', `${tag}: the focused cover shows a focus ring`, z2.outline);
+
+  await page.keyboard.press('Enter');
+  await sleep(300);
+  check((await zoomState(page)).dialog, `${tag}: Enter on the focused cover opens the viewer`);
+  await page.keyboard.press('Escape');
+  await sleep(200);
+
+  const scrollBefore = await page.evaluate(() => scrollY);
+  await page.keyboard.press('Space');
+  await sleep(300);
+  const z3 = await zoomState(page);
+  const scrollAfter = await page.evaluate(() => scrollY);
+  check(z3.dialog, `${tag}: Space on the focused cover opens the viewer`);
+  check(scrollAfter === scrollBefore, `${tag}: Space does not scroll the page`, `${scrollBefore} -> ${scrollAfter}`);
+  await page.keyboard.press('Escape');
+  await sleep(200);
+  check((await zoomState(page)).focusOnStage, `${tag}: focus is back on the cover after Space + Escape`);
+}
+
 async function main(): Promise<void> {
   mkdirSync(shotsDir, { recursive: true });
   const headless = process.env.E2E_HEADED !== '1';
@@ -506,6 +597,10 @@ async function main(): Promise<void> {
       }, GALLERY_HOST);
       check(focusBack, '1814: focus returns to the first thumbnail');
     }
+
+    // ── 5b. Cover zoom (same page)
+    console.log('\n── 5b. cover zoom on /t/1814');
+    await checkCoverZoom(page, '1814', s1.src);
 
     // ── 6. Idempotence
     console.log('\n── 6. idempotence');
