@@ -58,7 +58,12 @@ export const GAMETDB = {
     { type: 'coverHQ', ext: 'jpg', retailOnly: false },
     { type: 'cover', ext: 'jpg', retailOnly: false },
   ] satisfies GameTdbType[],
-  /** Other verified types, kept for the listing pages and future features. */
+  /**
+   * List rows: only the 160×144 `cover` (~11 KB). One type per region keeps a
+   * 75-row listing page to a few GameTDB requests per row (it rate-limits bursts).
+   */
+  thumbTypes: [{ type: 'cover', ext: 'jpg', retailOnly: false }] satisfies GameTdbType[],
+  /** Other verified types, kept for future features. */
   otherTypes: [
     { type: 'coverM', ext: 'jpg', retailOnly: false },
     { type: 'box', ext: 'png', retailOnly: false },
@@ -75,17 +80,20 @@ export const GAMETDB = {
  * Verified 2026-10-25: KQ9E has cover, coverS (png), coverM, coverHQ and box in US;
  * KF8E → US, KG4J → JA, KASV/KMQF/KBID/KFMU/KNRH/KKGP → EN. GameTDB files every
  * DSiWare letter except E and J under EN (no DE/FR/AU/NL/KO hits); Korean K codes
- * (KZIK, …) have no art. Not wired yet: the product-code regex only accepts CTR/KTR.
+ * (KZIK, …) have no art. Libretro has almost no DSi box art, so TWL codes skip it.
  */
 export const GAMETDB_DS = {
   base: 'https://art.gametdb.com/ds',
-  /** `cover` is 160×144 (~11 KB), the right size for list rows. */
+  /** Title pages: 768×680 first, then the 160×144 cover. */
   coverTypes: [
-    { type: 'cover', ext: 'jpg', retailOnly: false },
     { type: 'coverHQ', ext: 'jpg', retailOnly: false },
+    { type: 'cover', ext: 'jpg', retailOnly: false },
   ] satisfies GameTdbType[],
+  /** List rows: `cover` is 160×144 (~11 KB). `coverS` is a png, smaller in pixels but larger in bytes. */
+  thumbTypes: [{ type: 'cover', ext: 'jpg', retailOnly: false }] satisfies GameTdbType[],
   regionByChar: { E: 'US', J: 'JA' } as Readonly<Record<string, GameTdbRegion>>,
   /** Every other DSiWare letter (P, V, D, F, I, S, H, U, T, O…) lives under EN. */
+  defaultRegion: 'EN' as GameTdbRegion,
   fallbackRegions: ['EN', 'US'] as readonly GameTdbRegion[],
 } as const;
 
@@ -111,5 +119,24 @@ export const IMAGE_MODE: 'direct' | 'background' = 'direct';
 
 export const MAX_CONCURRENT_REQUESTS = 4;
 export const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+/**
+ * hShop title lookups for list rows that show no product code (the "Top
+ * content" list): `/t/{id}` → GameInfo. A title's product code never changes,
+ * so hits and definite misses are kept for 30 days.
+ */
+export const LOOKUP = {
+  ttlMs: 30 * 24 * 60 * 60 * 1000,
+  /** Requests to hShop itself in flight at once, separate from the artwork limiter. */
+  maxConcurrent: 2,
+  timeoutMs: 15_000,
+} as const;
+
+/**
+ * hShop categories whose titles never have box art (every themes row is
+ * `CTR-N-THEME`). Their "Top content" rows are not looked up, which saves up
+ * to 50 hShop requests per page view.
+ */
+export const NO_ART_CATEGORIES: readonly string[] = ['themes'];
+
 /** Bump when the cache shape or the fallback chain changes. */
 export const CACHE_VERSION = 2;
