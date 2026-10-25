@@ -23,7 +23,11 @@ const W_COMPACT = '56px';
 /** Under hShop's 1200px breakpoint, where rows become columns. */
 const W_MAIN_MOBILE = '64px';
 const W_COMPACT_MOBILE = '48px';
+/** Phones: every pixel of `.base-info` saved keeps long names from wrapping. */
+const W_MAIN_PHONE = '52px';
+const W_COMPACT_PHONE = '40px';
 const GAP = '10px';
+const GAP_PHONE = '8px';
 
 const ROW = `[${ENHANCED_ATTR}]:has(> ${THUMB_HOST})`;
 const COMPACT_ROW = `[${ENHANCED_ATTR}]:has(> ${THUMB_HOST}[data-compact])`;
@@ -39,6 +43,10 @@ ${INFO} { width: calc(50% - var(--cs-thumb-w) - var(--cs-thumb-gap)); }
   ${COMPACT_ROW} { --cs-thumb-w: ${W_COMPACT_MOBILE}; }
   ${INFO} { width: calc(100% - var(--cs-thumb-w) - var(--cs-thumb-gap)); }
   ${META} { width: 100%; }
+}
+@media (max-width: 600px) {
+  ${ROW} { --cs-thumb-w: ${W_MAIN_PHONE}; --cs-thumb-gap: ${GAP_PHONE}; }
+  ${COMPACT_ROW} { --cs-thumb-w: ${W_COMPACT_PHONE}; }
 }
 `;
 
