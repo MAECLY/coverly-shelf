@@ -1,0 +1,1827 @@
+
+<!DOCTYPE html>
+
+<html class="nospace" lang="en">
+	<head>
+		<meta charset="UTF-8"/>
+		<link as="style" rel="preload" type="text/css" href="/css/dark.css?v=2.10">
+		<link as="style" rel="preload" type="text/css" href="/css/light.css?v=2.10">
+		<link as="style" rel="preload" type="text/css" href="/css/main.css?v=2.10">
+
+		<link as="script" href="/js/base.min.js?v=2.10">
+
+		<link rel="stylesheet" type="text/css" href="/css/dark.css?v=2.10">
+		<link rel="stylesheet" type="text/css" href="/css/light.css?v=2.10">
+		<link rel="stylesheet" type="text/css" href="/css/main.css?v=2.10">
+
+
+				<link rel="stylesheet" type="text/css" href="/css/list.css?v=2.10">
+				<link rel="stylesheet" type="text/css" href="/css/scat-list.css?v=2.10">
+
+
+		<title>Virtual Console &#x279E; North America | hShop</title>
+		<meta name="title" content="Virtual Console &#x279E; North America | hShop">
+		<meta name="description" content="Virtual Console titles released in North America.">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta property="og:type" content="website">
+		<meta property="og:site_name" content="hShop">
+		<meta property="og:title" content="Virtual Console &#x279E; North America | hShop">
+		<meta property="og:description" content="Virtual Console titles released in North America.">
+		<meta name="theme-color" content="#18ff00">
+	</head>
+
+	<body class="dark-mode nospace">
+		<header>
+			<nav class="nav-container">
+				<div class="nav-header">
+					<a draggable="false" href="/">
+						<img draggable="false" src="/img/hs.png?v=2.10" alt="The hShop Logo."/>
+					</a>
+
+					<div class="mobilenav">
+						<div id="ths-drop" class="dropdown">
+							<a id="ths-link" title="3hs - the official hShop 3DS client" class="green bold dropdown-entry" href="/3hs">3hs</a>
+							<div class="dropdown-arrow dropdown-entry"></div>
+							<div id="ths-drop-list-container">
+								<div class="hidden dropdown-list" id="ths-drop-list">
+									<a class="green bold" href="/3hs">Download 3hs</a>
+									<a href="/3hs/themegen">HSTX Theme Generator</a>
+									<a href="/3hs/hwavgen">HWAV Music Generator</a>
+								</div>
+							</div>
+						</div>
+						<div class="spacer l1 hidden-desktop dynamic-mobile"></div>
+							<a draggable="false" href="/donate" class="pink bold">Donate</a>
+					</div>
+
+					<a id="toggle-navbar" class="hidden-desktop" draggable="false">
+						<img draggable="false" src="/img/nav-more.png?v=2.10" alt="The button used to toggle the navigation bar, only shown on small screens and mobile devices.">
+					</a>
+				</div>
+				<div class="spacer l1 hidden-mobile dynamic-mobile"></div>
+				<div id="nav-content" class="nav-hidden">
+					<div class="nav-list nospace">
+								<a title="Nintendo 3DS games." href="/c/games">Games</a>
+								<a title="Update data for Nintendo 3DS titles." href="/c/updates">Updates</a>
+								<a title="Downloadable content (DLC)." href="/c/dlc">DLC</a>
+								<a title="Official Virtual Console titles." href="/c/virtual-console">Virtual Console</a>
+								<a title="Nintendo DSiWare for the 3DS." href="/c/dsiware">DSiWare</a>
+								<a title="Videos, trailers or movies released on the 3DS." href="/c/videos">Videos</a>
+								<a title="Miscellaneous content." href="/c/extras">Extras</a>
+								<a title="Official Nintendo 3DS themes converted to an Anemone3DS compatible format." href="/c/themes">Themes</a>
+						<a draggable="false" id="msearch-icon" class="extra-icon hidden-desktop" title="Click here to get to the search page." href="/search">
+							<svg draggable="false" alt="An image of a magnifying glass." width="16" height="16" viewBox="0 0 16 16">
+								<path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"></path>
+							</svg>
+						</a>
+						<a draggable="false" id="mrandtitle-icon" class="extra-icon hidden-desktop" title="Click here to land on a random title!" href="/t/random">
+							<img class="rand-title" draggable="false" src="/img/dice.gif?v=2.10" alt="An animated image of a dice.">
+						</a>
+					</div>
+				</div>
+				<div class="spacer l1 hidden-mobile dynamic-mobile"></div>
+				<div class="nav-icons hidden-mobile">
+					<a draggable="false" class="extra-icon" title="Click here to get to the search page." href="/search">
+						<svg draggable="false" alt="An image of a magnifying glass." width="16" height="16" viewBox="0 0 16 16">
+							<path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"></path>
+						</svg>
+					</a>
+					<a draggable="false" class="extra-icon" title="Click here to land on a random title!" href="/t/random">
+						<img class="rand-title" draggable="false" src="/img/dice.gif?v=2.10" alt="An animated image of a dice.">
+					</a>
+				</div>
+			</nav>
+		</header>
+
+		<main>
+				<div class="donate-hdr">
+					<div class="donate-msg">
+						<h3 class="yellow tcenter nospace">If you found hShop useful, please <a class="pink bold underline" href="/donate">make a donation!</a></h3>
+					</div>
+				</div>
+
+				<div class="sitedesc">
+					<h1 class="nospace bold">Virtual Console &#x279E; North America</h1>
+						<h3 class="nospace bold">Virtual Console titles released in North America.</h3>
+				</div>
+
+			
+		<div class="sortsel-container">
+			<div class="sel-container">
+				<label for="sort-method-sel">Sort By:</label>
+				<select id="sort-method-sel" class="sortsel">
+					<option value="none" selected>None</option>
+					<option value="size">Size</option>
+					<option value="name">Name</option>
+					<option value="added_date">Added Date</option>
+					<option value="updated_date">Updated Date</option>
+					<option value="title_id">Title ID</option>
+					<option value="id">ID</option>
+					<option value="downloads">Downloads</option>
+				</select>
+			</div>
+			<div class="sel-container">
+				<label for="sort-order-sel">Sort Direction:</label>
+				<select id="sort-order-sel" class="sortsel">
+					<option value="none" selected>None</option>
+					<option value="ascending">Ascending</option>
+					<option value="descending">Descending</option>
+				</select>
+			</div>
+		</div>
+
+
+<div class="list-container">
+	<div class="list pre-top">
+		<div class="next-container">
+			<span class="nospace">showing 1 - 25 of 197</span>
+			<div class="spacer l3"></div>
+			<div class="count-selector">
+				<span>showing</span>
+				<select id="countsel1">
+					<option value="10" >10</option>
+					<option value="25" selected>25</option>
+					<option value="50" >50</option>
+					<option value="100" >100</option>
+				</select>
+				<span>titles</span>
+			</div>
+			<div class="next">
+					<div class="control-row">
+						<div class="spacer l3"></div>
+						<a class="green bold" href="/c/virtual-console/s/north-america?count=25&amp;offset=25">show next 25</a>
+					</div>
+			</div>
+		</div>
+		<div class="elements">
+				<a href="/t/3629" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">Mega Man&#x2122; Xtreme</h3>
+	<h4>content in <span class="green bold">virtual-console</span> ➞ <span class="green bold">north-america</span></h4>
+		<div class="meta">
+					<div class="meta-content">
+						<span class="green bold">Virtual Console: <span class="yellow bold">Game Boy Color</span></span>
+					</div>
+
+		</div>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">3629</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">00040000000EFE00</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">4.35 MiB</span>
+		<span class="yellow bold hover-on">34 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.0.0 (0)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-N-QAZE</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/3671" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">Sonic Drift 2</h3>
+	<h4>content in <span class="green bold">virtual-console</span> ➞ <span class="green bold">north-america</span></h4>
+		<div class="meta">
+					<div class="meta-content">
+						<span class="green bold">Virtual Console: <span class="yellow bold">Game Gear</span></span>
+					</div>
+
+		</div>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">3671</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">000400000008BD00</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">5.64 MiB</span>
+		<span class="yellow bold hover-on">45 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.0.0 (0)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-N-GADE</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/3607" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">Mach Rider&#x2122;</h3>
+	<h4>content in <span class="green bold">virtual-console</span> ➞ <span class="green bold">north-america</span></h4>
+		<div class="meta">
+					<div class="meta-content">
+						<span class="green bold">Virtual Console: <span class="yellow bold">NES</span></span>
+					</div>
+
+		</div>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">3607</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">00040000000DEC00</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">6.11 MiB</span>
+		<span class="yellow bold hover-on">48 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.0.0 (0)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-N-TC8E</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/3621" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">Mega Man&#x2122; 6</h3>
+	<h4>content in <span class="green bold">virtual-console</span> ➞ <span class="green bold">north-america</span></h4>
+		<div class="meta">
+					<div class="meta-content">
+						<span class="green bold">Virtual Console: <span class="yellow bold">NES</span></span>
+					</div>
+
+		</div>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">3621</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">00040000000A1600</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">6.81 MiB</span>
+		<span class="yellow bold hover-on">54 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.0.0 (0)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-N-TBFE</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/3697" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">Tennis</h3>
+	<h4>content in <span class="green bold">virtual-console</span> ➞ <span class="green bold">north-america</span></h4>
+		<div class="meta">
+					<div class="meta-content">
+						<span class="green bold">Virtual Console: <span class="yellow bold">Game Boy</span></span>
+					</div>
+
+		</div>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">3697</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">0004000000041100</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">3.30 MiB</span>
+		<span class="yellow bold hover-on">26 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.1.0 (16)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-N-RADE</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/3563" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">Donkey Kong Land III&#x2122;</h3>
+	<h4>content in <span class="green bold">virtual-console</span> ➞ <span class="green bold">north-america</span></h4>
+		<div class="meta">
+					<div class="meta-content">
+						<span class="green bold">Virtual Console: <span class="yellow bold">Game Boy</span></span>
+					</div>
+
+		</div>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">3563</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">000400000011A600</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">3.78 MiB</span>
+		<span class="yellow bold hover-on">30 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.0.0 (0)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-N-RCKE</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/3643" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">PAC-MAN&#xAE;</h3>
+	<h4>content in <span class="green bold">virtual-console</span> ➞ <span class="green bold">north-america</span></h4>
+		<div class="meta">
+					<div class="meta-content">
+						<span class="green bold">Virtual Console: <span class="yellow bold">NES</span></span>
+					</div>
+
+		</div>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">3643</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">000400000009A000</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">6.15 MiB</span>
+		<span class="yellow bold hover-on">49 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.0.0 (0)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-N-TA6E</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/3631" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">Metroid&#x2122; II - Return of Samus&#x2122;</h3>
+	<h4>content in <span class="green bold">virtual-console</span> ➞ <span class="green bold">north-america</span></h4>
+		<div class="meta">
+					<div class="meta-content">
+						<span class="green bold">Virtual Console: <span class="yellow bold">Game Boy</span></span>
+					</div>
+
+		</div>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">3631</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">0004000000050400</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">3.83 MiB</span>
+		<span class="yellow bold hover-on">30 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.1.0 (16)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-N-RA4E</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/3630" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">Metroid&#x2122; Fusion</h3>
+	<h4>content in <span class="green bold">virtual-console</span> ➞ <span class="green bold">north-america</span></h4>
+		<div class="meta">
+					<div class="meta-content">
+						<span class="green bold">Virtual Console: <span class="yellow bold">Game Boy Advance</span></span>
+					</div>
+
+		</div>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">3630</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">0004000000075600</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">9.00 MiB</span>
+		<span class="yellow bold hover-on">72 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.1.0 (16)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-N-PAEE</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/3312" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">Breath of Fire&#x2122;</h3>
+	<h4>content in <span class="green bold">virtual-console</span> ➞ <span class="green bold">north-america</span></h4>
+		<div class="meta">
+					<div class="meta-content">
+						<span class="green bold">Virtual Console: <span class="yellow bold">SNES</span></span>
+					</div>
+
+				<div class="meta-content">
+					<span class="yellow bold">Compatible only with New 3DS systems</span>
+				</div>
+		</div>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">3312</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">000400000F705400</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">6.60 MiB</span>
+		<span class="yellow bold hover-on">52 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.0.0 (0)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">KTR-N-UBAE</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/3628" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">Mega Man&#x2122; Xtreme 2</h3>
+	<h4>content in <span class="green bold">virtual-console</span> ➞ <span class="green bold">north-america</span></h4>
+		<div class="meta">
+					<div class="meta-content">
+						<span class="green bold">Virtual Console: <span class="yellow bold">Game Boy Color</span></span>
+					</div>
+
+		</div>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">3628</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">00040000000F0000</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">4.55 MiB</span>
+		<span class="yellow bold hover-on">36 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.0.0 (0)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-N-QA2E</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/3550" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">Clu Clu Land&#x2122;</h3>
+	<h4>content in <span class="green bold">virtual-console</span> ➞ <span class="green bold">north-america</span></h4>
+		<div class="meta">
+					<div class="meta-content">
+						<span class="green bold">Virtual Console: <span class="yellow bold">NES</span></span>
+					</div>
+
+		</div>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">3550</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">00040000000CDB00</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">11.71 MiB</span>
+		<span class="yellow bold hover-on">93 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.0.0 (0)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-N-TCRE</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/3609" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">Mario Golf&#x2122;</h3>
+	<h4>content in <span class="green bold">virtual-console</span> ➞ <span class="green bold">north-america</span></h4>
+		<div class="meta">
+					<div class="meta-content">
+						<span class="green bold">Virtual Console: <span class="yellow bold">Game Boy Color</span></span>
+					</div>
+
+		</div>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">3609</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">0004000000093C00</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">5.56 MiB</span>
+		<span class="yellow bold hover-on">44 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.0.0 (0)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-N-QAQE</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/3316" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">Donkey Kong Country 3 Dixie Kong&#x27;s Double Trouble&#x2122;</h3>
+	<h4>content in <span class="green bold">virtual-console</span> ➞ <span class="green bold">north-america</span></h4>
+		<div class="meta">
+					<div class="meta-content">
+						<span class="green bold">Virtual Console: <span class="yellow bold">SNES</span></span>
+					</div>
+
+				<div class="meta-content">
+					<span class="yellow bold">Compatible only with New 3DS systems</span>
+				</div>
+		</div>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">3316</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">000400000F702F00</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">9.55 MiB</span>
+		<span class="yellow bold hover-on">76 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.0.0 (0)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">KTR-N-UARE</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/3677" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">Star Soldier&#x2122;</h3>
+	<h4>content in <span class="green bold">virtual-console</span> ➞ <span class="green bold">north-america</span></h4>
+		<div class="meta">
+					<div class="meta-content">
+						<span class="green bold">Virtual Console: <span class="yellow bold">NES</span></span>
+					</div>
+
+		</div>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">3677</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">00040000000A4B00</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">6.22 MiB</span>
+		<span class="yellow bold hover-on">49 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.0.0 (0)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-N-TBLE</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/3172" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">Final Fight 3&#x2122;</h3>
+	<h4>content in <span class="green bold">virtual-console</span> ➞ <span class="green bold">north-america</span></h4>
+		<div class="meta">
+					<div class="meta-content">
+						<span class="green bold">Virtual Console: <span class="yellow bold">SNES</span></span>
+					</div>
+
+				<div class="meta-content">
+					<span class="yellow bold">Compatible only with New 3DS systems</span>
+				</div>
+		</div>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">3172</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">000400000F704E00</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">7.63 MiB</span>
+		<span class="yellow bold hover-on">61 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.0.0 (0)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">KTR-N-UA7E</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/3632" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">Metroid&#x2122;</h3>
+	<h4>content in <span class="green bold">virtual-console</span> ➞ <span class="green bold">north-america</span></h4>
+		<div class="meta">
+					<div class="meta-content">
+						<span class="green bold">Virtual Console: <span class="yellow bold">NES</span></span>
+					</div>
+
+		</div>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">3632</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">000400000006EE00</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">4.41 MiB</span>
+		<span class="yellow bold hover-on">35 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">1.0.0 (1024)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-N-TADE</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/3593" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">Harvest Moon&#xAE;</h3>
+	<h4>content in <span class="green bold">virtual-console</span> ➞ <span class="green bold">north-america</span></h4>
+		<div class="meta">
+					<div class="meta-content">
+						<span class="green bold">Virtual Console: <span class="yellow bold">Game Boy Color</span></span>
+					</div>
+
+		</div>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">3593</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">0004000000099B00</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">4.55 MiB</span>
+		<span class="yellow bold hover-on">36 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.0.0 (0)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-N-QASE</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/3688" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">Super Mario Bros.&#x2122;</h3>
+	<h4>content in <span class="green bold">virtual-console</span> ➞ <span class="green bold">north-america</span></h4>
+		<div class="meta">
+					<div class="meta-content">
+						<span class="green bold">Virtual Console: <span class="yellow bold">NES</span></span>
+					</div>
+
+		</div>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">3688</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">000400000006E500</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">4.33 MiB</span>
+		<span class="yellow bold hover-on">34 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">1.0.0 (1024)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-N-TAAE</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/3707" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">The Sword of Hope II</h3>
+	<h4>content in <span class="green bold">virtual-console</span> ➞ <span class="green bold">north-america</span></h4>
+		<div class="meta">
+					<div class="meta-content">
+						<span class="green bold">Virtual Console: <span class="yellow bold">Game Boy</span></span>
+					</div>
+
+		</div>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">3707</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">0004000000083100</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">3.56 MiB</span>
+		<span class="yellow bold hover-on">28 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.0.0 (0)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-N-RBVE</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/3556" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">DEMON&#x27;S CREST&#x2122;</h3>
+	<h4>content in <span class="green bold">virtual-console</span> ➞ <span class="green bold">north-america</span></h4>
+		<div class="meta">
+					<div class="meta-content">
+						<span class="green bold">Virtual Console: <span class="yellow bold">SNES</span></span>
+					</div>
+
+				<div class="meta-content">
+					<span class="yellow bold">Compatible only with New 3DS systems</span>
+				</div>
+		</div>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">3556</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">000400000F706800</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">6.80 MiB</span>
+		<span class="yellow bold hover-on">54 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.0.0 (0)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">KTR-N-UBHE</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/3703" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">The Legend of Zelda&#x2122; Oracle of Seasons&#x2122;</h3>
+	<h4>content in <span class="green bold">virtual-console</span> ➞ <span class="green bold">north-america</span></h4>
+		<div class="meta">
+					<div class="meta-content">
+						<span class="green bold">Virtual Console: <span class="yellow bold">Game Boy Color</span></span>
+					</div>
+
+		</div>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">3703</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">0004000000058C00</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">4.89 MiB</span>
+		<span class="yellow bold hover-on">39 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.0.0 (0)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-N-QACE</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/3595" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">Kid Icarus&#x2122; Of Myths and Monsters</h3>
+	<h4>content in <span class="green bold">virtual-console</span> ➞ <span class="green bold">north-america</span></h4>
+		<div class="meta">
+					<div class="meta-content">
+						<span class="green bold">Virtual Console: <span class="yellow bold">Game Boy</span></span>
+					</div>
+
+		</div>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">3595</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">0004000000069400</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">3.69 MiB</span>
+		<span class="yellow bold hover-on">29 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.0.0 (0)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-N-RBLE</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/3603" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">Legend of the River King&#x2122;</h3>
+	<h4>content in <span class="green bold">virtual-console</span> ➞ <span class="green bold">north-america</span></h4>
+		<div class="meta">
+					<div class="meta-content">
+						<span class="green bold">Virtual Console: <span class="yellow bold">Game Boy Color</span></span>
+					</div>
+
+		</div>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">3603</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">0004000000099D00</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">4.69 MiB</span>
+		<span class="yellow bold hover-on">37 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.0.0 (0)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-N-QATE</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/3554" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">Crystal Warriors</h3>
+	<h4>content in <span class="green bold">virtual-console</span> ➞ <span class="green bold">north-america</span></h4>
+		<div class="meta">
+					<div class="meta-content">
+						<span class="green bold">Virtual Console: <span class="yellow bold">Game Gear</span></span>
+					</div>
+
+		</div>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">3554</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">000400000009C100</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">5.66 MiB</span>
+		<span class="yellow bold hover-on">45 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.0.0 (0)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-N-GANE</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+		</div>
+			<div class="next-container">
+				<span class="nospace">showing 1 - 25 of 197</span>
+				<div class="spacer l3"></div>
+				<div class="count-selector">
+					<span>showing</span>
+					<select id="countsel2">
+						<option value="10" >10</option>
+						<option value="25" selected>25</option>
+						<option value="50" >50</option>
+						<option value="100" >100</option>
+					</select>
+					<span>titles</span>
+				</div>
+				<div class="next">
+						<div class="spacer l3"></div>
+						<a class="green bold" href="/c/virtual-console/s/north-america?count=25&amp;offset=25">show next 25</a>
+				</div>
+			</div>
+	</div>
+</div>		<h2 class="align-center nospace">Top content in this subcategory:</h2>
+
+<div class="list-container">
+	<div class="list top-list">
+		<div class="elements">
+				<a href="/t/3704" class="list-entry block-link">
+					<div class="base-info">
+						<h3>1. <span class="green bold">The Legend of Zelda&#x2122; The Minish Cap</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">335021</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3685" class="list-entry block-link">
+					<div class="base-info">
+						<h3>2. <span class="green bold">Super Mario Bros.&#x2122; 3</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">260316</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3692" class="list-entry block-link">
+					<div class="base-info">
+						<h3>3. <span class="green bold">Super Mario World&#x2122;</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">247667</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3688" class="list-entry block-link">
+					<div class="base-info">
+						<h3>4. <span class="green bold">Super Mario Bros.&#x2122;</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">220669</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3630" class="list-entry block-link">
+					<div class="base-info">
+						<h3>5. <span class="green bold">Metroid&#x2122; Fusion</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">207204</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3701" class="list-entry block-link">
+					<div class="base-info">
+						<h3>6. <span class="green bold">The Legend of Zelda&#x2122; Link&#x27;s Awakening DX&#x2122;</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">203794</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3700" class="list-entry block-link">
+					<div class="base-info">
+						<h3>7. <span class="green bold">The Legend of Zelda&#x2122; A Link to the Past</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">194296</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3601" class="list-entry block-link">
+					<div class="base-info">
+						<h3>8. <span class="green bold">Kirby&#x2122; &amp; The Amazing Mirror</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">189726</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3702" class="list-entry block-link">
+					<div class="base-info">
+						<h3>9. <span class="green bold">The Legend of Zelda&#x2122; Oracle of Ages&#x2122;</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">177114</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3719" class="list-entry block-link">
+					<div class="base-info">
+						<h3>10. <span class="green bold">Yoshi&#x27;s Island&#x2122; Super Mario&#x2122; Advance 3</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">176250</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3705" class="list-entry block-link">
+					<div class="base-info">
+						<h3>11. <span class="green bold">The Legend of Zelda&#x2122;</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">171372</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3703" class="list-entry block-link">
+					<div class="base-info">
+						<h3>12. <span class="green bold">The Legend of Zelda&#x2122; Oracle of Seasons&#x2122;</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">168834</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3168" class="list-entry block-link">
+					<div class="base-info">
+						<h3>13. <span class="green bold">EarthBound&#x2122;</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">167046</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3610" class="list-entry block-link">
+					<div class="base-info">
+						<h3>14. <span class="green bold">Mario Kart&#x2122; Super Circuit&#x2122;</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">163281</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3684" class="list-entry block-link">
+					<div class="base-info">
+						<h3>15. <span class="green bold">Super Mario Bros.&#x2122; 2</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">156098</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3698" class="list-entry block-link">
+					<div class="base-info">
+						<h3>16. <span class="green bold">TETRIS&#xAE;</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">156019</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3712" class="list-entry block-link">
+					<div class="base-info">
+						<h3>17. <span class="green bold">Wario Land&#x2122; 4</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">136350</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3693" class="list-entry block-link">
+					<div class="base-info">
+						<h3>18. <span class="green bold">Super Metroid&#x2122;</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">133536</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3691" class="list-entry block-link">
+					<div class="base-info">
+						<h3>19. <span class="green bold">Super Mario Land&#x2122;</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">133042</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3579" class="list-entry block-link">
+					<div class="base-info">
+						<h3>20. <span class="green bold">Fire Emblem&#x2122; The Sacred Stones</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">131321</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3686" class="list-entry block-link">
+					<div class="base-info">
+						<h3>21. <span class="green bold">Super Mario Bros.&#x2122; Deluxe</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">131306</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3153" class="list-entry block-link">
+					<div class="base-info">
+						<h3>22. <span class="green bold">Donkey Kong Country&#x2122;</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">130344</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3721" class="list-entry block-link">
+					<div class="base-info">
+						<h3>23. <span class="green bold">Zelda II&#x2122; - The Adventure of Link&#x2122;</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">119027</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3716" class="list-entry block-link">
+					<div class="base-info">
+						<h3>24. <span class="green bold">WarioWare&#x2122;, Inc. Mega Microgame$</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">117378</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3690" class="list-entry block-link">
+					<div class="base-info">
+						<h3>25. <span class="green bold">Super Mario Land&#x2122; 2 6 Golden Coins&#x2122;</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">115490</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3598" class="list-entry block-link">
+					<div class="base-info">
+						<h3>26. <span class="green bold">Kirby&#x27;s Dream Land&#x2122;</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">114684</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3687" class="list-entry block-link">
+					<div class="base-info">
+						<h3>27. <span class="green bold">Super Mario Bros.&#x2122; The Lost Levels</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">108187</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3608" class="list-entry block-link">
+					<div class="base-info">
+						<h3>28. <span class="green bold">Mario Bros&#x2122;</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">107795</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3675" class="list-entry block-link">
+					<div class="base-info">
+						<h3>29. <span class="green bold">Sonic&#x2122; the Hedgehog</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">103315</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3612" class="list-entry block-link">
+					<div class="base-info">
+						<h3>30. <span class="green bold">Mario vs Donkey Kong&#x2122;</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">102620</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3652" class="list-entry block-link">
+					<div class="base-info">
+						<h3>31. <span class="green bold">Pok&#xE9;mon&#x2122; Trading Card Game</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">102299</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3317" class="list-entry block-link">
+					<div class="base-info">
+						<h3>32. <span class="green bold">Donkey Kong Country&#x2122; 2 Diddy&#x27;s Kong Quest&#x2122;</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">95049</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3275" class="list-entry block-link">
+					<div class="base-info">
+						<h3>33. <span class="green bold">Super Mario Kart&#x2122;</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">94696</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3597" class="list-entry block-link">
+					<div class="base-info">
+						<h3>34. <span class="green bold">Kirby&#x27;s Dream Land&#x2122; 2</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">94212</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3673" class="list-entry block-link">
+					<div class="base-info">
+						<h3>35. <span class="green bold">Sonic The Hedgehog 2</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">91592</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3632" class="list-entry block-link">
+					<div class="base-info">
+						<h3>36. <span class="green bold">Metroid&#x2122;</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">89782</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3714" class="list-entry block-link">
+					<div class="base-info">
+						<h3>37. <span class="green bold">Wario Land&#x2122; Super Mario Land&#x2122; 3</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">85725</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3627" class="list-entry block-link">
+					<div class="base-info">
+						<h3>38. <span class="green bold">Mega Man&#x2122; X</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">85549</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3547" class="list-entry block-link">
+					<div class="base-info">
+						<h3>39. <span class="green bold">Castlevania&#xAE;</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">80833</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3643" class="list-entry block-link">
+					<div class="base-info">
+						<h3>40. <span class="green bold">PAC-MAN&#xAE;</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">80759</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3316" class="list-entry block-link">
+					<div class="base-info">
+						<h3>41. <span class="green bold">Donkey Kong Country 3 Dixie Kong&#x27;s Double Trouble&#x2122;</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">80602</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3711" class="list-entry block-link">
+					<div class="base-info">
+						<h3>42. <span class="green bold">Wario Land&#x2122; 3</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">77213</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3655" class="list-entry block-link">
+					<div class="base-info">
+						<h3>43. <span class="green bold">Punch-Out!!&#x2122; Featuring Mr. Dream</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">73156</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3577" class="list-entry block-link">
+					<div class="base-info">
+						<h3>44. <span class="green bold">F-Zero&#x2122; Maximum Velocity</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">70955</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3631" class="list-entry block-link">
+					<div class="base-info">
+						<h3>45. <span class="green bold">Metroid&#x2122; II - Return of Samus&#x2122;</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">70597</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3664" class="list-entry block-link">
+					<div class="base-info">
+						<h3>46. <span class="green bold">Shantae&#x2122;</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">69522</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3713" class="list-entry block-link">
+					<div class="base-info">
+						<h3>47. <span class="green bold">Wario Land&#x2122; II</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">69252</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3545" class="list-entry block-link">
+					<div class="base-info">
+						<h3>48. <span class="green bold">Castlevania III Dracula&#x27;s Curse</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">63415</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3680" class="list-entry block-link">
+					<div class="base-info">
+						<h3>49. <span class="green bold">Super Castlevania IV</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">62741</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/3572" class="list-entry block-link">
+					<div class="base-info">
+						<h3>50. <span class="green bold">Dr. Mario&#x2122;</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">62544</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+		</div>
+	</div>
+</div>
+		</main>
+
+		<footer>
+			<div class="nav-list">
+				<a href="/announcements">Announcements</a>
+				<a href="/wiki">Wiki</a>
+				<a href="https://discord.gg/dYKm279">Discord</a>
+				<div>
+					<img draggable="false" src="/img/sun.png?v=2.10" alt="A sun icon.">
+					<div class="dark" id="toggle-colormode">
+						<div></div>
+					</div>
+					<img draggable="false" src="/img/moon.png?v=2.10" alt="A moon icon.">
+				</div>
+
+
+					<h3 class="sitever nospace bold hidden-mobile">
+						hShop<span class="green">site v3</span>
+					</h3>
+
+
+			</div>
+		</footer>
+
+		<script src="/js/base.min.js?v=2.10"></script>
+
+
+				<script src="/js/paged.min.js?v=2.10"></script>
+				<script src="/js/scat-list.min.js?v=2.10"></script>
+	</body>
+</html>
