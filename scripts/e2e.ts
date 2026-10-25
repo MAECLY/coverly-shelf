@@ -263,9 +263,9 @@ interface ListState {
   /** No row carries more than one host. */
   oneHostPerRow: boolean;
   states: Record<string, number>;
-  /** Loaded images whose alt equals the row title. */
+  /** Thumbnails exposed to assistive tech (the row link already names the game). */
   imagesLoaded: number;
-  altMismatches: string[];
+  a11yLeaks: string[];
   artSrcs: string[];
   overflow: number;
   styleTags: number;
@@ -277,7 +277,7 @@ function listState(page: Page): Promise<ListState> {
     const hosts = [...document.querySelectorAll(host)];
     const states: Record<string, number> = {};
     let imagesLoaded = 0;
-    const altMismatches: string[] = [];
+    const a11yLeaks: string[] = [];
     const artSrcs: string[] = [];
     for (const h of hosts) {
       const thumb = h.shadowRoot?.querySelector('.cs-thumb');
@@ -287,12 +287,14 @@ function listState(page: Page): Promise<ListState> {
       if (img && img.complete && img.naturalWidth > 0) {
         imagesLoaded += 1;
         artSrcs.push(img.currentSrc || img.src);
-        const row = h.parentElement;
-        const name =
-          row?.querySelector('.base-info > h3 > span.green')?.textContent?.trim() ??
-          row?.querySelector('.base-info > h3')?.textContent?.trim() ??
-          '';
-        if (!img.alt || !name.includes(img.alt)) altMismatches.push(`${img.alt} / ${name}`);
+      }
+      // Decorative: hidden wrapper, empty alt, no image role or label inside.
+      if (
+        thumb?.getAttribute('aria-hidden') !== 'true' ||
+        (img && img.getAttribute('alt') !== '') ||
+        thumb.querySelector('[role], [aria-label]')
+      ) {
+        a11yLeaks.push(`${state}: ${h.parentElement?.getAttribute('href') ?? '?'}`);
       }
     }
     return {
@@ -310,7 +312,7 @@ function listState(page: Page): Promise<ListState> {
       oneHostPerRow: rows.every((a) => a.querySelectorAll(`:scope > ${host}`).length <= 1),
       states,
       imagesLoaded,
-      altMismatches,
+      a11yLeaks,
       artSrcs,
       overflow: document.documentElement.scrollWidth - innerWidth,
       styleTags: document.querySelectorAll('style[data-coverly-shelf-list]').length,
@@ -642,7 +644,7 @@ async function main(): Promise<void> {
     check(na.hostsPlaced, 'list NA: each host is the first child of an enhanced /t/ row');
     check(na.oneHostPerRow, 'list NA: at most one thumbnail per row');
     check(na.imagesLoaded >= 15, 'list NA: most thumbnails show box art', `${na.imagesLoaded} image(s) loaded`);
-    check(na.altMismatches.length === 0, 'list NA: thumbnail alt equals the row title', na.altMismatches.slice(0, 3).join(' | '));
+    check(na.a11yLeaks.length === 0, 'list NA: thumbnails are hidden from assistive tech (no doubled row name)', na.a11yLeaks.slice(0, 3).join(' | '));
     check(
       na.artSrcs.every((u) => !/\/3ds\/(coverHQ|coverM|coverfull|box|cart)\//.test(u)),
       'list NA: thumbnails use small art only (no coverHQ/coverM/box/cart)',

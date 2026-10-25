@@ -23,14 +23,29 @@ export function getInitials(title: string): string {
   return letters.length > 0 ? letters.toLocaleUpperCase() : '?';
 }
 
+export interface PlaceholderOptions {
+  /**
+   * True when something next to it already names the game (a listing row's
+   * link text): the placeholder is then decorative and gets no role or label.
+   */
+  decorative?: boolean;
+}
+
 /**
  * Generated stand-in cover: initials over a gradient made from hShop's own
- * tokens. Pure DOM, exposed to assistive tech as one image named after the game.
+ * tokens. Pure DOM, exposed to assistive tech as one image named after the
+ * game unless `decorative`.
  */
-export function createPlaceholder(title: string, doc: Document = document): HTMLElement {
+export function createPlaceholder(
+  title: string,
+  doc: Document = document,
+  { decorative = false }: PlaceholderOptions = {},
+): HTMLElement {
   return h(
     'div',
-    { class: 'cs-placeholder', role: 'img', 'aria-label': title },
+    decorative
+      ? { class: 'cs-placeholder', 'aria-hidden': 'true' }
+      : { class: 'cs-placeholder', role: 'img', 'aria-label': title },
     [
       h('span', { class: 'cs-placeholder-initials', 'aria-hidden': 'true' }, [getInitials(title)], doc),
       h('span', { class: 'cs-placeholder-title', 'aria-hidden': 'true' }, [title], doc),

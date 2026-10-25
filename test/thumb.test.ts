@@ -11,23 +11,23 @@ afterEach(() => {
 });
 
 describe('createThumb', () => {
-  it('starts as a busy skeleton that assistive tech skips', () => {
+  it('starts as a skeleton that assistive tech skips', () => {
     const el = createThumb({ title: 'Kid Icarus: Uprising', result: null });
     expect(el.dataset.state).toBe('loading');
-    expect(el.getAttribute('aria-busy')).toBe('true');
-    expect(el.querySelector('.cs-thumb-skeleton')?.getAttribute('aria-hidden')).toBe('true');
+    expect(el.getAttribute('aria-hidden')).toBe('true');
+    expect(el.querySelector('.cs-thumb-skeleton')).not.toBeNull();
     expect(el.querySelector('img')).toBeNull();
   });
 
-  it('renders the art with alt = title, no referrer and a credit tooltip', () => {
+  it('renders decorative art (the row link already names the game), no referrer and a credit tooltip', () => {
     const el = createThumb({ title: 'Kid Icarus: Uprising', result: { kind: 'image', url: ART, source: 'gametdb' } });
     const img = el.querySelector('img');
     expect(el.dataset.state).toBe('image');
-    expect(img?.getAttribute('alt')).toBe('Kid Icarus: Uprising');
+    expect(el.getAttribute('aria-hidden')).toBe('true');
+    expect(img?.getAttribute('alt')).toBe('');
     expect(img?.getAttribute('referrerpolicy')).toBe('no-referrer');
     expect(img?.getAttribute('src')).toBe(ART);
     expect(el.getAttribute('title')).toBe('Art: GameTDB');
-    expect(el.hasAttribute('aria-busy')).toBe(false);
   });
 
   it('prefers an explicit src (background mode data URL)', () => {
@@ -43,13 +43,23 @@ describe('createThumb', () => {
     const el = createThumb({ title: 'Kid Icarus: Uprising', result: { kind: 'placeholder' } });
     expect(el.dataset.state).toBe('placeholder');
     expect(el.querySelector('img')).toBeNull();
-    expect(el.querySelector('[role="img"]')?.getAttribute('aria-label')).toBe('Kid Icarus: Uprising');
+    // Decorative: no image role or label, and the whole thumbnail is hidden.
+    expect(el.getAttribute('aria-hidden')).toBe('true');
+    expect(el.querySelector('[role="img"], [aria-label]')).toBeNull();
     expect(el.textContent).toContain('KI');
   });
 
   it('keeps markup in titles as text', () => {
     const el = createThumb({ title: '<img src=x onerror=alert(1)>', result: { kind: 'placeholder' } });
     expect(el.querySelector('img')).toBeNull();
+  });
+
+  it('adds nothing to the row link\'s accessible name in any state', () => {
+    for (const result of [null, { kind: 'image', url: ART, source: 'gametdb' }, { kind: 'placeholder' }] as const) {
+      const el = createThumb({ title: 'Mario Kart 7', result });
+      expect(el.getAttribute('aria-hidden')).toBe('true');
+      expect(el.querySelector('[role], [aria-label], img:not([alt=""])')).toBeNull();
+    }
   });
 
   it('contains nothing interactive, so clicks follow the row link', () => {
@@ -74,7 +84,8 @@ describe('updateThumb', () => {
     const el = createThumb({ title: 'Kid Icarus: Uprising', result: null });
     updateThumb(el, { kind: 'image', url: ART, source: 'gametdb' });
     expect(el.querySelector('.cs-thumb-skeleton')).toBeNull();
-    expect(el.querySelector('img')?.getAttribute('alt')).toBe('Kid Icarus: Uprising');
+    expect(el.querySelector('img')?.getAttribute('alt')).toBe('');
+    expect(el.getAttribute('aria-hidden')).toBe('true');
   });
 
   it('never leaves a broken image: an error turns it into the placeholder', () => {
@@ -85,6 +96,8 @@ describe('updateThumb', () => {
     expect(el.dataset.state).toBe('placeholder');
     expect(el.querySelector('img')).toBeNull();
     expect(el.hasAttribute('title')).toBe(false);
+    expect(el.getAttribute('aria-hidden')).toBe('true');
+    expect(el.querySelector('[role="img"]')).toBeNull();
   });
 
   it('ignores a late error from an image that was already replaced', () => {

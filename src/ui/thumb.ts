@@ -6,9 +6,14 @@
  * inside the row's `<a>`, so it holds no buttons or links and no listeners
  * that could stop the click from following the row.
  *
+ * Decorative in every state: the thumbnail sits inside the row's link, whose
+ * text (`.base-info > h3`) already names the game, so exposing the art as an
+ * image named after the game would make screen readers say the name twice
+ * (WCAG technique H2). The wrapper is `aria-hidden` and the art has `alt=""`.
+ *
  * States, kept on `data-state`:
- * - `loading`: shimmer, hidden from assistive tech (the row already names the game);
- * - `image`: the art, `alt` = title; on load error it turns into the placeholder;
+ * - `loading`: shimmer;
+ * - `image`: the art; on load error it turns into the placeholder;
  * - `placeholder`: initials over hShop's tokens (reuses placeholder.ts).
  */
 import type { CoverResult } from '../lib/types';
@@ -17,7 +22,7 @@ import { h } from './dom';
 import { createPlaceholder } from './placeholder';
 
 export interface ThumbOptions {
-  /** Game title: the image's alt text and the placeholder's initials. */
+  /** Game title: the placeholder's initials (never announced; the row names the game). */
   title: string;
   /** null while the cover is still being resolved. */
   result: CoverResult | null;
@@ -32,10 +37,9 @@ const TITLE_KEY = 'csTitle';
 
 function showPlaceholder(el: HTMLElement, title: string, doc: Document): void {
   el.dataset.state = 'placeholder';
-  el.removeAttribute('aria-busy');
   el.removeAttribute('title');
   el.classList.remove('is-loaded');
-  el.replaceChildren(createPlaceholder(title, doc));
+  el.replaceChildren(createPlaceholder(title, doc, { decorative: true }));
 }
 
 function showImage(el: HTMLElement, title: string, url: string, tip: string, doc: Document): void {
@@ -43,7 +47,7 @@ function showImage(el: HTMLElement, title: string, url: string, tip: string, doc
     'img',
     {
       class: 'cs-thumb-art',
-      alt: title,
+      alt: '',
       decoding: 'async',
       referrerpolicy: 'no-referrer',
       draggable: 'false',
@@ -53,7 +57,6 @@ function showImage(el: HTMLElement, title: string, url: string, tip: string, doc
   );
   img.referrerPolicy = 'no-referrer';
   el.dataset.state = 'image';
-  el.removeAttribute('aria-busy');
   el.classList.remove('is-loaded');
   if (tip) el.setAttribute('title', tip);
   else el.removeAttribute('title');
@@ -88,10 +91,10 @@ export function updateThumb(el: HTMLElement, result: CoverResult, src?: string |
 
 /** A listing-row thumbnail: a skeleton when `result` is null, else the art or the placeholder. */
 export function createThumb({ title, result, src, doc = document }: ThumbOptions): HTMLElement {
-  const el = h('div', { class: 'cs-thumb', 'data-state': 'loading', 'aria-busy': 'true' }, [], doc);
+  const el = h('div', { class: 'cs-thumb', 'data-state': 'loading', 'aria-hidden': 'true' }, [], doc);
   el.dataset[TITLE_KEY] = title;
   if (result === null) {
-    el.append(h('div', { class: 'cs-thumb-skeleton', 'aria-hidden': 'true' }, [], doc));
+    el.append(h('div', { class: 'cs-thumb-skeleton' }, [], doc));
     return el;
   }
   updateThumb(el, result, src);
