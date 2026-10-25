@@ -10,10 +10,10 @@
  * the host (or this <style>) gives the row back its original layout.
  *
  * `--cs-thumb-w`, `--cs-thumb-gap`, `--cs-thumb-align` and `--cs-thumb-top`
- * are read by the host's `:host` rule in style.css, so the host size and the
+ * are read by the host rule in thumb.css, so the host size and the
  * width cut come from one place.
  */
-import { ENHANCED_ATTR } from '../../lib/selectors';
+import { ENHANCED_ATTR } from '../lib/selectors';
 
 export const THUMB_HOST = 'coverly-shelf-thumb';
 export const LAYOUT_STYLE_ATTR = 'data-coverly-shelf-list';

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { LAYOUT_CSS, injectLayoutStyle, LAYOUT_STYLE_ATTR, THUMB_HOST } from '../src/entrypoints/list.content/layout';
+import { LAYOUT_CSS, injectLayoutStyle, LAYOUT_STYLE_ATTR, THUMB_HOST } from '../src/ui/thumb-layout';
 import { ENHANCED_ATTR } from '../src/lib/selectors';
 import { createThumb, updateThumb } from '../src/ui/thumb';
 

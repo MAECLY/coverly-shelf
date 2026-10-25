@@ -246,7 +246,7 @@
   to { background-position: 0 0; }
 }
 
-.cs-placeholder {
+.cs-face .cs-placeholder {
   position: absolute;
   inset: 0;
   display: flex;
@@ -266,13 +266,13 @@
   color: var(--wb);
   text-align: center;
 }
-.cs-placeholder-initials {
+.cs-face .cs-placeholder-initials {
   font-weight: 900;
   font-size: 2.6em;
   line-height: 1;
   letter-spacing: 0.02em;
 }
-.cs-placeholder-title {
+.cs-face .cs-placeholder-title {
   margin-top: 0.6em;
   font-weight: bold;
   font-size: 0.7em;
@@ -288,6 +288,8 @@
 }
 
 /* ---------------------------------------------------------------- gallery */
+
+/* Scoped to the grid: the Related Content thumbnails (src/ui/thumb.css) reuse the `cs-thumb` name. */
 
 /* Matches hShop's `<h3 class="bold">Description:</h3>`. */
 .cs-heading {
@@ -305,7 +307,7 @@
   list-style: none;
 }
 
-.cs-thumb {
+.cs-grid .cs-thumb {
   display: block;
   width: 100%;
   aspect-ratio: 4 / 3;
@@ -315,10 +317,10 @@
   cursor: zoom-in;
   transition: background-color var(--cs-fast) ease;
 }
-.cs-thumb:hover {
+.cs-grid .cs-thumb:hover {
   background: var(--clevel-2-hover);
 }
-.cs-thumb-img {
+.cs-grid .cs-thumb-img {
   width: 100%;
   height: 100%;
   object-fit: contain; /* 3DS shots may stack both screens */

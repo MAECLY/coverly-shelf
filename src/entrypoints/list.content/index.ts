@@ -15,7 +15,7 @@
  * shows is stored for those lookups (`rememberShownCodes`), so a title seen
  * on any listing page never needs its `/t/{id}` fetched.
  */
-import './style.css';
+import '../../ui/thumb.css';
 import { createShadowRootUi, defineContentScript, type ContentScriptContext, type ShadowRootContentScriptUi } from '#imports';
 import { extractListEntries, type ListEntry } from '../../lib/extract';
 import { lookupGameInfo, rememberShownCodes } from '../../lib/lookup';
@@ -25,7 +25,7 @@ import { resolveCover } from '../../lib/resolver';
 import { ENHANCED_ATTR, SELECTORS } from '../../lib/selectors';
 import type { CoverResult, GameInfo } from '../../lib/types';
 import { createThumb, updateThumb } from '../../ui/thumb';
-import { injectLayoutStyle, THUMB_HOST } from './layout';
+import { injectLayoutStyle, THUMB_HOST } from '../../ui/thumb-layout';
 
 type Ui = ShadowRootContentScriptUi<HTMLElement>;
 
