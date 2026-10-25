@@ -9,8 +9,9 @@
  * applies to a row that really holds a thumbnail (`:has(> host)`). Removing
  * the host (or this <style>) gives the row back its original layout.
  *
- * `--cs-thumb-w` / `--cs-thumb-gap` are read by the host's `:host` rule in
- * style.css, so the host size and the width cut come from one place.
+ * `--cs-thumb-w`, `--cs-thumb-gap`, `--cs-thumb-align` and `--cs-thumb-top`
+ * are read by the host's `:host` rule in style.css, so the host size and the
+ * width cut come from one place.
  */
 import { ENHANCED_ATTR } from '../../lib/selectors';
 
@@ -39,7 +40,8 @@ ${ROW} { --cs-thumb-w: ${W_MAIN}; --cs-thumb-gap: ${GAP}; }
 ${COMPACT_ROW} { --cs-thumb-w: ${W_COMPACT}; }
 ${INFO} { width: calc(50% - var(--cs-thumb-w) - var(--cs-thumb-gap)); }
 @media (max-width: 1200px) {
-  ${ROW} { flex-direction: row; flex-wrap: wrap; align-items: center; --cs-thumb-w: ${W_MAIN_MOBILE}; }
+  /* Rows are taller here (names wrap): pin the thumb next to the name, level with its 5px padding. */
+  ${ROW} { flex-direction: row; flex-wrap: wrap; --cs-thumb-w: ${W_MAIN_MOBILE}; --cs-thumb-align: flex-start; --cs-thumb-top: 5px; }
   ${COMPACT_ROW} { --cs-thumb-w: ${W_COMPACT_MOBILE}; }
   ${INFO} { width: calc(100% - var(--cs-thumb-w) - var(--cs-thumb-gap)); }
   ${META} { width: 100%; }

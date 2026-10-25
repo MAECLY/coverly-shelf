@@ -40,8 +40,8 @@
   box-sizing: border-box;
   flex: 0 0 var(--cs-thumb-w, 80px);
   width: var(--cs-thumb-w, 80px);
-  align-self: center;
-  margin: 0 var(--cs-thumb-gap, 10px) 0 0;
+  align-self: var(--cs-thumb-align, center);
+  margin: var(--cs-thumb-top, 0) var(--cs-thumb-gap, 10px) 0 0;
   font-family: "Nunito", sans-serif;
   color: var(--wb);
   line-height: normal;
