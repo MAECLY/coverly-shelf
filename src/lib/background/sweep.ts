@@ -6,11 +6,13 @@
  *   entries can live in `storage.session` (cleared by the browser on close).
  * - On browser start and on install/update, expired entries are swept; in
  *   session mode the local fallback copies (Firefox MV2) are dropped too.
+ * - Whenever the worker wakes, a sweep runs if the last one is a day old, so a
+ *   browser that stays open for weeks does not keep expired entries.
  * - When the setting changes, entries stranded in the area that is no longer
  *   used are removed, then the new TTL is applied.
  */
 import { browser } from 'wxt/browser';
-import { clearCache, sweepExpired } from '../cache';
+import { clearCache, sweepExpired, sweepIfDue } from '../cache';
 import { getSettings, watchSettings, type Retention } from '../settings';
 
 /** Lets content scripts use `storage.session`. A no-op where the API does not exist. */
@@ -49,6 +51,7 @@ export async function applyRetention(retention: Retention, now: number = Date.no
 /** Wires everything up. Call once from defineBackground. */
 export function initCacheRetention(): void {
   void openSessionArea();
+  void sweepIfDue();
   try {
     browser.runtime.onStartup.addListener(() => {
       void sweepOnStartup();

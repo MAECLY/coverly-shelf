@@ -12,7 +12,7 @@
  */
 import { browser } from 'wxt/browser';
 import { storage } from '#imports';
-import { CACHE_VERSION } from './config';
+import { CACHE_PRUNE, CACHE_VERSION, LOOKUP } from './config';
 import { getSettings, retentionMs, SETTINGS_KEY, type Settings } from './settings';
 
 export interface CacheEntry<T> {
@@ -26,8 +26,34 @@ export const CACHE_AREAS: readonly CacheArea[] = ['local', 'session'];
 
 type StorageKey = `local:${string}` | `session:${string}`;
 
-/** Prefixes every cache key uses. Entries written by setCached are also recognised by shape. */
-const CACHE_KEY = /^(cover|gallery|lookup):/;
+/** Prefixes every artwork cache key uses. Entries written by setCached are also recognised by shape. */
+const CACHE_KEY = /^(cover|thumb|gallery|lookup):/;
+
+/**
+ * Bookkeeping that is stored like a cache entry but is not artwork: hShop's
+ * back-off window (`hshop:cooldown`) and the last sweep time. "Clear cache"
+ * and the usage readout leave these alone; sweepExpired still drops them
+ * once they are past their own TTL.
+ */
+const INTERNAL_KEY = /^(hshop|meta):/;
+
+/**
+ * Entries that are not artwork and keep their own lifetime whatever the
+ * retention setting says (it is about how long art is kept): an hShop title
+ * lookup never changes, and the back-off window must not outlive an hour.
+ * They still follow the setting's storage area, and "Clear cache" removes lookups.
+ */
+const PREFIX_TTL: ReadonlyArray<readonly [string, number]> = [
+  ['lookup:', LOOKUP.ttlMs],
+  ['hshop:', LOOKUP.maxCooldownMs],
+];
+
+/** The caller's or the prefix's own TTL when there is one, else the retention (`null`: no limit). */
+function keyTtl(key: string, retention: number | null, ttlMs?: number): number | null {
+  if (ttlMs !== undefined) return ttlMs;
+  const k = baseKey(key);
+  return PREFIX_TTL.find(([prefix]) => k.startsWith(prefix))?.[1] ?? retention;
+}
 
 /** `local:cover:AZEE`, `session:cover:AZEE` and `cover:AZEE` all become `cover:AZEE`. */
 function baseKey(key: string): string {
@@ -46,7 +72,7 @@ function isEntry(raw: unknown): raw is CacheEntry<unknown> {
 }
 
 function isCacheKey(key: string, value: unknown): boolean {
-  return key !== SETTINGS_KEY && (CACHE_KEY.test(key) || isEntry(value));
+  return key !== SETTINGS_KEY && !INTERNAL_KEY.test(key) && (CACHE_KEY.test(key) || isEntry(value));
 }
 
 function preferredArea(s: Settings): CacheArea {
@@ -61,13 +87,18 @@ function fresh(raw: unknown, ttl: number | null, now: number): raw is CacheEntry
 }
 
 /**
- * Returns the cached value, or `undefined` when it is missing, expired, from
- * another `CACHE_VERSION`, or storage fails. Never rejects.
+ * Returns the cached value, or `undefined` when it is missing, older than its
+ * lifetime (the caller's `ttlMs`, else the key prefix's own, else the retention
+ * setting), from another `CACHE_VERSION`, or storage fails. Never rejects.
  */
-export async function getCached<T>(key: string, now: () => number = Date.now): Promise<T | undefined> {
+export async function getCached<T>(
+  key: string,
+  now: () => number = Date.now,
+  ttlMs?: number,
+): Promise<T | undefined> {
   try {
     const settings = await getSettings();
-    const ttl = retentionMs(settings.retention);
+    const ttl = keyTtl(key, retentionMs(settings.retention), ttlMs);
     const k = baseKey(key);
     const areas: CacheArea[] = preferredArea(settings) === 'session' ? ['session', 'local'] : ['local'];
     for (const area of areas) {
@@ -120,13 +151,16 @@ function rawArea(area: CacheArea): RawArea | null {
   }
 }
 
-async function cacheItems(area: CacheArea): Promise<Record<string, unknown>> {
+async function cacheItems(
+  area: CacheArea,
+  include: (key: string, value: unknown) => boolean = isCacheKey,
+): Promise<Record<string, unknown>> {
   const a = rawArea(area);
   if (!a) return {};
   try {
     const all = await a.get(null);
     const out: Record<string, unknown> = {};
-    for (const [k, v] of Object.entries(all ?? {})) if (isCacheKey(k, v)) out[k] = v;
+    for (const [k, v] of Object.entries(all ?? {})) if (include(k, v)) out[k] = v;
     return out;
   } catch {
     return {};
@@ -205,14 +239,35 @@ export async function cacheUsage(): Promise<CacheUsage> {
  * another cache version, or malformed. Returns how many were removed. Never rejects.
  */
 export async function sweepExpired(now: number = Date.now()): Promise<number> {
-  const ttl = retentionMs((await getSettings()).retention);
+  const retention = retentionMs((await getSettings()).retention);
+  const sweepable = (k: string, v: unknown): boolean => isCacheKey(k, v) || k.startsWith('hshop:');
   let removed = 0;
   for (const area of CACHE_AREAS) {
-    const items = await cacheItems(area);
+    const items = await cacheItems(area, sweepable);
     const stale = Object.entries(items)
-      .filter(([, v]) => !fresh(v, ttl, now))
+      .filter(([k, v]) => !fresh(v, keyTtl(k, retention), now))
       .map(([k]) => k);
     removed += await removeKeys(area, stale);
   }
   return removed;
+}
+
+const SWEPT_AT_KEY = 'local:meta:sweptAt';
+
+/**
+ * sweepExpired at most once per CACHE_PRUNE.intervalMs, remembered under
+ * `local:meta:sweptAt` (not a cache key). The background worker calls it
+ * whenever it starts, so a browser left open for weeks still sheds expired
+ * entries without the `alarms` permission. Never rejects.
+ */
+export async function sweepIfDue(now: () => number = Date.now): Promise<number> {
+  try {
+    const last = await storage.getItem<number>(SWEPT_AT_KEY);
+    const t = now();
+    if (typeof last === 'number' && t - last >= 0 && t - last < CACHE_PRUNE.intervalMs) return 0;
+    await storage.setItem(SWEPT_AT_KEY, t);
+    return await sweepExpired(t);
+  } catch {
+    return 0;
+  }
 }

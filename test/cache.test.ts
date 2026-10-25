@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fakeBrowser } from 'wxt/testing/fake-browser';
 import { storage } from '#imports';
-import { cacheUsage, clearCache, getCached, setCached, sweepExpired } from '../src/lib/cache';
+import { cacheUsage, clearCache, getCached, setCached, sweepExpired, sweepIfDue } from '../src/lib/cache';
 import { applyRetention, initCacheRetention, sweepOnStartup } from '../src/lib/background/sweep';
-import { CACHE_TTL_MS, CACHE_VERSION } from '../src/lib/config';
+import { CACHE_PRUNE, CACHE_TTL_MS, CACHE_VERSION, LOOKUP } from '../src/lib/config';
 import { setSettings } from '../src/lib/settings';
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -164,7 +164,10 @@ describe('cache retention', () => {
     await fakeBrowser.storage.sync.onChanged.trigger({
       settings: { oldValue: { v: 1, retention: '7d' }, newValue: { v: 1, retention: 'session' } },
     });
-    await vi.waitFor(async () => expect(await fakeBrowser.storage.local.get(null)).toEqual({}));
+    // Only the daily-sweep timestamp is left.
+    await vi.waitFor(async () =>
+      expect(Object.keys(await fakeBrowser.storage.local.get(null))).toEqual(['meta:sweptAt']),
+    );
   });
 
   it('startup in session mode drops local fallback copies', async () => {
@@ -172,5 +175,87 @@ describe('cache retention', () => {
     await setSettings({ retention: 'session' });
     await sweepOnStartup();
     expect(await fakeBrowser.storage.local.get(null)).toEqual({});
+  });
+});
+
+describe('sweepExpired with per-prefix lifetimes', () => {
+  beforeEach(() => {
+    fakeBrowser.reset();
+    vi.restoreAllMocks();
+  });
+
+  const T = 10 * LOOKUP.ttlMs;
+
+  async function seed(): Promise<void> {
+    await setCached('local:thumb:FRESH', 'x', () => T - 1000);
+    await setCached('local:cover:OLD', 'x', () => T - CACHE_TTL_MS);
+    await storage.setItem('local:gallery:V1', { v: 1, at: T, value: [] });
+    await storage.setItem('local:thumb:FUTURE', { v: CACHE_VERSION, at: T + 60_000, value: 'x' });
+    await storage.setItem('local:cover:JUNK', 'not an entry');
+    // Lookups keep their own 30 days, whatever the retention.
+    await setCached('local:lookup:1', { info: null }, () => T - CACHE_TTL_MS);
+    await setCached('local:lookup:2', { info: null }, () => T - LOOKUP.ttlMs);
+    // hShop's back-off window lives at most an hour.
+    await setCached('local:hshop:cooldown', T + 1000, () => T - LOOKUP.maxCooldownMs);
+    // Not cache entries: never touched by the sweep.
+    await storage.setItem('local:meta:sweptAt', 0);
+  }
+
+  it('with the default 7 days removes expired, old-version, future-stamped and malformed entries', async () => {
+    await seed();
+    await expect(sweepExpired(T)).resolves.toBe(6);
+    const left = Object.keys(await storage.snapshot('local')).sort();
+    expect(left).toEqual(['lookup:1', 'meta:sweptAt', 'thumb:FRESH']);
+  });
+
+  it('with "forever" still drops lookups after 30 days and the hShop cooldown after an hour', async () => {
+    await setSettings({ retention: 'forever' });
+    await seed();
+    await sweepExpired(T);
+    const left = Object.keys(await storage.snapshot('local')).sort();
+    expect(left).toEqual(['cover:OLD', 'lookup:1', 'meta:sweptAt', 'thumb:FRESH']);
+  });
+
+  it('getCached lets lookups keep their own 30 days under any retention', async () => {
+    await setSettings({ retention: '1d' });
+    await setCached('local:lookup:9', 'x', () => 0);
+    await setCached('local:cover:AZEE', 'y', () => 0);
+    await expect(getCached('local:cover:AZEE', () => DAY)).resolves.toBeUndefined();
+    await expect(getCached('local:lookup:9', () => LOOKUP.ttlMs - 1)).resolves.toBe('x');
+    await expect(getCached('local:lookup:9', () => LOOKUP.ttlMs)).resolves.toBeUndefined();
+  });
+
+  it('clearCache keeps the hShop cooldown and sweep bookkeeping', async () => {
+    await setCached('local:hshop:cooldown', 123, () => Date.now());
+    await setCached('local:thumb:AZEE', 'x', () => Date.now());
+    await storage.setItem('local:meta:sweptAt', 1);
+    await clearCache();
+    expect(Object.keys(await storage.snapshot('local')).sort()).toEqual(['hshop:cooldown', 'meta:sweptAt']);
+    await expect(cacheUsage()).resolves.toMatchObject({ entries: 0 });
+  });
+});
+
+describe('sweepIfDue', () => {
+  beforeEach(() => {
+    fakeBrowser.reset();
+    vi.restoreAllMocks();
+  });
+
+  it('sweeps at most once per interval', async () => {
+    let t = 50 * CACHE_TTL_MS;
+    const now = (): number => t;
+    await storage.setItem('local:cover:V1', { v: 1, at: t, value: 'x' });
+    await expect(sweepIfDue(now)).resolves.toBe(1);
+    await storage.setItem('local:cover:V1', { v: 1, at: t, value: 'x' });
+    t += CACHE_PRUNE.intervalMs - 1;
+    await expect(sweepIfDue(now)).resolves.toBe(0);
+    await expect(storage.getItem('local:cover:V1')).resolves.not.toBeNull();
+    t += 1;
+    await expect(sweepIfDue(now)).resolves.toBe(1);
+  });
+
+  it('never rejects when storage throws', async () => {
+    vi.spyOn(storage, 'getItem').mockRejectedValue(new Error('no storage'));
+    await expect(sweepIfDue()).resolves.toBe(0);
   });
 });

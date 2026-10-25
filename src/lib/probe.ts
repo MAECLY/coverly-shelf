@@ -46,8 +46,12 @@ function fetchData(url: string): Promise<ImageDataResult> {
   return pending;
 }
 
-function loadDirect(url: string): Promise<ProbeOutcome> {
+function loadDirect(url: string, signal?: AbortSignal): Promise<ProbeOutcome> {
   return new Promise<ProbeOutcome>((resolve) => {
+    if (signal?.aborted) {
+      resolve('error');
+      return;
+    }
     let img: HTMLImageElement;
     try {
       img = new Image();
@@ -60,12 +64,16 @@ function loadDirect(url: string): Promise<ProbeOutcome> {
       if (done) return;
       done = true;
       clearTimeout(timer);
+      signal?.removeEventListener('abort', onAbort);
       img.onload = null;
       img.onerror = null;
       if (outcome !== 'hit') img.src = '';
       resolve(outcome);
     };
     const timer = setTimeout(() => finish('error'), PROBE_TIMEOUT_MS);
+    // Clearing src on abort cancels the download.
+    const onAbort = (): void => finish('error');
+    signal?.addEventListener('abort', onAbort, { once: true });
     img.onload = () => finish(img.naturalWidth > 0 ? 'hit' : 'miss');
     img.onerror = () => finish('miss');
     try {
@@ -100,21 +108,28 @@ export function headVerdict(head: ImageHead | null): ProbeOutcome | 'fallback' {
 }
 
 /** Direct mode: HEAD preflight through the background, <img> load only when it gives no answer. */
-async function probeDirect(url: string): Promise<ProbeOutcome> {
-  if (!isAllowedImageUrl(url)) return loadDirect(url);
+async function probeDirect(url: string, signal?: AbortSignal): Promise<ProbeOutcome> {
+  if (!isAllowedImageUrl(url)) return loadDirect(url, signal);
   const verdict = headVerdict(await requestImageHead(url).catch(() => null));
-  return verdict === 'fallback' ? loadDirect(url) : verdict;
+  if (signal?.aborted) return 'error';
+  return verdict === 'fallback' ? loadDirect(url, signal) : verdict;
+}
+
+export interface ProbeOptions {
+  /** Aborting it skips the probe if still queued and cancels it if loading: `error`. */
+  signal?: AbortSignal;
 }
 
 /** Probe `url` and say whether it is a hit, a definite miss or unknown. Runs through the shared limiter; never rejects. */
-export async function probeOutcome(url: string): Promise<ProbeOutcome> {
+export async function probeOutcome(url: string, { signal }: ProbeOptions = {}): Promise<ProbeOutcome> {
   try {
+    if (signal?.aborted) return 'error';
     if (IMAGE_MODE === 'background') {
       const res = await fetchData(url);
       if (!res.ok) return 'error';
       return res.data !== null ? 'hit' : 'miss';
     }
-    return await limit(() => probeDirect(url));
+    return await limit(() => probeDirect(url, signal), signal);
   } catch {
     return 'error';
   }

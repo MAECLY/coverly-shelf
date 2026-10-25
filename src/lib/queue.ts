@@ -4,7 +4,18 @@
  */
 import { MAX_CONCURRENT_REQUESTS } from './config';
 
-export type Limiter = <T>(task: () => Promise<T>) => Promise<T>;
+/**
+ * Runs `task` once a slot is free. With a `signal`, a task still waiting when
+ * the signal aborts never runs: it rejects with an `AbortError` and gives its
+ * place up at once, so a torn-down page sends no queued request.
+ */
+export type Limiter = <T>(task: () => Promise<T>, signal?: AbortSignal) => Promise<T>;
+
+function abortError(): Error {
+  const error = new Error('Aborted');
+  error.name = 'AbortError';
+  return error;
+}
 
 export function createLimiter(max: number): Limiter {
   const cap = Math.max(1, Math.floor(max));
@@ -17,9 +28,14 @@ export function createLimiter(max: number): Limiter {
     if (start) start();
   };
 
-  return <T>(task: () => Promise<T>): Promise<T> =>
+  return <T>(task: () => Promise<T>, signal?: AbortSignal): Promise<T> =>
     new Promise<T>((resolve, reject) => {
-      waiting.push(() => {
+      if (signal?.aborted) {
+        reject(abortError());
+        return;
+      }
+      const start = (): void => {
+        signal?.removeEventListener('abort', onAbort);
         active++;
         let result: Promise<T>;
         try {
@@ -31,7 +47,15 @@ export function createLimiter(max: number): Limiter {
           active--;
           next();
         });
-      });
+      };
+      const onAbort = (): void => {
+        const at = waiting.indexOf(start);
+        if (at === -1) return;
+        waiting.splice(at, 1);
+        reject(abortError());
+      };
+      signal?.addEventListener('abort', onAbort, { once: true });
+      waiting.push(start);
       next();
     });
 }

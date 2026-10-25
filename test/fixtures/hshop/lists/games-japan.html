@@ -1,0 +1,1827 @@
+
+<!DOCTYPE html>
+
+<html class="nospace" lang="en">
+	<head>
+		<meta charset="UTF-8"/>
+		<link as="style" rel="preload" type="text/css" href="/css/dark.css?v=2.10">
+		<link as="style" rel="preload" type="text/css" href="/css/light.css?v=2.10">
+		<link as="style" rel="preload" type="text/css" href="/css/main.css?v=2.10">
+
+		<link as="script" href="/js/base.min.js?v=2.10">
+
+		<link rel="stylesheet" type="text/css" href="/css/dark.css?v=2.10">
+		<link rel="stylesheet" type="text/css" href="/css/light.css?v=2.10">
+		<link rel="stylesheet" type="text/css" href="/css/main.css?v=2.10">
+
+
+				<link rel="stylesheet" type="text/css" href="/css/list.css?v=2.10">
+				<link rel="stylesheet" type="text/css" href="/css/scat-list.css?v=2.10">
+
+
+		<title>Games &#x279E; Japan | hShop</title>
+		<meta name="title" content="Games &#x279E; Japan | hShop">
+		<meta name="description" content="Games released in Japan.">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta property="og:type" content="website">
+		<meta property="og:site_name" content="hShop">
+		<meta property="og:title" content="Games &#x279E; Japan | hShop">
+		<meta property="og:description" content="Games released in Japan.">
+		<meta name="theme-color" content="#18ff00">
+	</head>
+
+	<body class="dark-mode nospace">
+		<header>
+			<nav class="nav-container">
+				<div class="nav-header">
+					<a draggable="false" href="/">
+						<img draggable="false" src="/img/hs.png?v=2.10" alt="The hShop Logo."/>
+					</a>
+
+					<div class="mobilenav">
+						<div id="ths-drop" class="dropdown">
+							<a id="ths-link" title="3hs - the official hShop 3DS client" class="green bold dropdown-entry" href="/3hs">3hs</a>
+							<div class="dropdown-arrow dropdown-entry"></div>
+							<div id="ths-drop-list-container">
+								<div class="hidden dropdown-list" id="ths-drop-list">
+									<a class="green bold" href="/3hs">Download 3hs</a>
+									<a href="/3hs/themegen">HSTX Theme Generator</a>
+									<a href="/3hs/hwavgen">HWAV Music Generator</a>
+								</div>
+							</div>
+						</div>
+						<div class="spacer l1 hidden-desktop dynamic-mobile"></div>
+							<a draggable="false" href="/donate" class="pink bold">Donate</a>
+					</div>
+
+					<a id="toggle-navbar" class="hidden-desktop" draggable="false">
+						<img draggable="false" src="/img/nav-more.png?v=2.10" alt="The button used to toggle the navigation bar, only shown on small screens and mobile devices.">
+					</a>
+				</div>
+				<div class="spacer l1 hidden-mobile dynamic-mobile"></div>
+				<div id="nav-content" class="nav-hidden">
+					<div class="nav-list nospace">
+								<a title="Nintendo 3DS games." href="/c/games">Games</a>
+								<a title="Update data for Nintendo 3DS titles." href="/c/updates">Updates</a>
+								<a title="Downloadable content (DLC)." href="/c/dlc">DLC</a>
+								<a title="Official Virtual Console titles." href="/c/virtual-console">Virtual Console</a>
+								<a title="Nintendo DSiWare for the 3DS." href="/c/dsiware">DSiWare</a>
+								<a title="Videos, trailers or movies released on the 3DS." href="/c/videos">Videos</a>
+								<a title="Miscellaneous content." href="/c/extras">Extras</a>
+								<a title="Official Nintendo 3DS themes converted to an Anemone3DS compatible format." href="/c/themes">Themes</a>
+						<a draggable="false" id="msearch-icon" class="extra-icon hidden-desktop" title="Click here to get to the search page." href="/search">
+							<svg draggable="false" alt="An image of a magnifying glass." width="16" height="16" viewBox="0 0 16 16">
+								<path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"></path>
+							</svg>
+						</a>
+						<a draggable="false" id="mrandtitle-icon" class="extra-icon hidden-desktop" title="Click here to land on a random title!" href="/t/random">
+							<img class="rand-title" draggable="false" src="/img/dice.gif?v=2.10" alt="An animated image of a dice.">
+						</a>
+					</div>
+				</div>
+				<div class="spacer l1 hidden-mobile dynamic-mobile"></div>
+				<div class="nav-icons hidden-mobile">
+					<a draggable="false" class="extra-icon" title="Click here to get to the search page." href="/search">
+						<svg draggable="false" alt="An image of a magnifying glass." width="16" height="16" viewBox="0 0 16 16">
+							<path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"></path>
+						</svg>
+					</a>
+					<a draggable="false" class="extra-icon" title="Click here to land on a random title!" href="/t/random">
+						<img class="rand-title" draggable="false" src="/img/dice.gif?v=2.10" alt="An animated image of a dice.">
+					</a>
+				</div>
+			</nav>
+		</header>
+
+		<main>
+				<div class="donate-hdr">
+					<div class="donate-msg">
+						<h3 class="yellow tcenter nospace">If you found hShop useful, please <a class="pink bold underline" href="/donate">make a donation!</a></h3>
+					</div>
+				</div>
+
+				<div class="sitedesc">
+					<h1 class="nospace bold">Games &#x279E; Japan</h1>
+						<h3 class="nospace bold">Games released in Japan.</h3>
+				</div>
+
+			
+		<div class="sortsel-container">
+			<div class="sel-container">
+				<label for="sort-method-sel">Sort By:</label>
+				<select id="sort-method-sel" class="sortsel">
+					<option value="none" selected>None</option>
+					<option value="size">Size</option>
+					<option value="name">Name</option>
+					<option value="added_date">Added Date</option>
+					<option value="updated_date">Updated Date</option>
+					<option value="title_id">Title ID</option>
+					<option value="id">ID</option>
+					<option value="downloads">Downloads</option>
+				</select>
+			</div>
+			<div class="sel-container">
+				<label for="sort-order-sel">Sort Direction:</label>
+				<select id="sort-order-sel" class="sortsel">
+					<option value="none" selected>None</option>
+					<option value="ascending">Ascending</option>
+					<option value="descending">Descending</option>
+				</select>
+			</div>
+		</div>
+
+
+<div class="list-container">
+	<div class="list pre-top">
+		<div class="next-container">
+			<span class="nospace">showing 1 - 25 of 1560</span>
+			<div class="spacer l3"></div>
+			<div class="count-selector">
+				<span>showing</span>
+				<select id="countsel1">
+					<option value="10" >10</option>
+					<option value="25" selected>25</option>
+					<option value="50" >50</option>
+					<option value="100" >100</option>
+				</select>
+				<span>titles</span>
+			</div>
+			<div class="next">
+					<div class="control-row">
+						<div class="spacer l3"></div>
+						<a class="green bold" href="/c/games/s/japan?count=25&amp;offset=25">show next 25</a>
+					</div>
+			</div>
+		</div>
+		<div class="elements">
+				<a href="/t/19764" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">&#x30CF;&#x30B3;&#x30DC;&#x30FC;&#x30A4;&#xFF01;</h3>
+		<h4>Also known as: <span class="green">Hakob&#x14D;i!</span>
+		</h4>
+	<h4>content in <span class="green bold">games</span> ➞ <span class="green bold">japan</span></h4>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">19764</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">0004000000126800</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">77.72 MiB</span>
+		<span class="yellow bold hover-on">621 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">1.1.0 (1040)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-N-JCPJ</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/1718" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">&#x30BC;&#x30EB;&#x30C0;&#x306E;&#x4F1D;&#x8AAC; - &#x795E;&#x3005;&#x306E;&#x30C8;&#x30E9;&#x30A4;&#x30D5;&#x30A9;&#x30FC;&#x30B9;&#xFF12;</h3>
+		<h4>Also known as: <span class="green">Zerudanodensetsu - kamigami no toraif&#x14D;su 2</span>
+		</h4>
+	<h4>content in <span class="green bold">games</span> ➞ <span class="green bold">japan</span></h4>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">1718</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">00040000000EC200</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">675.42 MiB</span>
+		<span class="yellow bold hover-on">5403 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.0.0 (0)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-P-BZLJ</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/7796" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">&#x3067;&#x3093;&#x3062;&#x3083;&#x3089;&#x3059;&#x3058;&#x30FC;&#x3055;&#x3093;&#x90AA; Vol.013 - &#x3058;&#x30FC;&#x3055;&#x3093;&#x306E;&#x5927;&#x767A;&#x660E;&#x3058;&#x3083;&#x3063;&#x3063;!!</h3>
+		<h4>Also known as: <span class="green">Den dji ~yarasuji &#x304;-san yokoshima Vol. 013 -Ji &#x304;-san no dai hatsumeija~tsu~tsu! !</span>
+		</h4>
+	<h4>content in <span class="green bold">games</span> ➞ <span class="green bold">japan</span></h4>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">7796</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">00040000001C7200</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">162.22 MiB</span>
+		<span class="yellow bold hover-on">1297 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.0.0 (0)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-N-J2YJ</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/1544" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">&#x4E0A;&#x6D77;&#xFF13;&#xFF24;&#x30AD;&#x30E5;&#x30FC;&#x30D6;</h3>
+		<h4>Also known as: <span class="green">Shanhai 3D ky&#x16B;bu</span>
+		</h4>
+	<h4>content in <span class="green bold">games</span> ➞ <span class="green bold">japan</span></h4>
+		<div class="meta">
+
+				<div class="meta-content">
+					<span class="yellow bold">Physical release only</span>
+				</div>
+		</div>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">1544</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Standard</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">0004000000034100</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">89.79 MiB</span>
+		<span class="yellow bold hover-on">718 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.0.0 (0)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-P-ASHJ</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/9653" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">&#x3069;&#x3053;&#x307D;&#x3093;&#x3061;&#x3087;&#x3044;&#x3059; - &#x30B9;&#x30FC;&#x30D1;&#x30FC;&#x30DE;&#x30EA;&#x30AA;&#x304F;&#x3093; Vol.1</h3>
+		<h4>Also known as: <span class="green">Doko pon choi su - s&#x16B;p&#x101;mario-kun Vol. 1</span>
+		</h4>
+	<h4>content in <span class="green bold">games</span> ➞ <span class="green bold">japan</span></h4>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">9653</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">000400000013B800</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">436.88 MiB</span>
+		<span class="yellow bold hover-on">3495 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.0.0 (0)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-N-KU7J</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/1144" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">&#x30B4;&#x30F3; - &#x30D0;&#x30AF;&#x30D0;&#x30AF;&#x30D0;&#x30AF;&#x30D0;&#x30AF;&#x30A2;&#x30C9;&#x30D9;&#x30F3;&#x30C1;&#x30E3;&#x30FC;</h3>
+		<h4>Also known as: <span class="green">Gon - bakubakubakubakuadobench&#x101;</span>
+		</h4>
+	<h4>content in <span class="green bold">games</span> ➞ <span class="green bold">japan</span></h4>
+		<div class="meta">
+
+				<div class="meta-content">
+					<span class="yellow bold">Physical release only</span>
+				</div>
+		</div>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">1144</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Standard</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">0004000000074700</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">153.55 MiB</span>
+		<span class="yellow bold hover-on">1228 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.0.0 (0)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-P-AG7J</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/20249" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">&#x304A;&#x5B9D;&#x30C7;&#x30A3;&#x30D5;&#x30A7;&#x30F3;&#x30C0;&#x30FC; - &#xFF5E;&#x30D5;&#x30A1;&#x30E9;&#x30AA;&#x306E;&#x79D8;&#x5B9D;&#xFF5E;</h3>
+		<h4>Also known as: <span class="green">Otakara difend&#x101; - ~ farao no hih&#x14D; ~</span>
+		</h4>
+	<h4>content in <span class="green bold">games</span> ➞ <span class="green bold">japan</span></h4>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">20249</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">00040000001AF700</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">6.83 MiB</span>
+		<span class="yellow bold hover-on">54 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.1.0 (16)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-N-JLEJ</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/19486" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">&#x30C0;&#x30F3;&#x30DC;&#x30FC;&#x30EB;&#x6226;&#x6A5F;W &#x8D85;&#x30AB;&#x30B9;&#x30BF;&#x30E0;</h3>
+		<h4>Also known as: <span class="green">Danb&#x14D;ru senki W ch&#x14D; kasutamu</span>
+		</h4>
+	<h4>content in <span class="green bold">games</span> ➞ <span class="green bold">japan</span></h4>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">19486</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">00040000000DCA00</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">1.59 GiB</span>
+		<span class="yellow bold hover-on">13016 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.2.0 (32)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-P-BDWJ</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/1501" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">&#x96F7;&#x5B50;&#x2010;&#x7D3A;&#x78A7;&#x306E;&#x7AE0;&#x2010;</h3>
+		<h4>Also known as: <span class="green">Raishi &#x2010; konpeki no sh&#x14D; &#x2010;</span>
+		</h4>
+	<h4>content in <span class="green bold">games</span> ➞ <span class="green bold">japan</span></h4>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">1501</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">0004000000178400</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">873.40 MiB</span>
+		<span class="yellow bold hover-on">6987 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.0.0 (0)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-P-ARPJ</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/9605" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">&#x6F22;&#x691C;&#x30C8;&#x30EC;&#x30FC;&#x30CB;&#x30F3;&#x30B0; &#xFF19;&#x7D1A; &#xFF11;&#xFF10;&#x7D1A;</h3>
+		<h4>Also known as: <span class="green">Kanken tor&#x113;ningu 9-ky&#x16B; 10-ky&#x16B;</span>
+		</h4>
+	<h4>content in <span class="green bold">games</span> ➞ <span class="green bold">japan</span></h4>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">9605</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">0004000000121A00</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">94.94 MiB</span>
+		<span class="yellow bold hover-on">759 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.0.0 (0)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-N-JU9J</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/1640" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">&#x63A2;&#x5075;&#x795E;&#x5BAE;&#x5BFA;&#x4E09;&#x90CE; - GHOST OF THE DUSK</h3>
+		<h4>Also known as: <span class="green">Tanteijinguujisabur&#x14D; - g&#x14D;suto OF THE DUSK</span>
+		</h4>
+	<h4>content in <span class="green bold">games</span> ➞ <span class="green bold">japan</span></h4>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">1640</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">00040000001BF400</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">382.62 MiB</span>
+		<span class="yellow bold hover-on">3060 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.0.0 (0)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-P-BG9J</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/1042" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">&#x8131;&#x51FA;&#x30A2;&#x30C9;&#x30D9;&#x30F3;&#x30C1;&#x30E3;&#x30FC; - &#x795E;&#x964D;&#x3057;&#x306E;&#x5360;&#x3044;&#x76E4;</h3>
+		<h4>Also known as: <span class="green">Dasshutsu adobench&#x101; - kamioroshi no uranai-ban</span>
+		</h4>
+	<h4>content in <span class="green bold">games</span> ➞ <span class="green bold">japan</span></h4>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">1042</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">0004000000184500</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">132.49 MiB</span>
+		<span class="yellow bold hover-on">1059 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.0.0 (0)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-N-KDHJ</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/1157" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">&#x9006;&#x8EE2;&#x88C1;&#x5224;123&#x3000;&#x6210;&#x6B69;&#x5802;&#x30BB;&#x30EC;&#x30AF;&#x30B7;&#x30E7;&#x30F3;</h3>
+		<h4>Also known as: <span class="green">Gyakuten saiban 123 naruhod&#x14D; serekushon</span>
+		</h4>
+	<h4>content in <span class="green bold">games</span> ➞ <span class="green bold">japan</span></h4>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">1157</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">0004000000108800</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">367.35 MiB</span>
+		<span class="yellow bold hover-on">2938 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.0.0 (0)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-P-BHDJ</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/9695" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">&#x30DE;&#x30EB;&#x5408;&#x683C;&#xFF01;IT&#x30D1;&#x30B9; &#x5E73;&#x6210;27&#x5E74;&#x5EA6;&#x7248;</h3>
+		<h4>Also known as: <span class="green">Maru g&#x14D;kaku! IT pasu Heisei 27-nendo-ban</span>
+		</h4>
+	<h4>content in <span class="green bold">games</span> ➞ <span class="green bold">japan</span></h4>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">9695</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">000400000016FE00</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">47.34 MiB</span>
+		<span class="yellow bold hover-on">378 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.0.0 (0)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-N-KP7J</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/19381" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">&#x30A4;&#x30CA;&#x30BA;&#x30DE;&#x30A4;&#x30EC;&#x30D6;&#x30F3;&#xFF11;&#x30FB;&#xFF12;&#x30FB;&#xFF13;!! - &#x5186;&#x5802;&#x5B88;&#x4F1D;&#x8AAC;</h3>
+		<h4>Also known as: <span class="green">Inazumairebun 1 2 3! ! - En d&#x14D;mori densetsu</span>
+		</h4>
+	<h4>content in <span class="green bold">games</span> ➞ <span class="green bold">japan</span></h4>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">19381</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">00040000000BB800</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">1.78 GiB</span>
+		<span class="yellow bold hover-on">14608 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">2.5.0 (2128)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-P-AETJ</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/1631" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">&#x592A;&#x9F13;&#x306E;&#x9054;&#x4EBA; &#x30C9;&#x30B3;&#x30C9;&#x30F3;&#xFF01; - &#x30DF;&#x30B9;&#x30C6;&#x30EA;&#x30FC;&#x30A2;&#x30C9;&#x30D9;&#x30F3;&#x30C1;&#x30E3;&#x30FC;</h3>
+		<h4>Also known as: <span class="green">Taiko no tatsujin dokodon! - Misuter&#x12B;adobench&#x101;</span>
+		</h4>
+	<h4>content in <span class="green bold">games</span> ➞ <span class="green bold">japan</span></h4>
+		<div class="meta">
+
+				<div class="meta-content">
+					<span class="yellow bold">May require locale emulation</span>
+				</div>
+		</div>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">1631</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">0004000000190E00</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">459.20 MiB</span>
+		<span class="yellow bold hover-on">3673 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.0.0 (0)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-P-BT8J</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/1709" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">&#x5996;&#x602A;&#x30A6;&#x30A9;&#x30C3;&#x30C1;&#xFF12;&#x672C;&#x5BB6;</h3>
+		<h4>Also known as: <span class="green">Y&#x14D;kai u~otchi 2 honke</span>
+		</h4>
+	<h4>content in <span class="green bold">games</span> ➞ <span class="green bold">japan</span></h4>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">1709</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">000400000012F800</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">1.82 GiB</span>
+		<span class="yellow bold hover-on">14885 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">2.7.0 (2160)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-P-BYHJ</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/1669" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">&#x30C8;&#x30E2;&#x30C0;&#x30C1;&#x30B3;&#x30EC;&#x30AF;&#x30B7;&#x30E7;&#x30F3;&#x3000;&#x65B0;&#x751F;&#x6D3B;</h3>
+		<h4>Also known as: <span class="green">Tomodachikorekushon shin seikatsu</span>
+		</h4>
+	<h4>content in <span class="green bold">games</span> ➞ <span class="green bold">japan</span></h4>
+		<div class="meta">
+
+				<div class="meta-content">
+					<span class="yellow bold">May require locale emulation</span>
+				</div>
+		</div>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">1669</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">000400000008C500</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">365.29 MiB</span>
+		<span class="yellow bold hover-on">2922 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.2.0 (32)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-P-EC6J</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/19091" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">BIOHAZARD&#xAE; - THE MERCENARIES 3D</h3>
+	<h4>content in <span class="green bold">games</span> ➞ <span class="green bold">japan</span></h4>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">19091</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">0004000000043E00</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">587.58 MiB</span>
+		<span class="yellow bold hover-on">4700 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">1.1.0 (1040)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-P-ABMJ</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/9457" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">&#x30C8;&#x30E2;&#x30C0;&#x30C1;&#x30B3;&#x30EC;&#x30AF;&#x30B7;&#x30E7;&#x30F3;&#x3000;&#x65B0;&#x751F;&#x6D3B; - Mii&#x5F15;&#x8D8A;&#x3057;&#x30BD;&#x30D5;&#x30C8;</h3>
+		<h4>Also known as: <span class="green">Tomodachikorekushon shin seikatsu - Mii hikkoshi sofuto</span>
+		</h4>
+	<h4>content in <span class="green bold">games</span> ➞ <span class="green bold">japan</span></h4>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">9457</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">000400000008F600</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">2.23 MiB</span>
+		<span class="yellow bold hover-on">17 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.1.0 (16)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-N-NAAJ</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/9778" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">&#x63A2;&#x5075;&#x795E;&#x5BAE;&#x5BFA;&#x4E09;&#x90CE; &#x6A2A;&#x6D5C;&#x6E2F;&#x9023;&#x7D9A;&#x6BBA;&#x4EBA;&#x4E8B;&#x4EF6;</h3>
+		<h4>Also known as: <span class="green">Tanteijinguujisabur&#x14D; Yokohama-k&#x14D; renzoku satsujin jiken</span>
+		</h4>
+	<h4>content in <span class="green bold">games</span> ➞ <span class="green bold">japan</span></h4>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">9778</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">00040000001C0E00</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">1.31 MiB</span>
+		<span class="yellow bold hover-on">10 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.0.0 (0)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-N-KYTJ</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/8919" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">-CHASE- &#x672A;&#x89E3;&#x6C7A;&#x4E8B;&#x4EF6;&#x635C;&#x67FB;&#x8AB2; - &#xFF5E;&#x9060;&#x3044;&#x8A18;&#x61B6;&#xFF5E;</h3>
+		<h4>Also known as: <span class="green">- CHASE - mikaiketsujiken s&#x14D;sa-ka - ~ t&#x14D;i kioku ~</span>
+		</h4>
+	<h4>content in <span class="green bold">games</span> ➞ <span class="green bold">japan</span></h4>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">8919</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">0004000000187600</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">197.67 MiB</span>
+		<span class="yellow bold hover-on">1581 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.0.0 (0)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-N-KMVJ</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/20189" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">&#x30DE;&#x30EA;&#x30AA;&#x30D1;&#x30FC;&#x30C6;&#x30A3; &#x30B9;&#x30BF;&#x30FC;&#x30E9;&#x30C3;&#x30B7;&#x30E5; - &#x6301;&#x3063;&#x3066;&#x3044;&#x308B;&#x4EBA;&#x3068;&#x5BFE;&#x6226;&#x7248;</h3>
+		<h4>Also known as: <span class="green">Mariop&#x101;ti sut&#x101;rasshu - motte iru hito to taisen-ban</span>
+		</h4>
+	<h4>content in <span class="green bold">games</span> ➞ <span class="green bold">japan</span></h4>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">20189</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">00040000001A5E00</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">347.81 MiB</span>
+		<span class="yellow bold hover-on">2782 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.1.0 (16)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-N-BABJ</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/20286" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">1000m - &#x30BE;&#x30F3;&#x30D3;&#x30A8;&#x30B9;&#x30B1;&#x30FC;&#x30D7;&#xFF01;</h3>
+		<h4>Also known as: <span class="green">1000 M - zonbiesuk&#x113;pu!</span>
+		</h4>
+	<h4>content in <span class="green bold">games</span> ➞ <span class="green bold">japan</span></h4>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">20286</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">00040000001BBC00</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">75.96 MiB</span>
+		<span class="yellow bold hover-on">607 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.1.0 (16)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-N-KZEJ</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+				<a href="/t/1535" class="list-entry block-link">
+					
+
+<div class="base-info">
+	<h3 class="green bold nospace">&#x4E16;&#x754C;&#x6A39;&#x3068;&#x4E0D;&#x601D;&#x8B70;&#x306E;&#x30C0;&#x30F3;&#x30B8;&#x30E7;&#x30F3;</h3>
+		<h4>Also known as: <span class="green">Seikaiju to fushiginodanjon</span>
+		</h4>
+	<h4>content in <span class="green bold">games</span> ➞ <span class="green bold">japan</span></h4>
+</div>
+<div class="meta">
+	<div class="meta-content">
+		<span class="green bold">1535</span>
+		<span>ID</span>
+	</div>
+	<div class="meta-content">
+		<span class="green bold">Pirate Legit</span>
+		<span>Content Type</span>
+	</div>
+	<div class="meta-content">
+		<span class="blue bold">0004000000118300</span>
+		<span>Title ID</span>
+	</div>
+	<div class="meta-content hover-meta">
+		<span class="yellow bold hover-default">540.94 MiB</span>
+		<span class="yellow bold hover-on">4327 ⊡</span>
+		<span>Size</span>
+	</div>
+	<div class="meta-content">
+		<span class="red bold">0.0.0 (0)</span>
+		<span>Version</span>
+	</div>
+	<div class="meta-content">
+		<span class="pink bold">CTR-P-BFDJ</span>
+		<span>Product Code</span>
+	</div>
+</div>
+
+				</a>
+		</div>
+			<div class="next-container">
+				<span class="nospace">showing 1 - 25 of 1560</span>
+				<div class="spacer l3"></div>
+				<div class="count-selector">
+					<span>showing</span>
+					<select id="countsel2">
+						<option value="10" >10</option>
+						<option value="25" selected>25</option>
+						<option value="50" >50</option>
+						<option value="100" >100</option>
+					</select>
+					<span>titles</span>
+				</div>
+				<div class="next">
+						<div class="spacer l3"></div>
+						<a class="green bold" href="/c/games/s/japan?count=25&amp;offset=25">show next 25</a>
+				</div>
+			</div>
+	</div>
+</div>		<h2 class="align-center nospace">Top content in this subcategory:</h2>
+
+<div class="list-container">
+	<div class="list top-list">
+		<div class="elements">
+				<a href="/t/989" class="list-entry block-link">
+					<div class="base-info">
+						<h3>1. <span class="green bold">&#x30D6;&#x30EC;&#x30A4;&#x30D6;&#x30EA;&#x30FC;&#x30C7;&#x30D5;&#x30A9;&#x30EB;&#x30C8; - &#x30D5;&#x30A9;&#x30FC;&#x30B6;&#x30FB;&#x30B7;&#x30FC;&#x30AF;&#x30A6;&#x30A7;&#x30EB;</span></h3>
+							<h4>Also known as: <span class="green">Bureibur&#x12B;deforuto - f&#x14D;za sh&#x12B;kuu~eru</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">257171</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/19921" class="list-entry block-link">
+					<div class="base-info">
+						<h3>2. <span class="green bold">&#x30C9;&#x30E9;&#x30B4;&#x30F3;&#x30AF;&#x30A8;&#x30B9;&#x30C8;&#x2167; - &#x7A7A;&#x3068;&#x6D77;&#x3068;&#x5927;&#x5730;&#x3068;&#x546A;&#x308F;&#x308C;&#x3057;&#x59EB;&#x541B;</span></h3>
+							<h4>Also known as: <span class="green">Doragon kuesuto &#x2167; - soratoumitodaichitonorowareshihimegimi</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">230692</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/20134" class="list-entry block-link">
+					<div class="base-info">
+						<h3>3. <span class="green bold">&#x30E2;&#x30F3;&#x30B9;&#x30BF;&#x30FC;&#x30CF;&#x30F3;&#x30BF;&#x30FC;&#x30C0;&#x30D6;&#x30EB;&#x30AF;&#x30ED;&#x30B9;</span></h3>
+							<h4>Also known as: <span class="green">Monster Hunter XX</span>
+(+<span class="green bold">1</span> other names)							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">220004</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/20141" class="list-entry block-link">
+					<div class="base-info">
+						<h3>4. <span class="green bold">&#x30C9;&#x30E9;&#x30B4;&#x30F3;&#x30AF;&#x30A8;&#x30B9;&#x30C8;XI - &#x904E;&#x304E;&#x53BB;&#x308A;&#x3057;&#x6642;&#x3092;&#x6C42;&#x3081;&#x3066;</span></h3>
+							<h4>Also known as: <span class="green">Doragonkuesuto XI - sugisarishi toki o motomete</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">157263</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/1360" class="list-entry block-link">
+					<div class="base-info">
+						<h3>5. <span class="green bold">&#x30E2;&#x30F3;&#x30B9;&#x30BF;&#x30FC;&#x30CF;&#x30F3;&#x30BF;&#x30FC; &#x30B9;&#x30C8;&#x30FC;&#x30EA;&#x30FC;&#x30BA;</span></h3>
+							<h4>Also known as: <span class="green">Monsut&#x101;hant&#x101; sut&#x14D;r&#x12B;zu</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">121801</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/20690" class="list-entry block-link">
+					<div class="base-info">
+						<h3>6. <span class="green bold">&#x30DA;&#x30EB;&#x30BD;&#x30CA;&#xFF31;&#xFF12; - &#x30CB;&#x30E5;&#x30FC; &#x30B7;&#x30CD;&#x30DE; &#x30E9;&#x30D3;&#x30EA;&#x30F3;&#x30B9;</span></h3>
+							<h4>Also known as: <span class="green">Perusona Q 2 - ny&#x16B; shinema rabirinsu</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">120851</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/1124" class="list-entry block-link">
+					<div class="base-info">
+						<h3>7. <span class="green bold">&#x30D5;&#x30A1;&#x30A4;&#x30A2;&#x30FC;&#x30A8;&#x30E0;&#x30D6;&#x30EC;&#x30E0; if</span></h3>
+							<h4>Also known as: <span class="green">Fai&#x101;emuburemu if</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">114053</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/1094" class="list-entry block-link">
+					<div class="base-info">
+						<h3>8. <span class="green bold">&#x30C9;&#x30E9;&#x30B4;&#x30F3;&#x30AF;&#x30A8;&#x30B9;&#x30C8;&#x30E2;&#x30F3;&#x30B9;&#x30BF;&#x30FC;&#x30BA;2 - &#x30A4;&#x30EB;&#x3068;&#x30EB;&#x30AB;&#x306E;&#x4E0D;&#x601D;&#x8B70;&#x306A;&#x3075;&#x3057;&#x304E;&#x306A;&#x9375;</span></h3>
+							<h4>Also known as: <span class="green">Doragonkuesutomonsut&#x101;zu 2 - iru to Ruka no fushigina fushigina kagi</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">112817</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/1710" class="list-entry block-link">
+					<div class="base-info">
+						<h3>9. <span class="green bold">&#x5996;&#x602A;&#x30A6;&#x30A9;&#x30C3;&#x30C1;&#xFF12;&#x771F;&#x6253;</span></h3>
+							<h4>Also known as: <span class="green">Y&#x14D;kai u~otchi 2 shin&#x27;uchi</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">106450</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/19882" class="list-entry block-link">
+					<div class="base-info">
+						<h3>10. <span class="green bold">&#x30DD;&#x30B1;&#x30E2;&#x30F3;&#x8D85;&#x4E0D;&#x601D;&#x8B70;&#x306E;&#x30C0;&#x30F3;&#x30B8;&#x30E7;&#x30F3;</span></h3>
+							<h4>Also known as: <span class="green">Pokemon ch&#x14D; fushiginodanjon</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">105889</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/1482" class="list-entry block-link">
+					<div class="base-info">
+						<h3>11. <span class="green bold">PROJECT X ZONE 2 - ORIGINAL GAME SOUND</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">102485</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/1241" class="list-entry block-link">
+					<div class="base-info">
+						<h3>12. <span class="green bold">&#x30AD;&#x30F3;&#x30B0;&#x30C0;&#x30E0; &#x30CF;&#x30FC;&#x30C4; 3D - [&#x30C9;&#x30EA;&#x30FC;&#x30E0; &#x30C9;&#x30ED;&#x30C3;&#x30D7; &#x30C7;&#x30A3;&#x30B9;&#x30BF;&#x30F3;&#x30B9;]</span></h3>
+							<h4>Also known as: <span class="green">Kingu damu h&#x101;tsu 3D - [dor&#x12B;mu doroppu disutansu]</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">88045</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/18633" class="list-entry block-link">
+					<div class="base-info">
+						<h3>13. <span class="green bold">&#x6BDB;&#x7CF8;&#x306E;&#x30AB;&#x30FC;&#x30D3;&#x30A3; &#x30D7;&#x30E9;&#x30B9;</span></h3>
+							<h4>Also known as: <span class="green">Keito no k&#x101;byi purasu</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">86151</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/19071" class="list-entry block-link">
+					<div class="base-info">
+						<h3>14. <span class="green bold">SUPER STREET FIGHTER &#x2163; - 3D EDITION</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">85954</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/20247" class="list-entry block-link">
+					<div class="base-info">
+						<h3>15. <span class="green bold">&#x5996;&#x602A;&#x30A6;&#x30A9;&#x30C3;&#x30C1;&#xFF13;&#x30B9;&#x30AD;&#x30E4;&#x30AD;</span></h3>
+							<h4>Also known as: <span class="green">Y&#x14D;kai u~otchi 3 sukiyaki</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">81412</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/19729" class="list-entry block-link">
+					<div class="base-info">
+						<h3>16. <span class="green bold">&#x30E2;&#x30F3;&#x30B9;&#x30BF;&#x30FC;&#x30CF;&#x30F3;&#x30BF;&#x30FC;&#xFF14;&#xFF27;</span></h3>
+							<h4>Also known as: <span class="green">Monsut&#x101;hant&#x101; 4 G</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">80106</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/19484" class="list-entry block-link">
+					<div class="base-info">
+						<h3>17. <span class="green bold">&#x30D6;&#x30EC;&#x30A4;&#x30D6;&#x30EA;&#x30FC;&#x30BB;&#x30AB;&#x30F3;&#x30C9;</span></h3>
+							<h4>Also known as: <span class="green">Bureibur&#x12B;sekando</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">76790</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/19875" class="list-entry block-link">
+					<div class="base-info">
+						<h3>18. <span class="green bold">&#x30B9;&#x30C6;&#x30E9; &#x30B0;&#x30ED;&#x30A6;</span></h3>
+							<h4>Also known as: <span class="green">Sutera gurou</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">73229</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/19432" class="list-entry block-link">
+					<div class="base-info">
+						<h3>19. <span class="green bold">&#x5996;&#x602A;&#x30A6;&#x30A9;&#x30C3;&#x30C1;</span></h3>
+							<h4>Also known as: <span class="green">Y&#x14D;kai u~otchi</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">71029</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/1631" class="list-entry block-link">
+					<div class="base-info">
+						<h3>20. <span class="green bold">&#x592A;&#x9F13;&#x306E;&#x9054;&#x4EBA; &#x30C9;&#x30B3;&#x30C9;&#x30F3;&#xFF01; - &#x30DF;&#x30B9;&#x30C6;&#x30EA;&#x30FC;&#x30A2;&#x30C9;&#x30D9;&#x30F3;&#x30C1;&#x30E3;&#x30FC;</span></h3>
+							<h4>Also known as: <span class="green">Taiko no tatsujin dokodon! - Misuter&#x12B;adobench&#x101;</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">69827</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/20195" class="list-entry block-link">
+					<div class="base-info">
+						<h3>21. <span class="green bold">&#x30C9;&#x30E9;&#x30B4;&#x30F3;&#x30AF;&#x30A8;&#x30B9;&#x30C8;&#x30E2;&#x30F3;&#x30B9;&#x30BF;&#x30FC;&#x30BA; - Joker 3 PROFESSIONAL</span></h3>
+							<h4>Also known as: <span class="green">Doragonkuesutomonsut&#x101;zu - j&#x14D;k&#x101; 3 PROFESSIONAL</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">68736</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/932" class="list-entry block-link">
+					<div class="base-info">
+						<h3>22. <span class="green bold">&#x30BB;&#x30D6;&#x30F3;&#x30B9;&#x30C9;&#x30E9;&#x30B4;&#x30F3;&#x2162; code:VFD</span></h3>
+							<h4>Also known as: <span class="green">Sebunsudoragon &#x2162; k&#x14D;do: VFD</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">67159</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/19380" class="list-entry block-link">
+					<div class="base-info">
+						<h3>23. <span class="green bold">Castlevania - Lords of Shadow - - &#x5BBF;&#x547D;&#x306E;&#x9B54;&#x93E1;</span></h3>
+							<h4>Also known as: <span class="green">Castlevania - Lords of shad&#x14D; - - shukumei no ma kagami</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">66846</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/19661" class="list-entry block-link">
+					<div class="base-info">
+						<h3>24. <span class="green bold">&#x592A;&#x9F13;&#x306E;&#x9054;&#x4EBA; - &#x3069;&#x3093;&#x3068;&#x304B;&#x3064;&#x306E;&#x6642;&#x7A7A;&#x5927;&#x5192;&#x967A;</span></h3>
+							<h4>Also known as: <span class="green">Taiko no tatsujin - Don to katsu no jik&#x16B; dai b&#x14D;ken</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">66329</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/19069" class="list-entry block-link">
+					<div class="base-info">
+						<h3>25. <span class="green bold">&#x65B0;&#x30FB;&#x5149;&#x795E;&#x8A71;&#x3000;&#x30D1;&#x30EB;&#x30C6;&#x30CA;&#x306E;&#x93E1;</span></h3>
+							<h4>Also known as: <span class="green">Shin Hikari Shinwa - Parutena no Kagami</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">63407</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/20253" class="list-entry block-link">
+					<div class="base-info">
+						<h3>26. <span class="green bold">&#x771F;&#x30FB;&#x5973;&#x795E;&#x8EE2;&#x751F; - &#x30C7;&#x30A3;&#x30FC;&#x30D7;&#x3000;&#x30B9;&#x30C8;&#x30EC;&#x30F3;&#x30B8;&#x3000;&#x30B8;&#x30E3;&#x30FC;&#x30CB;&#x30FC;</span></h3>
+							<h4>Also known as: <span class="green">Ma megamitensh&#x14D; - d&#x12B;pu suto renji j&#x101;n&#x12B;</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">62370</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/1669" class="list-entry block-link">
+					<div class="base-info">
+						<h3>27. <span class="green bold">&#x30C8;&#x30E2;&#x30C0;&#x30C1;&#x30B3;&#x30EC;&#x30AF;&#x30B7;&#x30E7;&#x30F3;&#x3000;&#x65B0;&#x751F;&#x6D3B;</span></h3>
+							<h4>Also known as: <span class="green">Tomodachikorekushon shin seikatsu</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">57595</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/1035" class="list-entry block-link">
+					<div class="base-info">
+						<h3>28. <span class="green bold">&#x5927;&#x9006;&#x8EE2;&#x88C1;&#x5224; -&#x6210;&#x6B69;&#x5802;&#x9F8D;&#x30CE;&#x4ECB;&#x306E;&#x5192;&#x96AA;-</span></h3>
+							<h4>Also known as: <span class="green">Dai gyakuten saiban - Naruhod&#x14D; Ry&#x16B;nosuke no b&#x14D;ken -</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">56557</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/1553" class="list-entry block-link">
+					<div class="base-info">
+						<h3>29. <span class="green bold">&#x771F;&#x30FB;&#x5973;&#x795E;&#x8EE2;&#x751F;&#x2163;&#x3000;&#xFF26;&#xFF29;&#xFF2E;&#xFF21;&#xFF2C;</span></h3>
+							<h4>Also known as: <span class="green">Ma megamitensh&#x14D; &#x2163; FINAL</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">55640</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/1341" class="list-entry block-link">
+					<div class="base-info">
+						<h3>30. <span class="green bold">&#x30E1;&#x30C8;&#x30ED;&#x30A4;&#x30C9;&#x3000;&#x30B5;&#x30E0;&#x30B9;&#x30EA;&#x30BF;&#x30FC;&#x30F3;&#x30BA;</span></h3>
+							<h4>Also known as: <span class="green">Metoroido samusurit&#x101;nzu</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">55495</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/20305" class="list-entry block-link">
+					<div class="base-info">
+						<h3>31. <span class="green bold">&#x5996;&#x602A;&#x30A6;&#x30A9;&#x30C3;&#x30C1;&#x30D0;&#x30B9;&#x30BF;&#x30FC;&#x30BA;2 - &#x79D8;&#x5B9D;&#x4F1D;&#x8AAC;&#x30D0;&#x30F3;&#x30D0;&#x30E9;&#x30E4;&#x30FC; &#x30BD;&#x30FC;&#x30C9;</span></h3>
+							<h4>Also known as: <span class="green">Y&#x14D;kai u~otchibasut&#x101;zu 2 - hih&#x14D; densetsu banbaray&#x101; s&#x14D;do</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">54693</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/19333" class="list-entry block-link">
+					<div class="base-info">
+						<h3>32. <span class="green bold">&#x30A4;&#x30CA;&#x30BA;&#x30DE;&#x30A4;&#x30EC;&#x30D6;&#x30F3;GO2 - &#x30AF;&#x30ED;&#x30CE;&#x30FB;&#x30B9;&#x30C8;&#x30FC;&#x30F3; &quot;&#x30CD;&#x30C3;&#x30D7;&#x30A6;&quot;</span></h3>
+							<h4>Also known as: <span class="green">Inazuma Eleven GO 2 - Chrono Stones - Neppuu</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">54396</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/1719" class="list-entry block-link">
+					<div class="base-info">
+						<h3>33. <span class="green bold">&#x30BC;&#x30EB;&#x30C0;&#x306E;&#x4F1D;&#x8AAC; - &#x30E0;&#x30B8;&#x30E5;&#x30E9;&#x306E;&#x4EEE;&#x9762; 3D</span></h3>
+							<h4>Also known as: <span class="green">Zerudanodensetsu - mujuranokamen 3D</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">53999</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/19912" class="list-entry block-link">
+					<div class="base-info">
+						<h3>34. <span class="green bold">&#x30E2;&#x30F3;&#x30B9;&#x30BF;&#x30FC;&#x30CF;&#x30F3;&#x30BF;&#x30FC;&#x30AF;&#x30ED;&#x30B9;</span></h3>
+							<h4>Also known as: <span class="green">Monsut&#x101;hant&#x101;kurosu</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">53043</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/19420" class="list-entry block-link">
+					<div class="base-info">
+						<h3>35. <span class="green bold">&#x30EC;&#x30A4;&#x30C8;&#x30F3;&#x6559;&#x6388;&#x3068; - &#x5947;&#x8DE1;&#x306E;&#x4EEE;&#x9762;&#x30D7;&#x30E9;&#x30B9;</span></h3>
+							<h4>Also known as: <span class="green">Reiton ky&#x14D;ju to - kiseki no kamen purasu</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">53006</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/20308" class="list-entry block-link">
+					<div class="base-info">
+						<h3>36. <span class="green bold">&#x5996;&#x602A;&#x30A6;&#x30A9;&#x30C3;&#x30C1;&#x30D0;&#x30B9;&#x30BF;&#x30FC;&#x30BA;2 - &#x79D8;&#x5B9D;&#x4F1D;&#x8AAC;&#x30D0;&#x30F3;&#x30D0;&#x30E9;&#x30E4;&#x30FC; &#x30DE;&#x30B0;&#x30CA;&#x30E0;</span></h3>
+							<h4>Also known as: <span class="green">Y&#x14D;kai u~otchibasut&#x101;zu 2 - hih&#x14D; densetsu banbaray&#x101; magunamu</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">52693</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/19430" class="list-entry block-link">
+					<div class="base-info">
+						<h3>37. <span class="green bold">&#x521D;&#x97F3;&#x30DF;&#x30AF; - Project mirai 2</span></h3>
+							<h4>Also known as: <span class="green">Hatsunemiku - Project mirai 2</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">50713</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/19213" class="list-entry block-link">
+					<div class="base-info">
+						<h3>38. <span class="green bold">&#x30C9;&#x30E9;&#x30B4;&#x30F3;&#x30AF;&#x30A8;&#x30B9;&#x30C8;&#x2166; - &#x30A8;&#x30C7;&#x30F3;&#x306E;&#x6226;&#x58EB;&#x305F;&#x3061;</span></h3>
+							<h4>Also known as: <span class="green">Doragon kuesuto &#x2166; - eden&#x27;nosenshitachi</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">49834</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/20689" class="list-entry block-link">
+					<div class="base-info">
+						<h3>39. <span class="green bold">&#x30DE;&#x30EA;&#x30AA;&#xFF06;&#x30EB;&#x30A4;&#x30FC;&#x30B8;RPG3 DX</span></h3>
+							<h4>Also known as: <span class="green">Mario&amp; ru&#x12B;ji RPG 3DX</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">49253</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/20297" class="list-entry block-link">
+					<div class="base-info">
+						<h3>40. <span class="green bold">&#x30EC;&#x30A4;&#x30C8;&#x30F3; &#x30DF;&#x30B9;&#x30C6;&#x30EA;&#x30FC;&#x30B8;&#x30E3;&#x30FC;&#x30CB;&#x30FC; - &#x30AB;&#x30C8;&#x30EA;&#x30FC;&#x30A8;&#x30A4;&#x30EB;&#x3068;&#x5927;&#x5BCC;&#x8C6A;&#x306E;&#x9670;&#x8B00;</span></h3>
+							<h4>Also known as: <span class="green">Reiton misuter&#x12B;j&#x101;n&#x12B; - kator&#x12B;eiru to daif&#x16B;g&#x14D; no inb&#x14D;</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">49241</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/1711" class="list-entry block-link">
+					<div class="base-info">
+						<h3>41. <span class="green bold">&#x5996;&#x602A;&#x30A6;&#x30A9;&#x30C3;&#x30C1; &#x30D0;&#x30B9;&#x30BF;&#x30FC;&#x30BA; - &#x8D64;&#x732B;&#x56E3;</span></h3>
+							<h4>Also known as: <span class="green">Y&#x14D;kai u~otchi basut&#x101;zu - aka neko-dan</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">48440</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/19495" class="list-entry block-link">
+					<div class="base-info">
+						<h3>42. <span class="green bold">FANTASY LIFE LINK!</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">46630</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/20078" class="list-entry block-link">
+					<div class="base-info">
+						<h3>43. <span class="green bold">Minecraft: - New Nintendo 3DS Edition</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">45400</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/20238" class="list-entry block-link">
+					<div class="base-info">
+						<h3>44. <span class="green bold">&#x9244;&#x9053;&#x306B;&#x3063;&#x307D;&#x3093;&#xFF01;&#x8DEF;&#x7DDA;&#x305F;&#x3073; - &#x4F1A;&#x6D25;&#x9244;&#x9053;&#x7DE8;</span></h3>
+							<h4>Also known as: <span class="green">Tetsud&#x14D; Nippon! Rosen tabi - Aidzu tetsud&#x14D;-hen</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">44934</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/1118" class="list-entry block-link">
+					<div class="base-info">
+						<h3>45. <span class="green bold">FINAL FANTASY</span></h3>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">42654</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/19105" class="list-entry block-link">
+					<div class="base-info">
+						<h3>46. <span class="green bold">&#x30E2;&#x30F3;&#x30B9;&#x30BF;&#x30FC;&#x30CF;&#x30F3;&#x30BF;&#x30FC;&#xFF14;</span></h3>
+							<h4>Also known as: <span class="green">Monsut&#x101;hant&#x101; 4</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">42083</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/19093" class="list-entry block-link">
+					<div class="base-info">
+						<h3>47. <span class="green bold">&#x30DE;&#x30EA;&#x30AA;&#x30AB;&#x30FC;&#x30C8;&#xFF17;</span></h3>
+							<h4>Also known as: <span class="green">Mariok&#x101;to 7</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">40803</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/1508" class="list-entry block-link">
+					<div class="base-info">
+						<h3>48. <span class="green bold">&#x30EA;&#x30BA;&#x30E0;&#x5929;&#x56FD; &#x30B6;&#x30FB;&#x30D9;&#x30B9;&#x30C8;&#xFF0B;</span></h3>
+							<h4>Also known as: <span class="green">Rizumu tengoku za besuto &#x2B;</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">40143</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/19284" class="list-entry block-link">
+					<div class="base-info">
+						<h3>49. <span class="green bold">&#x30EC;&#x30A4;&#x30C8;&#x30F3;&#x6559;&#x6388;&#xFF36;&#xFF33;&#x9006;&#x8EE2;&#x88C1;&#x5224;</span></h3>
+							<h4>Also known as: <span class="green">Reiton ky&#x14D;ju VS gyakuten saiban</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">39571</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+				<a href="/t/20181" class="list-entry block-link">
+					<div class="base-info">
+						<h3>50. <span class="green bold">&#x30DD;&#x30C1;&#x3068;&#xFF01;&#x30E8;&#x30C3;&#x30B7;&#x30FC;&#x30A6;&#x30FC;&#x30EB;&#x30EF;&#x30FC;&#x30EB;&#x30C9;</span></h3>
+							<h4>Also known as: <span class="green">Pochi to! Yossh&#x12B;&#x16B;ruw&#x101;rudo</span>
+							</h4>
+					</div>
+					<div class="meta">
+						<div class="meta-content">
+							<span class="yellow bold">39245</span>
+							<span>Downloads</span>
+						</div>
+					</div>
+				</a>
+		</div>
+	</div>
+</div>
+		</main>
+
+		<footer>
+			<div class="nav-list">
+				<a href="/announcements">Announcements</a>
+				<a href="/wiki">Wiki</a>
+				<a href="https://discord.gg/dYKm279">Discord</a>
+				<div>
+					<img draggable="false" src="/img/sun.png?v=2.10" alt="A sun icon.">
+					<div class="dark" id="toggle-colormode">
+						<div></div>
+					</div>
+					<img draggable="false" src="/img/moon.png?v=2.10" alt="A moon icon.">
+				</div>
+
+
+					<h3 class="sitever nospace bold hidden-mobile">
+						hShop<span class="green">site v3</span>
+					</h3>
+
+
+			</div>
+		</footer>
+
+		<script src="/js/base.min.js?v=2.10"></script>
+
+
+				<script src="/js/paged.min.js?v=2.10"></script>
+				<script src="/js/scat-list.min.js?v=2.10"></script>
+	</body>
+</html>

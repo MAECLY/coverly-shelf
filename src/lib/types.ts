@@ -3,16 +3,16 @@
  * They are page-agnostic on purpose so the listing pages can reuse them.
  */
 
-/** `CTR` is the original 3DS, `KTR` the New 3DS exclusives. */
-export type Platform = 'CTR' | 'KTR';
+/** `CTR` is the original 3DS, `KTR` the New 3DS exclusives, `TWL` DSiWare. */
+export type Platform = 'CTR' | 'KTR' | 'TWL';
 
-/** Region folders GameTDB uses under `https://art.gametdb.com/3ds/{type}/{region}/`. */
+/** Region folders GameTDB uses under `https://art.gametdb.com/{3ds|ds}/{type}/{region}/`. */
 export type GameTdbRegion = string;
 
 export interface GameInfo {
   /** Game title as hShop shows it (already HTML-decoded). */
   title: string;
-  /** Full product code, e.g. `CTR-P-AZEE`. */
+  /** Full product code, e.g. `CTR-P-AZEE` (DLC `CTR-M-BYGE-00` is read as `CTR-M-BYGE`). */
   productCode: string;
   platform: Platform;
   /** Middle letter of the product code: `P` retail, `N` digital, etc. */

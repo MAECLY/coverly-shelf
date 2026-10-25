@@ -7,6 +7,9 @@
  *    LIVE hshop.erista.me title pages: cover, regions, digital titles, themes,
  *    gallery + lightbox keyboard, idempotence, request concurrency, cache and
  *    responsive screenshots (saved to docs/screenshots/).
+ * 3. Drives LIVE listing pages (/c/*, /search/results): row thumbnails, row
+ *    links, layout overflow, DSiWare art, themes left untouched, idempotence
+ *    and the separate thumbnail cache.
  *
  * Prints PASS/FAIL per check and exits non-zero on any FAIL.
  * Set E2E_HEADED=1 to watch it run.
@@ -28,6 +31,9 @@ const SITE = 'https://hshop.erista.me';
 const ART_HOSTS = ['art.gametdb.com', 'thumbnails.libretro.com'];
 const COVER_HOST = 'coverly-shelf-cover';
 const GALLERY_HOST = 'coverly-shelf-gallery';
+const THUMB_HOST = 'coverly-shelf-thumb';
+const TITLE_MATCHES = ['*://hshop.erista.me/t/*'];
+const LIST_MATCHES = ['*://hshop.erista.me/c/*', '*://hshop.erista.me/search/results*'];
 const MAX_IN_FLIGHT = 4;
 
 const failures: string[] = [];
@@ -76,20 +82,29 @@ check(
   'host_permissions are only the two artwork hosts',
 );
 const scripts = manifest.content_scripts ?? [];
-check(scripts.length === 1, 'exactly one content script');
-check(sameSet(scripts[0]?.matches, ['*://hshop.erista.me/t/*']), 'content script matches only /t/* on hShop');
+check(scripts.length === 2, 'exactly two content scripts (title pages and listing pages)', `found ${scripts.length}`);
+const titleScript = scripts.find((s) => (s.js ?? []).includes('content-scripts/title.js'));
+const listScript = scripts.find((s) => (s.js ?? []).includes('content-scripts/list.js'));
+check(sameSet(titleScript?.matches, TITLE_MATCHES), 'title content script matches only /t/* on hShop', JSON.stringify(titleScript?.matches));
+check(sameSet(listScript?.matches, LIST_MATCHES), 'list content script matches only /c/* and /search/results* on hShop', JSON.stringify(listScript?.matches));
+check(
+  scripts.every((s) => (s.matches ?? []).every((m) => m.startsWith('*://hshop.erista.me/'))),
+  'every content script runs on hShop only',
+);
 check(!scripts.some((s) => (s.css ?? []).length > 0), 'no manifest CSS is injected into hShop (cssInjectionMode "ui")');
 
-const cssPath = join(out, 'content-scripts', 'title.css');
-const css = existsSync(cssPath) ? readFileSync(cssPath, 'utf8') : '';
-check(css.length > 0, 'title.css is built');
-check(!css.includes('@property'), "title.css has no @property rules (WXT would move them into hShop's document)");
-check(!css.includes('@font-face'), 'title.css declares no @font-face');
+for (const name of ['title', 'list']) {
+  const cssPath = join(out, 'content-scripts', `${name}.css`);
+  const css = existsSync(cssPath) ? readFileSync(cssPath, 'utf8') : '';
+  check(css.length > 0, `${name}.css is built`);
+  check(!css.includes('@property'), `${name}.css has no @property rules (WXT would move them into hShop's document)`);
+  check(!css.includes('@font-face'), `${name}.css declares no @font-face`);
 
-const jsPath = join(out, 'content-scripts', 'title.js');
-const js = existsSync(jsPath) ? readFileSync(jsPath, 'utf8') : '';
-check(js.length > 0, 'title.js is built');
-check(!/\.innerHTML\s*=/.test(js), 'title.js never assigns innerHTML');
+  const jsPath = join(out, 'content-scripts', `${name}.js`);
+  const js = existsSync(jsPath) ? readFileSync(jsPath, 'utf8') : '';
+  check(js.length > 0, `${name}.js is built`);
+  check(!/\.innerHTML\s*=/.test(js), `${name}.js never assigns innerHTML`);
+}
 
 let libretroMap: Record<string, string[]> = {};
 let mapOk = false;
@@ -167,7 +182,7 @@ function watchPage(page: Page): PageWatch {
     if (msg.type() !== 'error') return;
     const loc = msg.location().url ?? '';
     const text = msg.text();
-    if (loc.startsWith('chrome-extension://') || /coverly|content-scripts\/title/i.test(text)) {
+    if (loc.startsWith('chrome-extension://') || /coverly|content-scripts\/(title|list)/i.test(text)) {
       w.extConsoleErrors.push(`${text} @ ${loc}`);
     }
   });
@@ -229,11 +244,11 @@ function coverState(page: Page): Promise<CoverState> {
 }
 
 /**
- * hShop's download block, as markup. When hShop gates downloads behind a
- * Cloudflare Turnstile, the widget's contents and id are random per load (and
- * owned by Cloudflare), so they are blanked before comparing.
+ * hShop's download box (`.landing-dl`) as HTML, with the Cloudflare Turnstile
+ * widget emptied: Turnstile renders a random widget id on every load (two loads
+ * without the extension already differ), so only hShop's own markup is compared.
  */
-function downloadBlock(page: Page): Promise<string> {
+function downloadBoxHtml(page: Page): Promise<string> {
   return page
     .locator('.landing-dl')
     .first()
@@ -252,6 +267,120 @@ async function goto(page: Page, path: string): Promise<void> {
   await page.goto(`${SITE}${path}`, { waitUntil: 'load', timeout: 60_000 });
 }
 
+// ─── Listing-page helpers ───────────────────────────────────────────────────
+
+interface ListState {
+  titleRows: number;
+  hosts: number;
+  /** Every host is the first child of an enhanced `a.list-entry` that links to /t/{id}. */
+  hostsPlaced: boolean;
+  /** No row carries more than one host. */
+  oneHostPerRow: boolean;
+  states: Record<string, number>;
+  /** Thumbnails exposed to assistive tech (the row link already names the game). */
+  imagesLoaded: number;
+  a11yLeaks: string[];
+  artSrcs: string[];
+  overflow: number;
+  styleTags: number;
+}
+
+function listState(page: Page): Promise<ListState> {
+  return page.evaluate((host) => {
+    const rows = [...document.querySelectorAll<HTMLAnchorElement>('a.list-entry[href^="/t/"]')];
+    const hosts = [...document.querySelectorAll(host)];
+    const states: Record<string, number> = {};
+    let imagesLoaded = 0;
+    const a11yLeaks: string[] = [];
+    const artSrcs: string[] = [];
+    for (const h of hosts) {
+      const thumb = h.shadowRoot?.querySelector('.cs-thumb');
+      const state = thumb?.getAttribute('data-state') ?? 'none';
+      states[state] = (states[state] ?? 0) + 1;
+      const img = h.shadowRoot?.querySelector<HTMLImageElement>('img.cs-thumb-art');
+      if (img && img.complete && img.naturalWidth > 0) {
+        imagesLoaded += 1;
+        artSrcs.push(img.currentSrc || img.src);
+      }
+      // Decorative: hidden wrapper, empty alt, no image role or label inside.
+      if (
+        thumb?.getAttribute('aria-hidden') !== 'true' ||
+        (img && img.getAttribute('alt') !== '') ||
+        thumb.querySelector('[role], [aria-label]')
+      ) {
+        a11yLeaks.push(`${state}: ${h.parentElement?.getAttribute('href') ?? '?'}`);
+      }
+    }
+    return {
+      titleRows: rows.length,
+      hosts: hosts.length,
+      hostsPlaced: hosts.every((h) => {
+        const a = h.parentElement;
+        return (
+          !!a &&
+          a.matches('a.list-entry[href^="/t/"]') &&
+          a.hasAttribute('data-hshop-enhanced') &&
+          a.firstElementChild === h
+        );
+      }),
+      oneHostPerRow: rows.every((a) => a.querySelectorAll(`:scope > ${host}`).length <= 1),
+      states,
+      imagesLoaded,
+      a11yLeaks,
+      artSrcs,
+      overflow: document.documentElement.scrollWidth - innerWidth,
+      styleTags: document.querySelectorAll('style[data-coverly-shelf-list]').length,
+    };
+  }, THUMB_HOST);
+}
+
+/** Scrolls the page and the top list so every row comes into view once. */
+async function scrollLists(page: Page): Promise<void> {
+  await page.evaluate(async () => {
+    const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+    const step = innerHeight * 0.8;
+    for (let y = 0; y < document.body.scrollHeight; y += step) {
+      scrollTo(0, y);
+      await wait(200);
+    }
+    const top = document.querySelector('.list.top-list');
+    if (top) {
+      for (let y = 0; y < top.scrollHeight; y += 300) {
+        top.scrollTop = y;
+        await wait(200);
+      }
+      top.scrollTop = 0;
+    }
+    scrollTo(0, 0);
+  });
+}
+
+/** Waits until no mounted thumbnail is still loading (or the timeout passes). */
+async function waitForThumbs(page: Page, timeout = 45_000): Promise<boolean> {
+  return page
+    .waitForFunction(
+      (host) => {
+        const hosts = [...document.querySelectorAll(host)];
+        return (
+          hosts.length > 0 &&
+          hosts.every((h) => {
+            const t = h.shadowRoot?.querySelector('.cs-thumb');
+            if (!t) return false;
+            const state = t.getAttribute('data-state');
+            if (state === 'loading') return false;
+            if (state !== 'image') return true;
+            const img = h.shadowRoot?.querySelector<HTMLImageElement>('img.cs-thumb-art');
+            return !!img && img.complete;
+          })
+        );
+      },
+      THUMB_HOST,
+      { timeout, polling: 300 },
+    )
+    .then(() => true)
+    .catch(() => false);
+}
+
 async function main(): Promise<void> {
   mkdirSync(shotsDir, { recursive: true });
   const headless = process.env.E2E_HEADED !== '1';
@@ -263,7 +392,7 @@ async function main(): Promise<void> {
   const baselineErrors: string[] = [];
   plainPage.on('pageerror', (e) => baselineErrors.push(e.message));
   await goto(plainPage, '/t/1814');
-  const baselineDl = await downloadBlock(plainPage);
+  const baselineDl = await downloadBoxHtml(plainPage);
   await plain.close();
   console.log(`baseline .landing-dl captured (${baselineDl.length} chars), ${baselineErrors.length} page error(s)`);
 
@@ -299,7 +428,7 @@ async function main(): Promise<void> {
     check(s1.naturalWidth > 0 && !s1.placeholder, '1814: cover image loaded', `naturalWidth=${s1.naturalWidth}`);
     check(s1.src === 'https://art.gametdb.com/3ds/coverHQ/US/AZEE.jpg', '1814: cover from GameTDB coverHQ/US/AZEE.jpg', String(s1.src));
     check(!!s1.title && s1.alt === s1.title, '1814: alt equals the game title', `alt="${s1.alt}" title="${s1.title}"`);
-    const dl = await downloadBlock(page);
+    const dl = await downloadBoxHtml(page);
     check(dl === baselineDl, '1814: .landing-dl outerHTML identical to the run without the extension');
     const newErrors = watch.pageErrors.filter((e) => !baselineErrors.includes(e));
     check(newErrors.length === 0, '1814: no page errors beyond the baseline', newErrors.join(' | '));
@@ -518,6 +647,105 @@ async function main(): Promise<void> {
       }
     }
     check(true, 'screenshots saved to docs/screenshots/');
+
+    // ── 10. Listing pages
+    console.log('\n── 10. listing pages');
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await context.clearCookies({ name: 'colormode' });
+
+    // North America: main list (25 rows with codes) + top list (50 rows, no codes).
+    art.mark = 'list-na';
+    await goto(page, '/c/games/s/north-america');
+    await page.waitForSelector(THUMB_HOST, { state: 'attached', timeout: 20_000 }).catch(() => null);
+    await scrollLists(page);
+    const naSettled = await waitForThumbs(page);
+    const na = await listState(page);
+    check(naSettled, 'list NA: every thumbnail left its loading state', JSON.stringify(na.states));
+    check(na.hosts > 0 && na.hosts <= na.titleRows, 'list NA: thumbnails mounted on title rows', `${na.hosts} host(s) / ${na.titleRows} rows`);
+    check(na.hostsPlaced, 'list NA: each host is the first child of an enhanced /t/ row');
+    check(na.oneHostPerRow, 'list NA: at most one thumbnail per row');
+    check(na.imagesLoaded >= 15, 'list NA: most thumbnails show box art', `${na.imagesLoaded} image(s) loaded`);
+    check(na.a11yLeaks.length === 0, 'list NA: thumbnails are hidden from assistive tech (no doubled row name)', na.a11yLeaks.slice(0, 3).join(' | '));
+    check(
+      na.artSrcs.every((u) => !/\/3ds\/(coverHQ|coverM|coverfull|box|cart)\//.test(u)),
+      'list NA: thumbnails use small art only (no coverHQ/coverM/box/cart)',
+      na.artSrcs.filter((u) => /coverHQ|coverM/.test(u)).slice(0, 3).join(', '),
+    );
+    check(na.overflow <= 0, 'list NA: no horizontal overflow at 1440', `${na.overflow}px`);
+    check(na.styleTags === 1, 'list NA: exactly one layout <style> in the document', `found ${na.styleTags}`);
+    await page.screenshot({ path: join(shotsDir, 'list-na-dark-1440.png') });
+
+    const stored2 = await worker.evaluate(async () => {
+      // @ts-expect-error chrome is the extension global inside the service worker
+      return (await chrome.storage.local.get(null)) as Record<string, unknown>;
+    });
+    const thumbKeys = Object.keys(stored2).filter((k) => k.startsWith('thumb:'));
+    check(thumbKeys.length > 0, 'list NA: thumbnails cached under thumb: keys', `${thumbKeys.length} key(s)`);
+    const coverStill = stored2['cover:AZEE'] as { value?: { url?: string } } | undefined;
+    check(
+      coverStill?.value?.url === 'https://art.gametdb.com/3ds/coverHQ/US/AZEE.jpg',
+      'list NA: the title-page cover cache (cover:AZEE) keeps its HQ art',
+      JSON.stringify(coverStill?.value ?? null),
+    );
+
+    // Idempotence: in-page path changes must not double any row.
+    await page.evaluate(() => history.pushState(null, '', '/c/games/s/north-america/'));
+    await sleep(1_500);
+    await page.evaluate(() => history.pushState(null, '', '/c/games/s/north-america'));
+    await sleep(2_000);
+    const naAgain = await listState(page);
+    check(naAgain.oneHostPerRow && naAgain.hostsPlaced, 'list idempotence: one host per row after in-page re-runs', `hosts=${naAgain.hosts}`);
+    check(naAgain.styleTags === 1, 'list idempotence: still one layout <style>', `found ${naAgain.styleTags}`);
+
+    // Clicking a thumbnail follows the row link.
+    const firstHost = page.locator(THUMB_HOST).first();
+    const rowHref = await firstHost.evaluate((h) => h.parentElement?.getAttribute('href') ?? '');
+    await firstHost.scrollIntoViewIfNeeded();
+    await firstHost.click();
+    await page.waitForURL((u) => u.pathname === rowHref, { timeout: 15_000 }).catch(() => null);
+    check(new URL(page.url()).pathname === rowHref, 'list: clicking a thumbnail opens the row title page', `${rowHref} -> ${new URL(page.url()).pathname}`);
+
+    // Phone width: no overflow.
+    await page.setViewportSize({ width: 390, height: 844 });
+    await goto(page, '/c/games/s/north-america');
+    await page.waitForSelector(THUMB_HOST, { state: 'attached', timeout: 20_000 }).catch(() => null);
+    await waitForThumbs(page, 20_000);
+    const naPhone = await listState(page);
+    check(naPhone.overflow <= 0, 'list NA: no horizontal overflow at 390', `${naPhone.overflow}px`);
+    await page.screenshot({ path: join(shotsDir, 'list-na-dark-390.png') });
+    await page.setViewportSize({ width: 1440, height: 900 });
+
+    // DSiWare: TWL codes resolve through GameTDB ds/.
+    art.mark = 'list-dsiware';
+    await goto(page, '/c/dsiware/s/north-america');
+    await page.waitForSelector(THUMB_HOST, { state: 'attached', timeout: 20_000 }).catch(() => null);
+    await waitForThumbs(page, 30_000);
+    const dsi = await listState(page);
+    check(dsi.hosts > 0, 'list DSiWare: thumbnails mounted', `${dsi.hosts} host(s)`);
+    check(
+      dsi.artSrcs.some((u) => u.startsWith('https://art.gametdb.com/ds/')),
+      'list DSiWare: at least one thumbnail from GameTDB ds/',
+      `${dsi.imagesLoaded} image(s); ${dsi.artSrcs.slice(0, 2).join(', ')}`,
+    );
+
+    // Themes: CTR-N-THEME has no art; nothing is injected and nothing is fetched.
+    art.mark = 'list-themes';
+    await goto(page, '/c/themes/s/north-america');
+    await sleep(4_000);
+    const themes = await listState(page);
+    check(themes.hosts === 0, 'list themes: no thumbnail injected', `hosts=${themes.hosts}`);
+    check(themes.styleTags === 0, 'list themes: no layout <style> injected');
+    check(!(await page.locator('[data-hshop-enhanced]').count()), 'list themes: no enhanced marker');
+    check(art.during('list-themes').length === 0, 'list themes: no requests to the art hosts');
+
+    // Search results use the same rows.
+    art.mark = 'list-search';
+    await goto(page, '/search/results?q=mario&qt=Text');
+    await page.waitForSelector(THUMB_HOST, { state: 'attached', timeout: 20_000 }).catch(() => null);
+    await waitForThumbs(page, 30_000);
+    const search = await listState(page);
+    check(search.hosts > 0 && search.hostsPlaced, 'list search: thumbnails mounted on result rows', `${search.hosts} host(s) / ${search.titleRows} rows`);
+    check(search.overflow <= 0, 'list search: no horizontal overflow', `${search.overflow}px`);
 
     // ── 7. Concurrency (whole run)
     console.log('\n── 7. concurrency');
