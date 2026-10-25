@@ -129,6 +129,14 @@ export const LOOKUP = {
   /** Requests to hShop itself in flight at once, separate from the artwork limiter. */
   maxConcurrent: 2,
   timeoutMs: 15_000,
+  /**
+   * Pause after hShop signals overload (429, 5xx, a challenge page or a
+   * redirect away from the title): no lookup is sent until it ends. A
+   * `Retry-After` header wins, clamped to [min, max].
+   */
+  cooldownMs: 10 * 60 * 1000,
+  minCooldownMs: 30 * 1000,
+  maxCooldownMs: 60 * 60 * 1000,
 } as const;
 
 /**

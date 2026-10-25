@@ -5,7 +5,14 @@ import { fakeBrowser } from 'wxt/testing/fake-browser';
 import { storage } from '#imports';
 import { CACHE_VERSION, LOOKUP } from '../src/lib/config';
 import { extractListEntries } from '../src/lib/extract';
-import { lookupGameInfo, parseTitlePage, rememberGameInfo, rememberShownCodes } from '../src/lib/lookup';
+import {
+  cooldownFromRetryAfter,
+  lookupGameInfo,
+  parseTitlePage,
+  rememberGameInfo,
+  rememberShownCodes,
+  resetHshopCooldown,
+} from '../src/lib/lookup';
 import type { GameInfo } from '../src/lib/types';
 
 const FIXTURES = join(__dirname, 'fixtures', 'hshop');
@@ -29,6 +36,7 @@ const fetchMock = vi.fn<(input: string, init?: RequestInit) => Promise<Response>
 
 beforeEach(() => {
   fakeBrowser.reset();
+  resetHshopCooldown();
   fetchMock.mockReset();
   vi.stubGlobal('fetch', fetchMock);
 });
@@ -85,18 +93,75 @@ describe('lookupGameInfo', () => {
     await expect(storage.getItem('local:lookup:15834')).resolves.toMatchObject({ value: { info: null } });
   });
 
-  it.each([
-    ['a network error', () => Promise.reject(new TypeError('Failed to fetch'))],
-    ['a 429', () => Promise.resolve(response('slow down', { status: 429 }))],
-    ['a 503', () => Promise.resolve(response('down', { status: 503 }))],
-    ['a challenge page', () => Promise.resolve(response('<html><body>Checking your browser</body></html>'))],
-    ['a redirect elsewhere', () => Promise.resolve(response(RETAIL, { url: 'https://hshop.erista.me/' }))],
-  ])('does not cache %s', async (_, impl) => {
-    fetchMock.mockImplementation(impl);
+  it('does not cache a network error and retries on the next call', async () => {
+    fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'));
     await expect(lookupGameInfo('1814')).resolves.toBeNull();
     await expect(storage.getItem('local:lookup:1814')).resolves.toBeNull();
     fetchMock.mockResolvedValue(response(RETAIL));
     await expect(lookupGameInfo('1814')).resolves.toMatchObject({ gameCode: 'AZEE' });
+  });
+
+  it.each([
+    ['a 429', () => Promise.resolve(response('slow down', { status: 429 }))],
+    ['a 503', () => Promise.resolve(response('down', { status: 503 }))],
+    ['a challenge page', () => Promise.resolve(response('<html><body>Checking your browser</body></html>'))],
+    ['a redirect elsewhere', () => Promise.resolve(response(RETAIL, { url: 'https://hshop.erista.me/' }))],
+  ])('does not cache %s and backs off before asking hShop again', async (_, impl) => {
+    let t = 1_000_000;
+    const now = (): number => t;
+    fetchMock.mockImplementation(impl);
+    await expect(lookupGameInfo('1814', { now })).resolves.toBeNull();
+    await expect(storage.getItem('local:lookup:1814')).resolves.toBeNull();
+    fetchMock.mockReset();
+    fetchMock.mockResolvedValue(response(RETAIL));
+    // During the cooldown nothing is sent, for this id or any other.
+    t += LOOKUP.cooldownMs - 1;
+    await expect(lookupGameInfo('1814', { now })).resolves.toBeNull();
+    await expect(lookupGameInfo('2000', { now })).resolves.toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
+    t += 1;
+    await expect(lookupGameInfo('1814', { now })).resolves.toMatchObject({ gameCode: 'AZEE' });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('honours Retry-After and keeps the cooldown across page views', async () => {
+    let t = 5_000_000;
+    const now = (): number => t;
+    const res = response('slow down', { status: 429 });
+    res.headers.set('retry-after', '120');
+    fetchMock.mockResolvedValueOnce(res);
+    await lookupGameInfo('1814', { now });
+    // A new page view: no in-memory state, only storage.
+    resetHshopCooldown();
+    fetchMock.mockResolvedValue(response(RETAIL));
+    t += 119_000;
+    await expect(lookupGameInfo('1814', { now })).resolves.toBeNull();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    t += 1_000;
+    await expect(lookupGameInfo('1814', { now })).resolves.toMatchObject({ gameCode: 'AZEE' });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('drops lookups already queued behind a request that got a 429', async () => {
+    fetchMock.mockImplementation(async (url: string) =>
+      url.endsWith('/t/1') ? response('slow down', { status: 429 }) : response(RETAIL),
+    );
+    await Promise.all(['1', '2', '3', '4', '5', '6'].map((id) => lookupGameInfo(id)));
+    // 1 and 2 start together (two in flight); 3+ start after the 429 and are skipped.
+    expect(fetchMock.mock.calls.map((c) => c[0])).toEqual([
+      'https://hshop.erista.me/t/1',
+      'https://hshop.erista.me/t/2',
+    ]);
+  });
+
+  it('reads Retry-After as seconds or an HTTP date, clamped', () => {
+    expect(cooldownFromRetryAfter(null, 0)).toBe(LOOKUP.cooldownMs);
+    expect(cooldownFromRetryAfter('garbage', 0)).toBe(LOOKUP.cooldownMs);
+    expect(cooldownFromRetryAfter('120', 0)).toBe(120_000);
+    expect(cooldownFromRetryAfter('1', 0)).toBe(LOOKUP.minCooldownMs);
+    expect(cooldownFromRetryAfter('999999', 0)).toBe(LOOKUP.maxCooldownMs);
+    const now = Date.parse('2026-10-25T10:00:00Z');
+    expect(cooldownFromRetryAfter('Sun, 25 Oct 2026 10:05:00 GMT', now)).toBe(300_000);
   });
 
   it('shares one request between concurrent callers', async () => {

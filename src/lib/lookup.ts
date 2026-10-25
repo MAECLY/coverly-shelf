@@ -9,6 +9,10 @@
  *   without a usable code such as a theme) are both kept.
  * - Transport problems (network error, timeout, 429/5xx, a challenge page or a
  *   redirect away from the title) are not cached, so a later visit retries.
+ * - hShop overload signals (429, 5xx, a challenge page or a redirect away)
+ *   start a cooldown (`Retry-After`, else LOOKUP.cooldownMs) kept in memory and
+ *   under `local:hshop:cooldown`: until it ends every lookup, queued ones too,
+ *   resolves null without a request, on this page and on later page views.
  * - At most LOOKUP.maxConcurrent requests to hShop at once, separate from the
  *   artwork limiter, and one request per id per page however often it is asked.
  * - Never rejects.
@@ -33,10 +37,60 @@ interface LookupRecord {
 /** null = no usable code (definite); undefined = no answer this time (transient). */
 type Outcome = GameInfo | null | undefined;
 
+/** What one request told us; `cooldownMs` when hShop asked us to back off. */
+interface FetchResult {
+  outcome: Outcome;
+  cooldownMs?: number;
+}
+
 const limitHshop = createLimiter(LOOKUP.maxConcurrent);
 const inflight = new Map<string, Promise<GameInfo | null>>();
 
 const lookupKey = (id: string): string => `local:lookup:${id}`;
+const COOLDOWN_KEY = 'local:hshop:cooldown';
+
+/** Epoch ms until which hShop gets no lookup (mirrors COOLDOWN_KEY). */
+let cooldownUntil = 0;
+
+/** Test hook: forget the in-memory cooldown. */
+export function resetHshopCooldown(): void {
+  cooldownUntil = 0;
+}
+
+/**
+ * Pause length for a `Retry-After` value (delta seconds or an HTTP date),
+ * clamped to [LOOKUP.minCooldownMs, LOOKUP.maxCooldownMs]; LOOKUP.cooldownMs
+ * when it is missing or unreadable.
+ */
+export function cooldownFromRetryAfter(header: string | null | undefined, nowMs: number): number {
+  let ms: number = LOOKUP.cooldownMs;
+  const raw = header?.trim();
+  if (raw) {
+    if (/^\d+$/.test(raw)) ms = Number(raw) * 1000;
+    else {
+      const at = Date.parse(raw);
+      if (Number.isFinite(at)) ms = at - nowMs;
+    }
+  }
+  return Math.min(LOOKUP.maxCooldownMs, Math.max(LOOKUP.minCooldownMs, ms));
+}
+
+async function coolingDown(now: () => number): Promise<boolean> {
+  const t = now();
+  if (t < cooldownUntil) return true;
+  const stored = await getCached<unknown>(COOLDOWN_KEY, now, LOOKUP.maxCooldownMs);
+  if (typeof stored === 'number' && Number.isFinite(stored) && t < stored) {
+    // Never trust a stored pause longer than the maximum (clock changes).
+    cooldownUntil = Math.min(stored, t + LOOKUP.maxCooldownMs);
+    return true;
+  }
+  return false;
+}
+
+async function startCooldown(ms: number, now: () => number): Promise<void> {
+  cooldownUntil = Math.max(cooldownUntil, now() + ms);
+  await setCached(COOLDOWN_KEY, cooldownUntil, now);
+}
 
 function isString(v: unknown): v is string {
   return typeof v === 'string';
@@ -76,7 +130,7 @@ export function parseTitlePage(html: string): Outcome {
   }
 }
 
-async function fetchTitle(id: string): Promise<Outcome> {
+async function fetchTitle(id: string, now: () => number): Promise<FetchResult> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), LOOKUP.timeoutMs);
   try {
@@ -86,13 +140,18 @@ async function fetchTitle(id: string): Promise<Outcome> {
       redirect: 'follow',
       signal: ctrl.signal,
     });
-    if (res.status === 404 || res.status === 410) return null;
-    if (!res.ok) return undefined;
+    if (res.status === 404 || res.status === 410) return { outcome: null };
+    if (res.status === 429 || res.status >= 500) {
+      return { outcome: undefined, cooldownMs: cooldownFromRetryAfter(res.headers.get('retry-after'), now()) };
+    }
+    if (!res.ok) return { outcome: undefined };
     // A redirect elsewhere (challenge, maintenance) is not this title's page.
-    if (res.url && hshopIdFromHref(res.url) !== id) return undefined;
-    return parseTitlePage(await res.text());
+    if (res.url && hshopIdFromHref(res.url) !== id) return { outcome: undefined, cooldownMs: LOOKUP.cooldownMs };
+    const outcome = parseTitlePage(await res.text());
+    // A 200 without hShop's title layout is a challenge or maintenance page.
+    return outcome === undefined ? { outcome, cooldownMs: LOOKUP.cooldownMs } : { outcome };
   } catch {
-    return undefined;
+    return { outcome: undefined };
   } finally {
     clearTimeout(timer);
   }
@@ -101,8 +160,13 @@ async function fetchTitle(id: string): Promise<Outcome> {
 async function lookup(id: string, now: () => number): Promise<GameInfo | null> {
   const cached = await getCached<unknown>(lookupKey(id), now, LOOKUP.ttlMs);
   if (isRecord(cached)) return cached.info;
+  if (await coolingDown(now)) return null;
 
-  const outcome = await limitHshop(() => fetchTitle(id));
+  // Checked again when the limiter starts the task: an earlier request may have hit a 429.
+  const { outcome, cooldownMs } = await limitHshop(async (): Promise<FetchResult> =>
+    (await coolingDown(now)) ? { outcome: undefined } : fetchTitle(id, now),
+  );
+  if (cooldownMs !== undefined) await startCooldown(cooldownMs, now);
   if (outcome === undefined) return null;
   await setCached<LookupRecord>(lookupKey(id), { info: outcome }, now);
   return outcome;
