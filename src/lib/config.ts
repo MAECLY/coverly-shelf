@@ -11,7 +11,14 @@ export const REGION_BY_CHAR: Readonly<Record<string, GameTdbRegion>> = {
   P: 'EN',
   J: 'JA',
   K: 'KO',
-  // TODO(reference): D/F/S/I/H/U/R/C/W variants are unverified on GameTDB.
+  // Verified 2026-10-25 against art.gametdb.com/3ds/cover/{region}/{code}.jpg.
+  // Every D/F/S/I/H code probed also exists under EN, which the fallback chain tries next.
+  D: 'DE', // AA3D, ADPD, AF2D, AF8D, AFJD → 200 in DE (AD3D, AE2D, AFND only in EN)
+  I: 'IT', // AE2I, AEEI, AKKI, AWTI → 200 in IT (AL6I, AL8I, ALZI, AQLI only in EN)
+  F: 'EN', // AD3F, AF9F, AFJF, AH8F, AKKF, AL5F, AL6F → 200 in EN, none in FR
+  S: 'EN', // AFJS, AKKS, AL5S, AL6S, AL8S, ALAS, ALZS → 200 in EN, none in ES
+  H: 'EN', // AKKH, AL6H → 200 in EN, none in NL
+  // TODO(reference): U/R/C/W/Z variants are unverified on GameTDB (APNR → 404 in RU and EN).
 };
 
 /** Regions tried after the game's own region, in order. */

@@ -142,6 +142,12 @@ Probed with `AZEE` (retail), `AREE` (retail), `SAEE` (digital, `N`):
   distribution letter is `N`.
 - Regions verified: `US` (AZEE), `EN` (AZEP, and the New 3DS `KTR-P-CFMP`),
   `JA` (BZLJ). `JCPJ` (digital, JA) returned 404, so misses are normal.
+- European language letters (cover probes, 2026-10-25): every `D`/`F`/`S`/`I`/`H`
+  code tried exists under `EN` (e.g. AD3F, AKKS, AL8I, AKKH). Some also have a
+  localized cover: `DE` for `D` (AA3D, ADPD, AF2D, AF8D, AFJD) and `IT` for `I`
+  (AE2I, AEEI, AKKI, AWTI). `FR`, `ES` and `NL` had no hit for `F`/`S`/`H`
+  codes, so those map to `EN`. `R` (APNR) returned 404 in `RU` and `EN`;
+  `U`/`C`/`W`/`Z` remain unverified.
 - 404 for missing art, `Cache-Control: max-age=2592000`, no CORS headers (fine
   for `<img>`, not readable with `fetch` from the page).
 - Cover ratio: 160/144 ≈ 1.11, 768/680 ≈ 1.13 — wider than tall.
