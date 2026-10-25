@@ -229,8 +229,7 @@
     font-size: 16px;
     font-weight: 600;
     line-height: 1.55;
-    /* Two lines reserved: the async readout may wrap on phones without pushing the page down. */
-    min-height: calc(2 * 1.55em);
+    min-height: 1.55em;
   }
   .intro {
     margin-top: 6px;
@@ -369,14 +368,21 @@
   .status {
     margin-top: 12px;
     line-height: 1.55;
-    /* Always takes room (two lines on phones), so announcements never move the footer. */
-    min-height: calc(2 * 1.55em);
+    /* Always takes room, even when empty, so announcements never move the footer. */
+    min-height: 1.55em;
     font-size: 14px;
     font-weight: 600;
     color: var(--cr-success);
   }
   .status.is-error {
     color: var(--cr-danger);
+  }
+  /* Phones: the async readout and longer messages may wrap, so two lines are reserved. */
+  @media (max-width: 560px) {
+    .usage,
+    .status {
+      min-height: calc(2 * 1.55em);
+    }
   }
 
   /* ── Footer ── */
