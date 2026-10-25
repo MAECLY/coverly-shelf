@@ -30,15 +30,20 @@ function isEntry(raw: unknown): raw is CacheEntry<unknown> {
 }
 
 /**
- * Returns the cached value, or `undefined` when it is missing, expired, from
- * another `CACHE_VERSION`, or storage fails. Never rejects.
+ * Returns the cached value, or `undefined` when it is missing, older than
+ * `ttlMs` (default `CACHE_TTL_MS`), from another `CACHE_VERSION`, or storage
+ * fails. Never rejects.
  */
-export async function getCached<T>(key: string, now: () => number = Date.now): Promise<T | undefined> {
+export async function getCached<T>(
+  key: string,
+  now: () => number = Date.now,
+  ttlMs: number = CACHE_TTL_MS,
+): Promise<T | undefined> {
   try {
     const raw: unknown = await storage.getItem(storageKey(key));
     if (!isEntry(raw) || raw.v !== CACHE_VERSION) return undefined;
     const age = now() - raw.at;
-    if (age < 0 || age >= CACHE_TTL_MS) return undefined;
+    if (age < 0 || age >= ttlMs) return undefined;
     return raw.value as T;
   } catch {
     return undefined;
