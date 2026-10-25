@@ -1,0 +1,162 @@
+{
+  "optionsTitle": {
+    "message": "Coverly Shelf settings",
+    "description": "Page title of the options page"
+  },
+  "optionsSubtitle": {
+    "message": "Settings",
+    "description": "Shown under the product name"
+  },
+  "cacheHeading": {
+    "message": "Cache",
+    "description": "Section heading"
+  },
+  "cacheIntro": {
+    "message": "For each game, Coverly Shelf remembers which artwork address worked, so the next visit shows the cover without probing again. It never stores personal data or your browsing history.",
+    "description": "Explains what is stored"
+  },
+  "usageEmpty": {
+    "message": "Nothing cached yet. Open a game page on hShop to fill the shelf.",
+    "description": "Usage readout when the cache is empty"
+  },
+  "usageOne": {
+    "message": "1 game cached, $SIZE$",
+    "description": "Usage readout, singular",
+    "placeholders": {
+      "size": {
+        "content": "$1"
+      }
+    }
+  },
+  "usageMany": {
+    "message": "$COUNT$ games cached, $SIZE$",
+    "description": "Usage readout, plural",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      },
+      "size": {
+        "content": "$2"
+      }
+    }
+  },
+  "usageMore": {
+    "message": "+$COUNT$",
+    "description": "Overflow badge after the drawn spines",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "usageLoading": {
+    "message": "Reading the cache…",
+    "description": "While usage loads"
+  },
+  "retentionLegend": {
+    "message": "Remember artwork for",
+    "description": "Legend of the retention radio group"
+  },
+  "retentionSession": {
+    "message": "This session",
+    "description": "Retention option"
+  },
+  "retention1d": {
+    "message": "1 day",
+    "description": "Retention option"
+  },
+  "retention7d": {
+    "message": "7 days",
+    "description": "Retention option"
+  },
+  "retention30d": {
+    "message": "30 days",
+    "description": "Retention option"
+  },
+  "retentionForever": {
+    "message": "Until I clear it",
+    "description": "Retention option"
+  },
+  "retentionHintSession": {
+    "message": "Forgotten when you close the browser.",
+    "description": "Hint for session"
+  },
+  "retentionHint1d": {
+    "message": "Kept for a day, then looked up again.",
+    "description": "Hint for 1 day"
+  },
+  "retentionHint7d": {
+    "message": "Kept for a week, then looked up again. This is the default.",
+    "description": "Hint for 7 days"
+  },
+  "retentionHint30d": {
+    "message": "Kept for a month. Fewer requests, but new artwork shows up later.",
+    "description": "Hint for 30 days"
+  },
+  "retentionHintForever": {
+    "message": "Kept until you clear the cache here.",
+    "description": "Hint for forever"
+  },
+  "retentionSaved": {
+    "message": "Saved. Artwork is now remembered for: $CHOICE$.",
+    "description": "Live announcement after saving",
+    "placeholders": {
+      "choice": {
+        "content": "$1"
+      }
+    }
+  },
+  "clearButton": {
+    "message": "Clear cache",
+    "description": "Button that starts clearing"
+  },
+  "clearNothing": {
+    "message": "Nothing to clear",
+    "description": "Disabled clear button label"
+  },
+  "clearConfirmText": {
+    "message": "Remove what Coverly Shelf remembers? Covers are looked up again on your next visit.",
+    "description": "Inline confirmation text"
+  },
+  "clearConfirm": {
+    "message": "Clear cache",
+    "description": "Confirm button"
+  },
+  "clearCancel": {
+    "message": "Keep it",
+    "description": "Cancel button"
+  },
+  "clearDone": {
+    "message": "Cache cleared.",
+    "description": "Success feedback"
+  },
+  "clearFailed": {
+    "message": "The cache could not be cleared. Try again, or reload the extension.",
+    "description": "Error feedback"
+  },
+  "footerVersion": {
+    "message": "Version $VERSION$",
+    "description": "Footer version",
+    "placeholders": {
+      "version": {
+        "content": "$1"
+      }
+    }
+  },
+  "footerSource": {
+    "message": "Source code",
+    "description": "Footer link to GitHub"
+  },
+  "footerWebsite": {
+    "message": "Website",
+    "description": "Footer link to landing"
+  },
+  "footerCredits": {
+    "message": "Artwork from",
+    "description": "Footer credits, followed by the GameTDB and Libretro links"
+  },
+  "footerCreditsAnd": {
+    "message": "and",
+    "description": "Joins the two credit links"
+  }
+}

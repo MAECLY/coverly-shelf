@@ -1,0 +1,162 @@
+{
+  "optionsTitle": {
+    "message": "Ajustes de Coverly Shelf",
+    "description": "Page title of the options page"
+  },
+  "optionsSubtitle": {
+    "message": "Ajustes",
+    "description": "Shown under the product name"
+  },
+  "cacheHeading": {
+    "message": "Caché",
+    "description": "Section heading"
+  },
+  "cacheIntro": {
+    "message": "Para cada juego, Coverly Shelf recuerda qué dirección de carátula funcionó, así la próxima visita muestra la portada sin volver a buscar. Nunca guarda datos personales ni tu historial.",
+    "description": "Explains what is stored"
+  },
+  "usageEmpty": {
+    "message": "Aún no hay nada en caché. Abre la página de un juego en hShop para llenar la estantería.",
+    "description": "Usage readout when the cache is empty"
+  },
+  "usageOne": {
+    "message": "1 juego en caché, $SIZE$",
+    "description": "Usage readout, singular",
+    "placeholders": {
+      "size": {
+        "content": "$1"
+      }
+    }
+  },
+  "usageMany": {
+    "message": "$COUNT$ juegos en caché, $SIZE$",
+    "description": "Usage readout, plural",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      },
+      "size": {
+        "content": "$2"
+      }
+    }
+  },
+  "usageMore": {
+    "message": "+$COUNT$",
+    "description": "Overflow badge after the drawn spines",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "usageLoading": {
+    "message": "Leyendo la caché…",
+    "description": "While usage loads"
+  },
+  "retentionLegend": {
+    "message": "Recordar carátulas durante",
+    "description": "Legend of the retention radio group"
+  },
+  "retentionSession": {
+    "message": "Esta sesión",
+    "description": "Retention option"
+  },
+  "retention1d": {
+    "message": "1 día",
+    "description": "Retention option"
+  },
+  "retention7d": {
+    "message": "7 días",
+    "description": "Retention option"
+  },
+  "retention30d": {
+    "message": "30 días",
+    "description": "Retention option"
+  },
+  "retentionForever": {
+    "message": "Hasta que la borre",
+    "description": "Retention option"
+  },
+  "retentionHintSession": {
+    "message": "Se olvida al cerrar el navegador.",
+    "description": "Hint for session"
+  },
+  "retentionHint1d": {
+    "message": "Se guarda un día y después se vuelve a buscar.",
+    "description": "Hint for 1 day"
+  },
+  "retentionHint7d": {
+    "message": "Se guarda una semana y después se vuelve a buscar. Es la opción por defecto.",
+    "description": "Hint for 7 days"
+  },
+  "retentionHint30d": {
+    "message": "Se guarda un mes. Menos peticiones, pero las carátulas nuevas tardan más en aparecer.",
+    "description": "Hint for 30 days"
+  },
+  "retentionHintForever": {
+    "message": "Se guarda hasta que borres la caché aquí.",
+    "description": "Hint for forever"
+  },
+  "retentionSaved": {
+    "message": "Guardado. Las carátulas se recuerdan durante: $CHOICE$.",
+    "description": "Live announcement after saving",
+    "placeholders": {
+      "choice": {
+        "content": "$1"
+      }
+    }
+  },
+  "clearButton": {
+    "message": "Borrar caché",
+    "description": "Button that starts clearing"
+  },
+  "clearNothing": {
+    "message": "Nada que borrar",
+    "description": "Disabled clear button label"
+  },
+  "clearConfirmText": {
+    "message": "¿Borrar lo que recuerda Coverly Shelf? Las portadas se vuelven a buscar en tu próxima visita.",
+    "description": "Inline confirmation text"
+  },
+  "clearConfirm": {
+    "message": "Borrar caché",
+    "description": "Confirm button"
+  },
+  "clearCancel": {
+    "message": "Conservarla",
+    "description": "Cancel button"
+  },
+  "clearDone": {
+    "message": "Caché borrada.",
+    "description": "Success feedback"
+  },
+  "clearFailed": {
+    "message": "No se pudo borrar la caché. Inténtalo de nuevo o recarga la extensión.",
+    "description": "Error feedback"
+  },
+  "footerVersion": {
+    "message": "Versión $VERSION$",
+    "description": "Footer version",
+    "placeholders": {
+      "version": {
+        "content": "$1"
+      }
+    }
+  },
+  "footerSource": {
+    "message": "Código fuente",
+    "description": "Footer link to GitHub"
+  },
+  "footerWebsite": {
+    "message": "Sitio web",
+    "description": "Footer link to landing"
+  },
+  "footerCredits": {
+    "message": "Carátulas de",
+    "description": "Footer credits, followed by the GameTDB and Libretro links"
+  },
+  "footerCreditsAnd": {
+    "message": "y",
+    "description": "Joins the two credit links"
+  }
+}

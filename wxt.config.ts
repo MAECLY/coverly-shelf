@@ -8,6 +8,8 @@ export default defineConfig({
   srcDir: 'src',
   manifest: {
     name: 'Coverly Shelf',
+    // Strings for the options page live in public/_locales (en, es).
+    default_locale: 'en',
     description:
       'Box art and screenshots for 3DS game pages. Purely cosmetic: it never touches downloads.',
     permissions: ['storage'],
