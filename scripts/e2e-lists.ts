@@ -559,6 +559,9 @@ async function main(): Promise<void> {
         await host.click();
         await page.waitForURL((u) => u.pathname === href, { timeout: 15_000 }).catch(() => null);
         check(new URL(page.url()).pathname === href, `${p}: clicking a thumbnail follows the row link`, `${href} -> ${new URL(page.url()).pathname}`);
+        // Leave the title page before the next listing: its HQ cover requests,
+        // cancelled by the next navigation, would otherwise count as listing traffic.
+        await page.goto('about:blank');
       }
     }
 
