@@ -9,6 +9,7 @@
  */
 import { browser } from 'wxt/browser';
 import { defineBackground } from 'wxt/utils/define-background';
+import { initCacheRetention } from '../lib/background/sweep';
 import { LIBRETRO } from '../lib/config';
 import type { ExtMessage } from '../lib/messages';
 
@@ -90,6 +91,8 @@ export function handleMessage(msg: unknown): Promise<unknown> | undefined {
 }
 
 export default defineBackground(() => {
+  // Cache retention setting: session-area access, startup sweep, setting changes.
+  initCacheRetention();
   browser.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     // Only our own extension pages and content scripts may ask.
     if (sender.id !== browser.runtime.id) return false;
