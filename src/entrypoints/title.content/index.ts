@@ -136,6 +136,16 @@ async function mountGallery(
   const anchor = descriptionEntry();
   if (!anchor) return;
 
+  // Every thumbnail failed: drop our host too, so no empty gap or `clear` is left behind.
+  const dropHost = (): void => {
+    const at = run.uis.indexOf(ui as Ui);
+    if (at !== -1) run.uis.splice(at, 1);
+    try {
+      ui.remove();
+    } catch {
+      /* already gone */
+    }
+  };
   const ui = await createShadowRootUi(ctx, {
     name: GALLERY_UI,
     position: 'inline',
@@ -143,7 +153,7 @@ async function mountGallery(
     append: 'after',
     inheritStyles: true,
     onMount: (container, shadow, host) => {
-      const section = createGallery({ title: info.title, images, overlayContainer: shadow });
+      const section = createGallery({ title: info.title, images, overlayContainer: shadow, onEmpty: dropHost });
       if (section) container.append(section);
       // Keep hShop's 25px rhythm when other entries follow ours.
       host.toggleAttribute('data-trailing', host.nextElementSibling !== null);
