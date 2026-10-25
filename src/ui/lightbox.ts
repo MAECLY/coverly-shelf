@@ -15,6 +15,13 @@ export interface LightboxOptions {
   /** Element that gets focus back when the dialog closes (the thumbnail). */
   opener?: HTMLElement | null;
   onClose?: () => void;
+  /** Accessible name of the close button. Default "Close screenshots". */
+  closeLabel?: string;
+  /**
+   * `shots` (default): native-resolution screenshots, upscaled with crisp pixels.
+   * `art`: box art, scaled smoothly.
+   */
+  variant?: 'shots' | 'art';
 }
 
 export interface LightboxHandle {
@@ -40,6 +47,8 @@ function activeIn(node: Node): Element | null {
  */
 export function openLightbox(opts: LightboxOptions): LightboxHandle {
   const { container, images, label, opener, onClose } = opts;
+  const closeLabel = opts.closeLabel ?? 'Close screenshots';
+  const variant = opts.variant === 'art' ? 'art' : 'shots';
   const doc = container.ownerDocument ?? document;
   const total = images.length;
   let index = Math.min(Math.max(0, opts.index), Math.max(0, total - 1));
@@ -50,7 +59,7 @@ export function openLightbox(opts: LightboxOptions): LightboxHandle {
   const counter = h('p', { class: 'cs-lightbox-counter', 'aria-live': 'polite' }, [], doc);
   const closeBtn = h(
     'button',
-    { type: 'button', class: 'cs-lightbox-btn cs-lightbox-close', 'aria-label': 'Close screenshots' },
+    { type: 'button', class: 'cs-lightbox-btn cs-lightbox-close', 'aria-label': closeLabel },
     [h('span', { 'aria-hidden': 'true' }, ['×'], doc)],
     doc,
   );
@@ -81,7 +90,7 @@ export function openLightbox(opts: LightboxOptions): LightboxHandle {
   );
   const overlay = h(
     'div',
-    { class: 'cs-lightbox', role: 'dialog', 'aria-modal': 'true', 'aria-label': label, tabindex: '-1' },
+    { class: variant === 'art' ? 'cs-lightbox is-art' : 'cs-lightbox', role: 'dialog', 'aria-modal': 'true', 'aria-label': label, tabindex: '-1' },
     [panel],
     doc,
   );
