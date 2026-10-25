@@ -11,12 +11,14 @@
  * Requests: a row only resolves when it comes within ~400px of the viewport.
  * Top-list rows carry no product code; extractListEntries lends them the
  * main-list row's info for the same `/t/{id}`, else they go through
- * `lookupGameInfo` (cached, 2 at a time) once in view.
+ * `lookupGameInfo` (cached, 2 at a time) once in view. Every code a page
+ * shows is stored for those lookups (`rememberShownCodes`), so a title seen
+ * on any listing page never needs its `/t/{id}` fetched.
  */
 import './style.css';
 import { createShadowRootUi, defineContentScript, type ContentScriptContext, type ShadowRootContentScriptUi } from '#imports';
 import { extractListEntries, type ListEntry } from '../../lib/extract';
-import { lookupGameInfo } from '../../lib/lookup';
+import { lookupGameInfo, rememberShownCodes } from '../../lib/lookup';
 import { createPathWatcher } from '../../lib/navigation';
 import { displaySrc } from '../../lib/probe';
 import { resolveCover } from '../../lib/resolver';
@@ -124,7 +126,10 @@ function planRows(entries: readonly ListEntry[]): Array<Row & { compact: boolean
 }
 
 async function enhance(ctx: ContentScriptContext, run: Run, isStale: () => boolean): Promise<void> {
-  const planned = planRows(extractListEntries(document));
+  const entries = extractListEntries(document);
+  // Codes this page shows spare a later "Top content" row its hShop request.
+  void rememberShownCodes(entries);
+  const planned = planRows(entries);
   if (planned.length === 0) return;
 
   run.removeStyle = injectLayoutStyle(document);

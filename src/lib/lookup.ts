@@ -15,7 +15,7 @@
  */
 import { getCached, setCached } from './cache';
 import { LOOKUP } from './config';
-import { extractGameInfo, hshopIdFromHref } from './extract';
+import { extractGameInfo, hshopIdFromHref, type ListEntry } from './extract';
 import { createLimiter } from './queue';
 import { SELECTORS } from './selectors';
 import type { GameInfo, Platform } from './types';
@@ -125,11 +125,35 @@ export function lookupGameInfo(hshopId: string, opts: { now?: () => number } = {
   return pending;
 }
 
+const sameCode = (a: GameInfo | null, b: GameInfo): boolean =>
+  !!a && a.productCode === b.productCode && a.hshopRegion === b.hshopRegion && a.titleId === b.titleId;
+
 /**
  * Stores what a page already showed (a main-list row's code) so a later
- * "Top content" row for the same title needs no request. Never rejects.
+ * "Top content" row for the same title needs no request. Skips the write when
+ * the cache already holds the same code. Never rejects.
  */
 export async function rememberGameInfo(hshopId: string, info: GameInfo, opts: { now?: () => number } = {}): Promise<void> {
   if (!ID_RE.test(hshopId) || !isGameInfo(info)) return;
-  await setCached<LookupRecord>(lookupKey(hshopId), { info }, opts.now ?? Date.now);
+  const now = opts.now ?? Date.now;
+  const cached = await getCached<unknown>(lookupKey(hshopId), now, LOOKUP.ttlMs);
+  if (isRecord(cached) && sameCode(cached.info, info)) return;
+  await setCached<LookupRecord>(lookupKey(hshopId), { info }, now);
+}
+
+/**
+ * Remembers every listing row whose own product code the page shows (main
+ * list and search results; never "Top content" rows, which only borrow one),
+ * so a top-list row for the same title on another page or a later page of
+ * this subcategory costs no hShop request. Never rejects.
+ */
+export async function rememberShownCodes(entries: readonly ListEntry[], opts: { now?: () => number } = {}): Promise<void> {
+  try {
+    for (const entry of entries) {
+      if (!entry.info || !entry.hshopId || entry.anchor.closest(SELECTORS.list.topList)) continue;
+      await rememberGameInfo(entry.hshopId, entry.info, opts);
+    }
+  } catch {
+    /* only a cache warm-up */
+  }
 }
