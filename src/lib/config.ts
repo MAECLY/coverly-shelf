@@ -84,7 +84,8 @@ export const GAMETDB = {
 
 /**
  * GameTDB for DSiWare (`TWL-N-XXXX` product codes), same URL pattern under `/ds/`.
- * Verified 2026-10-25: KQ9E has cover, coverS (png), coverM, coverHQ and box in US;
+ * Verified 2026-10-25: KQ9E has cover, coverS (png), coverM, coverHQ and box in US
+ * (and so do all 20 hits of the 25-code re-check);
  * KF8E → US, KG4J → JA, KASV/KMQF/KBID/KFMU/KNRH/KKGP → EN. GameTDB files every
  * DSiWare letter except E and J under EN (no DE/FR/AU/NL/KO hits); Korean K codes
  * (KZIK, …) have no art. Libretro has almost no DSi box art, so TWL codes skip it.
@@ -101,7 +102,13 @@ export const GAMETDB_DS = {
   regionByChar: { E: 'US', J: 'JA' } as Readonly<Record<string, GameTdbRegion>>,
   /** Every other DSiWare letter (P, V, D, F, I, S, H, U, T, O…) lives under EN. */
   defaultRegion: 'EN' as GameTdbRegion,
-  fallbackRegions: ['EN', 'US'] as readonly GameTdbRegion[],
+  /**
+   * None: re-verified 2026-10-25 on 25 DSiWare codes (KYRJ, K7TV, KAIV, KKGP,
+   * KZXJ + 20 from every region, see docs/REFERENCE.md), each one with art has
+   * all five types in exactly the folder above and in no other of US/EN/JA or
+   * its language folder. A second region only cost misses a request.
+   */
+  fallbackRegions: [] as readonly GameTdbRegion[],
 } as const;
 
 export const LIBRETRO = {

@@ -76,10 +76,12 @@ describe('DSiWare regions', () => {
     expect(regionFor('D', null)).toBe('DE');
   });
 
-  it('chains the DSiWare region with EN then US', () => {
+  it('tries only the DSiWare region folder (art never sits in a second one)', () => {
     const [entry] = main(entries('dsiware-north-america.html'));
     expect(entry?.info?.platform).toBe('TWL');
-    expect(regionChain(entry!.info!)).toEqual(['US', 'EN']);
+    expect(regionChain(entry!.info!)).toEqual(['US']);
+    expect(regionChain({ ...entry!.info!, regionChar: 'V', region: regionFor('V', 'europe', 'TWL') })).toEqual(['EN']);
+    expect(regionChain({ ...entry!.info!, regionChar: 'J', region: regionFor('J', 'japan', 'TWL') })).toEqual(['JA']);
   });
 });
 
