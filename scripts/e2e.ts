@@ -17,6 +17,9 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium, type BrowserContext, type Page, type Request } from 'playwright';
 
+// hShop's QR code encodes a live download token; keep it out of committed screenshots.
+const HIDE_DOWNLOAD_QR = '.landing-dl img { visibility: hidden !important; }';
+
 const root = fileURLToPath(new URL('..', import.meta.url));
 const out = join(root, '.output', 'chrome-mv3');
 const profileDir = join(root, '.e2e-profile');
@@ -311,7 +314,7 @@ async function main(): Promise<void> {
           { timeout: 10_000 },
         )
         .catch(() => null);
-      await page.screenshot({ path: join(shotsDir, 'lightbox-1440.png') });
+      await page.screenshot({ style: HIDE_DOWNLOAD_QR, path: join(shotsDir, 'lightbox-1440.png') });
 
       const before = await lbImg.getAttribute('src');
       await page.keyboard.press('ArrowRight');
@@ -407,7 +410,7 @@ async function main(): Promise<void> {
     check(s18761.naturalWidth > 0 && !s18761.placeholder, '18761: cover resolves', String(s18761.src));
     const retailOnly = art.during('18761').filter((e) => /\/3ds\/(coverfull|coverfullHQ|cart)\//.test(e.url));
     check(retailOnly.length === 0, '18761: no request to coverfull/cart', retailOnly.map((e) => e.url).join(', '));
-    await page.screenshot({ path: join(shotsDir, 'title-digital-18761-1440.png'), fullPage: true });
+    await page.screenshot({ style: HIDE_DOWNLOAD_QR, path: join(shotsDir, 'title-digital-18761-1440.png'), fullPage: true });
 
     // ── 4. Theme
     console.log('\n── 4. /t/15834 theme');
@@ -432,7 +435,7 @@ async function main(): Promise<void> {
       await waitForCover(page);
       await page.waitForSelector(GALLERY_HOST, { state: 'attached', timeout: 10_000 }).catch(() => null);
       await sleep(800);
-      await page.screenshot({ path: join(shotsDir, `title-1814-dark-${w}.png`), fullPage: true });
+      await page.screenshot({ style: HIDE_DOWNLOAD_QR, path: join(shotsDir, `title-1814-dark-${w}.png`), fullPage: true });
       if (w === 390) {
         const geo = await page.evaluate((host) => {
           const h = document.querySelector(host)?.getBoundingClientRect();
@@ -448,13 +451,13 @@ async function main(): Promise<void> {
       await sleep(800);
       const light = await page.evaluate(() => document.body.classList.contains('light-mode'));
       check(light, `${w}: light mode active via colormode cookie`);
-      await page.screenshot({ path: join(shotsDir, `title-1814-light-${w}.png`), fullPage: true });
+      await page.screenshot({ style: HIDE_DOWNLOAD_QR, path: join(shotsDir, `title-1814-light-${w}.png`), fullPage: true });
       await context.clearCookies({ name: 'colormode' });
 
       await goto(page, '/t/18761');
       await waitForCover(page);
       await sleep(800);
-      await page.screenshot({ path: join(shotsDir, `title-digital-18761-${w}.png`), fullPage: true });
+      await page.screenshot({ style: HIDE_DOWNLOAD_QR, path: join(shotsDir, `title-digital-18761-${w}.png`), fullPage: true });
 
       await goto(page, '/t/1814');
       await waitForCover(page);
@@ -473,7 +476,7 @@ async function main(): Promise<void> {
           )
           .catch(() => null);
         await sleep(400);
-        await page.screenshot({ path: join(shotsDir, `lightbox-${w}.png`) });
+        await page.screenshot({ style: HIDE_DOWNLOAD_QR, path: join(shotsDir, `lightbox-${w}.png`) });
         await page.keyboard.press('Escape');
       }
     }
