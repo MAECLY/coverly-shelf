@@ -610,6 +610,11 @@ async function main(): Promise<void> {
         await host.click();
         await page.waitForURL((u) => u.pathname === href, { timeout: 15_000 }).catch(() => null);
         check(new URL(page.url()).pathname === href, `${p}: clicking a thumbnail follows the row link`, `${href} -> ${new URL(page.url()).pathname}`);
+        // Let the title page's own cover requests start and finish here: one that
+        // starts after the next page's reset would be counted against that page.
+        await page.waitForLoadState('load').catch(() => null);
+        await sleep(2_000);
+        await art.drain();
       }
     }
 
