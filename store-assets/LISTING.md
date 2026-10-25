@@ -76,10 +76,12 @@ Coverly Shelf is an independent project. It is not affiliated with or endorsed b
 
 ### Category (Categoría)
 
-**Funciones e interfaz** (`CATEGORY_FUNCTIONALITY_AND_UI`, in the
-"Personalizar Chrome" group). The extension changes how a site's pages look,
-which is what this category covers. "Entretenimiento" is the alternative if
-the store asks for a content category instead.
+**Entretenimiento** (`CATEGORY_EXTENSIONS_ENTERTAINMENT`, in the
+"Estilo de vida" group). Coverly Shelf enhances browsing a game catalogue
+with box art and screenshots, like the extensions that improve video or
+streaming sites, which the store files under Entertainment. "Juegos" is for
+extensions that are games, and "Funciones e interfaz" is for changes to
+Chrome's own interface, so neither fits.
 
 ### Language (Idioma)
 
