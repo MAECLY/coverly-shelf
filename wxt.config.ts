@@ -13,6 +13,9 @@ export default defineConfig({
     description:
       'Box art and screenshots for 3DS game pages. Purely cosmetic: it never touches downloads.',
     permissions: ['storage'],
+    // Toolbar button with no popup: a click opens the settings page (background.ts).
+    // Declaring an action needs no permission.
+    action: { default_title: '__MSG_optionsTitle__' },
     host_permissions: ['https://art.gametdb.com/*', 'https://thumbnails.libretro.com/*'],
   },
   vite: () => ({

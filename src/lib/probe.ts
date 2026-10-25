@@ -46,7 +46,7 @@ function fetchData(url: string): Promise<ImageDataResult> {
   return pending;
 }
 
-function loadDirect(url: string, signal?: AbortSignal): Promise<ProbeOutcome> {
+function loadDirect(url: string, signal?: AbortSignal, onHit?: (img: HTMLImageElement) => void): Promise<ProbeOutcome> {
   return new Promise<ProbeOutcome>((resolve) => {
     if (signal?.aborted) {
       resolve('error');
@@ -68,6 +68,7 @@ function loadDirect(url: string, signal?: AbortSignal): Promise<ProbeOutcome> {
       img.onload = null;
       img.onerror = null;
       if (outcome !== 'hit') img.src = '';
+      else onHit?.(img);
       resolve(outcome);
     };
     const timer = setTimeout(() => finish('error'), PROBE_TIMEOUT_MS);
@@ -143,10 +144,29 @@ export async function probeImage(url: string): Promise<boolean> {
 /** Direct mode only: url → outcome of loading it once for display. Only hits are remembered. */
 const warmed = new Map<string, Promise<ProbeOutcome>>();
 
+/**
+ * The loaded <img> of every warmed URL, newest last. Holding it keeps the
+ * decoded image in the renderer's memory cache, so the cover or thumbnail that
+ * shows the same URL right after renders from memory instead of sending a
+ * second request outside the limiter. Bounded to the images of a long page.
+ */
+const kept = new Map<string, HTMLImageElement>();
+const MAX_KEPT = 160;
+
+function keep(url: string, img: HTMLImageElement): void {
+  kept.delete(url);
+  kept.set(url, img);
+  while (kept.size > MAX_KEPT) {
+    const oldest = kept.keys().next().value;
+    if (oldest === undefined) break;
+    kept.delete(oldest);
+  }
+}
+
 function warmDirect(url: string): Promise<ProbeOutcome> {
   let pending = warmed.get(url);
   if (!pending) {
-    pending = limit(() => loadDirect(url)).catch((): ProbeOutcome => 'error');
+    pending = limit(() => loadDirect(url, undefined, (img) => keep(url, img))).catch((): ProbeOutcome => 'error');
     warmed.set(url, pending);
     void pending.then((outcome) => {
       if (outcome !== 'hit' && warmed.get(url) === pending) warmed.delete(url);

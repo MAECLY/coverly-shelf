@@ -1,22 +1,31 @@
 /**
  * Title page (`/t/{id}`) enhancer: a 3D box cover next to the technical table
- * and, when Libretro has any, a screenshot gallery under the description.
+ * (click, Enter or Space opens it full size), a screenshot gallery under the
+ * description when Libretro has any, and a thumbnail on every row of the
+ * "Related Content" box (./related.ts).
  *
- * Purely cosmetic. The only DOM changes on hShop are our two shadow hosts and
- * the ENHANCED_ATTR marker; any failure removes them again so the page stays
- * exactly as it was.
+ * Demos, updates, DLC and kiosk builds without art of their own show their
+ * Base Title's art (src/lib/related.ts, docs/REFERENCE.md).
+ *
+ * Purely cosmetic. The only DOM changes on hShop are our shadow hosts, the
+ * ENHANCED_ATTR markers and the related rows' layout <style>; any failure
+ * removes them again so the page stays exactly as it was.
  */
 import './style.css';
+import '../../ui/thumb.css';
 import { createShadowRootUi, defineContentScript, type ContentScriptContext, type ShadowRootContentScriptUi } from '#imports';
-import { extractGameInfo } from '../../lib/extract';
+import { toDisplayable, type Displayable } from '../../lib/display';
+import { extractGameInfo, extractRelatedEntries } from '../../lib/extract';
 import { createPathWatcher } from '../../lib/navigation';
 import { preflightTitlePage } from '../../lib/preflight';
 import { displaySrc } from '../../lib/probe';
-import { resolveCover, resolveGallery } from '../../lib/resolver';
+import { baseTitleInfo, resolveTitleCover, type TitleCover } from '../../lib/related';
+import { resolveGallery } from '../../lib/resolver';
 import { ENHANCED_ATTR, SELECTORS } from '../../lib/selectors';
-import type { CoverResult, GameInfo } from '../../lib/types';
+import type { GameInfo } from '../../lib/types';
 import { createCover, createCoverSkeleton } from '../../ui/cover';
 import { createGallery, type GalleryImage } from '../../ui/gallery';
+import { mountRelated } from './related';
 
 const COVER_UI = 'coverly-shelf-cover';
 const GALLERY_UI = 'coverly-shelf-gallery';
@@ -27,6 +36,8 @@ interface Run {
   id: number;
   uis: Ui[];
   marked: Element | null;
+  /** Teardowns of other parts (the related-row thumbnails). */
+  cleanups: Array<() => void>;
 }
 
 export default defineContentScript({
@@ -34,7 +45,7 @@ export default defineContentScript({
   cssInjectionMode: 'ui',
   runAt: 'document_idle',
   main(ctx) {
-    let current: Run = { id: 0, uis: [], marked: null };
+    let current: Run = { id: 0, uis: [], marked: null, cleanups: [] };
 
     const teardown = (run: Run): void => {
       for (const ui of run.uis.splice(0)) {
@@ -44,13 +55,20 @@ export default defineContentScript({
           /* already gone */
         }
       }
+      for (const cleanup of run.cleanups.splice(0)) {
+        try {
+          cleanup();
+        } catch {
+          /* keep tearing down the rest */
+        }
+      }
       run.marked?.removeAttribute(ENHANCED_ATTR);
       run.marked = null;
     };
 
     const start = (): void => {
       teardown(current);
-      const run: Run = { id: current.id + 1, uis: [], marked: null };
+      const run: Run = { id: current.id + 1, uis: [], marked: null, cleanups: [] };
       current = run;
       if (!location.pathname.startsWith('/t/')) return;
       const isStale = (): boolean => ctx.isInvalid || current !== run;
@@ -104,26 +122,34 @@ async function enhance(ctx: ContentScriptContext, run: Run, isStale: () => boole
   run.uis.push(cover as Ui);
   cover.mount();
 
+  // Related Content rows; the one marked "Base Title" lends its art to a demo,
+  // update, DLC or kiosk build that has none of its own.
+  const related = extractRelatedEntries(document);
+  const base = baseTitleInfo(related);
+  const pageCover: Promise<TitleCover> = resolveTitleCover(info, base);
+  if (related.length > 0) {
+    run.cleanups.push(mountRelated(ctx, related, { page: info, base, pageCover }, isStale));
+  }
+
   const [result, gallery] = await Promise.all([
-    resolveCover(info).then(toDisplayable).catch((): Resolved => ({ result: { kind: 'placeholder' }, src: null })),
+    pageCover
+      .then((c) => toDisplayable(c.result))
+      .catch((): Displayable => ({ result: { kind: 'placeholder' }, src: null })),
     resolveGallery(info).then(toGalleryImages).catch((): GalleryImage[] => []),
   ]);
   if (isStale()) return;
-  cover.uiContainer.replaceChildren(createCover({ title: info.title, result: result.result, src: result.src }));
+  cover.uiContainer.replaceChildren(
+    createCover({
+      title: info.title,
+      result: result.result,
+      src: result.src,
+      // Full size = the resolved art itself: the full-size chain already tries
+      // GameTDB coverHQ first for every region, so this is coverHQ whenever it exists.
+      zoom: { container: cover.shadow, src: result.src },
+    }),
+  );
 
   await mountGallery(ctx, run, info, gallery, isStale);
-}
-
-interface Resolved {
-  result: CoverResult;
-  src: string | null;
-}
-
-/** In background mode the art must become a data URL first; if that fails, show the placeholder. */
-async function toDisplayable(result: CoverResult): Promise<Resolved> {
-  if (result.kind !== 'image') return { result, src: null };
-  const src = await displaySrc(result.url);
-  return src ? { result, src } : { result: { kind: 'placeholder' }, src: null };
 }
 
 async function toGalleryImages(list: readonly { url: string; source: GalleryImage['source']; kind: GalleryImage['kind'] }[]): Promise<GalleryImage[]> {

@@ -29,6 +29,9 @@ redacted) of:
 | `title-retail-eu-98.html` | `/t/98` same game, Europe | `CTR-P-AZEP` |
 | `title-digital-us-18761.html` | `/t/18761` 3D Classics Excitebike | `CTR-N-SAEE` |
 | `title-theme-15834.html` | `/t/15834` a theme | `CTR-N-THEME` (not a game code: the regex rejects it) |
+| `title-demo-eu-6881.html` | `/t/6881` (Demo A) Project X Zone, Related Content: Demo Title + Base Title | `CTR-T-AXXP` |
+| `title-dlc-us-20778.html` | `/t/20778` Yo-kai Watch 3 Contents Data (DLC), Related Content: Base Title + Update Data | `CTR-M-ALZE-00` |
+| `title-update-eu-2624.html` | `/t/2624` Word Puzzles by POWGI (update), Related Content: Demo Title + Base Title | `CTR-U-KWPP` |
 | `list-games-north-america.html` | `/c/games/s/north-america` | 25 rows |
 | `lists/*.html` | every listing variant, see "Listing pages" | |
 | `css/*.css` | `dark`, `light`, `main`, `list`, `landing`, `sectioned` | |
@@ -70,6 +73,58 @@ Layout facts that matter for injection:
   `.basic-meta` is a normal block, so a floated first child inside it works.
 - `.sectioned` turns into a column under `max-width: 1200px` (hShop's own
   breakpoint).
+
+### Related Content (`/t/{id}`)
+
+Fetched 2026-10-25, one page at a time: `/t/6881`, `/t/6882` (demos),
+`/t/650` (their base), `/t/20778` (DLC), `/t/20699` (its base), `/t/2624`
+(update), `/t/9398`, `/t/20600`, `/t/9238` (demos) and `/t/2514` (kiosk demo).
+Pages served without the Turnstile check carry no download link or token, so
+the fixtures above are verbatim.
+
+Many title pages end their left card with a `.related` box (`landing.css`:
+`display: flex; flex-direction: column`). Its rows are `a.block-link.list-entry`
+links built exactly like main-list rows (`list.css` is loaded on title pages
+too), without the "content in … ➞ …" line and with a relation badge in the
+row's `.base-info > .meta`:
+
+```html
+<div class="related">                       <!-- last child of .landing.sectioned-l -->
+  <h3 class="bold">Related Content:</h3>
+  <a class="block-link list-entry" href="/t/650">
+    <div class="base-info">
+      <h3 class="green bold nospace">Project X Zone</h3>
+      <div class="meta">
+        <div class="meta-content"><span class="bold">Relation: Base Title</span></div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="meta-content"><span class="green bold">650</span><span>ID</span></div>
+      …
+      <div class="meta-content"><span class="pink bold">CTR-P-AXXP</span><span>Product Code</span></div>
+    </div>
+  </a>
+</div>
+```
+
+- Selectors: `SELECTORS.related.container` (`.landing.sectioned-l > .related`)
+  and `SELECTORS.related.relation` (the badge); the rows are read with the
+  listing-row selectors (`extractRelatedEntries` → `extractListEntries`).
+- Relations seen (`RELATIONS` in `src/lib/selectors.ts`): `Base Title`,
+  `Demo Title`, `Update Data`, `Downloadable Content`. The relation describes
+  the row relative to the page: on a base game the rows are its demos, update
+  and DLC; on a demo, the sibling demo shows as `Demo Title` and the base as
+  `Base Title`.
+- Not every page has the box: `/t/1814` and the kiosk demo `/t/2514`
+  (`CTR-B-BXXP`) have none.
+- Observed codes: `/t/6881` `CTR-T-AXXP` → rows `CTR-T-AZVP` (Demo B, Demo
+  Title) and `CTR-P-AXXP` (Base Title). `/t/20778` `CTR-M-ALZE-00` → `CTR-P-ALZE`
+  (Base Title), `CTR-U-ALZE` (Update Data). `/t/2624` `CTR-U-KWPP` →
+  `CTR-T-KWPP` (Demo Title), `CTR-N-KWPP` (Base Title). `/t/20600`
+  `CTR-T-KLRJ` → `CTR-N-KLRJ` (Base Title).
+- Art (GameTDB, 2026-10-25): `AZVP` 404 in `coverHQ`/`cover` for `EN` and
+  `US`; `AXXP` 200 in `coverHQ/EN` and `cover/EN`. `KLRJ`, `LPEJ` and `JFDJ`
+  404 in `JA`, `EN` and `US` (no art for the demo or its base).
 
 ### Listing pages (`/c/*`, `/search/results`)
 
@@ -361,6 +416,37 @@ On `:root` (`main.css`): `--main-spacing: 25px`, `--half-spacing`,
   built from `--bw` with low alpha.
 - `theme-color` meta: `#18ff00`.
 
+## Base-title fallback (`src/lib/related.ts`)
+
+Applies only on title pages, and only with codes hShop itself prints. Every
+step uses the normal cover chain (GameTDB by region, then Libretro) of one
+exact product code, so the art is always verified; nothing is matched by name.
+
+1. **Own code first.** The page and every related row first resolve their own
+   code. A hit always wins. DLC (`CTR-M-XXXX-NN`) and updates (`CTR-U-XXXX`)
+   need no special case: `extract.ts` already reads their game code `XXXX`,
+   which is the base game's (`CTR-M-ALZE-00` → `ALZE`), and the Libretro step
+   already asks for the base `P`/`N` serials first (`libretroSerials`).
+2. **The page itself.** When the page is a derived release (distribution
+   `T` demo, `U` update, `M` DLC, `B`/`H` kiosk build) and its own chain found
+   nothing, it shows the art of the related row marked `Relation: Base Title`
+   (the first such row with a usable code). Skipped when that row has the same
+   artwork chain (same platform, game code and GameTDB region), which already
+   missed. A retail (`P`) or digital (`N`) page never borrows art. Example:
+   `/t/6882` `CTR-T-AZVP` (no art) → `CTR-P-AXXP` → `coverHQ/EN/AXXP.jpg`.
+3. **A related row.** Its own code (thumbnail size). A row with the page's own
+   artwork chain reuses the page's own result without a request. If that is
+   the placeholder **and** the row's relation is `Base Title`, `Demo Title`,
+   `Update Data` or `Downloadable Content` (the same game as the page):
+   a. the Base Title row's code, unless the row is the Base Title itself or
+      that code has the row's or the page's artwork chain;
+   b. then the page's own resolved cover (after step 2).
+   Any other relation (or a badge that cannot be read) keeps the placeholder.
+4. If nothing has art, the existing placeholder is shown (`/t/20600`).
+
+Results stay cached per code (`cover:`, `thumb:` keys), so the fallback adds
+no cache entries of its own and costs no request once each code is cached.
+
 ## GameTDB (`https://art.gametdb.com/3ds/{type}/{region}/{gameCode}.{ext}`)
 
 Probed with `AZEE` (retail), `AREE` (retail), `SAEE` (digital, `N`):
@@ -390,6 +476,84 @@ Probed with `AZEE` (retail), `AREE` (retail), `SAEE` (digital, `N`):
 - 404 for missing art, `Cache-Control: max-age=2592000`, no CORS headers (fine
   for `<img>`, not readable with `fetch` from the page).
 - Cover ratio: 160/144 ≈ 1.11, 768/680 ≈ 1.13 — wider than tall.
+
+## Virtual Console (`/c/virtual-console/s/*`)
+
+Surveyed 2026-10-25: all 691 VC titles (europe 163, france 1, germany 3,
+japan 290, korea 3, north-america 197, world 34). The **first letter** of the
+game code is the original system, always in agreement with the row badge
+(`Virtual Console: …`, read via `SELECTORS.list.badges`):
+
+| Letter | System (badge) | Titles |
+|---|---|---|
+| `T` | NES / Famicom (one Japanese row has no badge) | 241 |
+| `R` | Game Boy | 179 |
+| `Q` | Game Boy Color | 103 |
+| `U` | SNES / Super Famicom (`KTR`, New 3DS only) | 80 |
+| `G` | Game Gear | 54 |
+| `P` | Game Boy Advance (30) or PC Engine (4, Japan, badge `TurboGrafx-16)`) | 34 |
+
+No other letter is used. Region letters: `J` 287, `E` 197, `P` 163, `A` 39
+(region-free Pokémon in every language), `D` 3, `F` 1, `Z` 1.
+
+- **GameTDB does have VC art.** Live probes (`3ds/cover`, own region then
+  `EN`): TAAE, RA4E, QAZE, TC8E, GADE, UAKE (`US`), TAAP (`EN`) all 200; only
+  PAEE missed. A sample of 47 VC titles (10 per large region) had GameTDB art
+  for 43; the 4 misses were Japanese. Earlier "0 art" readings came from the
+  GameTDB outage.
+- **Libretro fallback** (`public/libretro-vc.json`, `bun run gen:vc`): game
+  code → `{system, name}` for the original system's `Named_Boxarts`. Built by
+  `scripts/gen-vc-map.ts`, which crawls every VC listing (`?count=100`,
+  11 pages, 2 s apart), loads the system's No-Intro DAT from
+  libretro-database, and matches **exactly** after a fixed normalisation
+  (strip ™ ® ©, unify quotes, collapse spaces, ignore case; `: ` ↔ ` - `;
+  a leading "The" moved behind the title like No-Intro). Lookup keys, best
+  first: the base of the No-Intro name the 3DS DATs give the title's serial
+  (91 VC serials, e.g. `CTR-N-PAAE` → `F-Zero - Maximum Velocity (USA) (GBA)
+  (Virtual Console)`), then hShop's name. Region variants follow the code's
+  letter: `E` → `(USA)`, `(USA, …)`, `(World)`; `P` → `(Europe)`, `(…,
+  Europe)`, `(World)`; `J` → `(Japan)`…; `D`/`F` add their country first.
+  Betas, protos, demos and re-releases (e-Reader, Evercade, Switch Online,
+  Classic Mini, collections) are never used. Every kept name was HEAD-checked
+  on `thumbnails.libretro.com/{system}/Named_Boxarts/` (one request at a time).
+- A thumbnail that exists can still show another product: `(… Virtual
+  Console)` dumps are often filled with another release's box. The generator
+  prints every chosen VC-tagged name for a visual review, and names that fail
+  it go to `VC_ART_DENYLIST` (`src/lib/sources/vc-map.ts`), which the
+  generator never picks. Reviewed 2026-10-25: PAJE, TBNP, TD5P show their own
+  game; TAFE (`Donkey Kong - Original Edition (USA, Europe) (3DS Virtual
+  Console)`) shows the PAL *Donkey Kong Classics* box, so it is denied and
+  TAFE keeps the placeholder.
+- Result: **279 of 691** titles (40%).
+
+| hShop region | Titles | Verified | Exact name, no thumbnail | No exact name |
+|---|---|---|---|---|
+| europe | 163 | 108 (66%) | 1 | 54 |
+| north-america | 197 | 153 (78%) | 1 | 43 |
+| japan | 290 | 17 (6%) | 4 | 269 |
+| korea | 3 | 1 | 0 | 2 |
+| france, germany | 4 | 0 | 0 | 4 |
+| world | 34 | 0 | 0 | 34 |
+
+| System | Titles | Verified |
+|---|---|---|
+| Game Boy Advance | 30 | 27 (90%) |
+| Game Gear | 54 | 26 (48%) |
+| Game Boy | 179 | 79 (44%) |
+| NES | 241 | 86 (36%) |
+| Game Boy Color | 103 | 37 (36%) |
+| SNES | 80 | 24 (30%) |
+| PC Engine | 4 | 0 |
+
+  Most misses are hShop names without No-Intro's ` - ` separator
+  (`Castlevania III Dracula's Curse`), Japanese script (No-Intro names are
+  romanized), or localized Pokémon names; they keep the placeholder (or the
+  GameTDB art). Nothing is guessed.
+- The resolver asks for it only after every GameTDB region missed, and only
+  for `CTR`/`KTR` codes whose first letter is a VC letter
+  (`VC_CODE_LETTERS`). Title pages also take `Named_Snaps`/`Named_Titles` of
+  that system. Live `e2e:lists`: virtual-console/north-america 25/25 (24
+  GameTDB, 1 Libretro VC).
 
 ## Libretro
 
@@ -453,8 +617,11 @@ lower-bound oracle): US 1071/1200 (89%), GB 1034/1129 (92%), JP 1053/1692
 | `X` | `EN` | BLSX, BLJX | 404 in `ES` |
 | `Y` | `EN` | BLSY, KFPY | 404 in `FR`, `KO` |
 | `A` | `EN` | BNDA, A2AA, KRXA | |
-| `Z` | `EN` (via fallback) | AAHZ, ARMZ, BMMZ | ALBZ, ABZZ, AMQZ have nothing anywhere; left unmapped so the slug fallback still runs |
-| `C` | — | — | JMKC, JREC 404 in `ZH`, `EN`, `JA`; no `C` code archived |
+| `Z` | `EN` | AYWZ, BYGZ, BYHZ, BYSZ, AAHZ, AGKZ, AXCZ, ARMZ, ATHZ, ALEZ | Re-probed live 2026-10-25 on 12 codes: 10 in `EN` (AYWZ/BYGZ/BYHZ also `AU`, AXCZ also `ZH`), AS7Z (Canada) only `US` (the fallback), ALBZ nowhere; none only in `AU`/`ZH`/`KO` |
+| `Y` | `EN` | BLSY, BTMY, AXRY, KGNY, ASCY, BG6Y, KFPY, APNY | 8/8 only in `EN` (404 in `KO`, `ZH`, `US`, `RU`) |
+| `C` | — | — | JMKC, JREC (the only `C` codes) 404 in `ZH`, `EN`, `US`, `JA`, `other` |
+| `R` | — | — | APNR (the only `R` code) 404 in `RU`, `EN`, `US`, `other` |
+| `U` | — | — | no 3DS code on hShop ends in `U` (Australian games use `Z`); `U` is DSiWare only |
 
 Folders that exist on GameTDB 3DS (archived counts): `EN` 1552, `US` 1197,
 `JA` 1063, `DE` 505, `IT` 319, `FR` 293, `ES` 216, `NL` 156, `AU` 148, `KO` 127,
@@ -462,7 +629,64 @@ Folders that exist on GameTDB 3DS (archived counts): `EN` 1552, `US` 1197,
 `ZHTW`, `ZHCN`, `TW`, `CN` do not exist. Every code found in a localized
 folder (`DE`, `FR`, …) is also in `EN` or `US`, so those folders never add a hit.
 
+### Updates and DLC
+
+Re-probed live on 2026-10-25 (GameTDB was reachable again; an earlier pass
+during its outage gave false misses). Update (`CTR-U-XXXX`) and DLC
+(`CTR-M-XXXX-NN`) rows use the base game's 4-character code, so the same
+region chain applies. Two rows from every `/c/updates/s/*` and `/c/dlc/s/*`
+subcategory, walked with the extension's own chain (`cover`, one region at a
+time): **37 of 39 hit**. The misses are CTR-U-JUUJ (`demo-updates`) and
+CTR-U-BX2Z (`unknown-other`).
+
+| Subcategory | Rows | Chain | First hit |
+|---|---|---|---|
+| updates/france, dlc/france | ALZF, AFJF, JCVF | `EN` → `US` | `EN` (`FR` has none: AFJF 404) |
+| updates/germany, dlc/germany | ALZD, ARHD, JCVD | `DE` → `EN` → `US` | `EN` |
+| dlc/italy, updates/italy | JCVI, ALEV, BTMV | `IT`/`EN` → … | `EN` |
+| updates/spain, dlc/spain | ALEX, ALZS, JCVS | `EN` → `US` | `EN` |
+| updates/japan, dlc/japan | AQ2J, AP5J, BZMJ, BNUJ (+ A22J, AACJ, BASJ) | `JA` → `EN` → `US` | `JA` |
+| updates/korea, dlc/korea | A9CK, AR6K, BYGK | `KO` → `EN` → `US` | `KO` |
+| dlc/korea | BG6Y | `EN` → `US` | `EN` |
+| updates/taiwan, dlc/china | AJJW, ABEW | `ZH` → `EN` → `US` | `ZH` |
+| updates/taiwan, dlc/taiwan, australia | AH4Z, AAHZ, AMXZ, AYWZ, BYGZ | `EN` → `US` | `EN` |
+| updates/world | AY6A, ECRA | `EN` → `US` | `EN` |
+| updates/europe, dlc/europe | CAFP, KWPP, HMEP, KGBP | `EN` → `US` | `EN` |
+| updates/north-america, dlc/north-america | BD3E, BC4E, KRJE, ALZE | `US` → `EN` | `US` |
+
+Live `e2e:lists` (first page, main list): updates/france 7/7, dlc/japan
+19/25.
+
+#### Sibling-region fallback: rejected
+
+Trying the same 3-letter stem with another region letter (a `J` code falling
+back to its `E`/`P` sibling) is **not** used. In the No-Intro 3DS DATs, 351
+stems have both a `J` and an `E`/`P` serial; 116 share the base name and most
+of the other 235 are translations of the same game, but not all:
+`CTR-P-AT8J` is *Tamagotchi no Doki Doki Dream Omisetchi* while `CTR-N-AT8P`
+is *Urban Trial Freestyle*. One counterexample is enough to show a stem does
+not identify a game, so a sibling cover could be another game's box.
+
 ### DSiWare (`TWL-N-XXXX`)
+
+Re-verified live on 2026-10-25 with KYRJ, K7TV, KAIV, KKGP, KZXJ and 20 codes
+from every DSiWare subcategory (KSRE, KD7E, KVWE, KJQJ, K6AJ, KK4J, KEHV,
+KEWV, KZPV, K3TK, KWPK, KIWU, KTFU, KHDF, KBID, KHDD, KCNI, KPBS, KNRH,
+Z2AT), probing `cover` in `US`, `EN`, `JA` and the letter's language folder
+(`DE`, `FR`, `IT`, `ES`, `NL`, `KO`, `AU`), then `coverS`, `coverM`,
+`coverHQ`, `box`:
+
+- **20 of 25 have art**, and each of those has **all five types** in exactly
+  **one** folder: `E` → `US` (3/3), `J` → `JA` (4/5, KZXJ none), every other
+  letter → `EN` (13/13 for `P`, `V`, `U`, `D`, `I`, `S`, `H`; KGHO (`O`) too).
+  No code was in a second folder, and no language folder (`DE`, `FR`, `IT`,
+  `ES`, `NL`, `AU`, `KO`) had anything.
+- Misses: KZXJ, K3TK, KWPK (Korean `K` codes never have art), KHDF, KHDD
+  (localized releases of KHDx), Z2AT (`unknown-other`).
+- So the chain is the single folder (`GAMETDB_DS.fallbackRegions` is empty):
+  the `EN`/`US` fallbacks only added misses. Title pages try `coverHQ` then
+  `cover`, list rows `cover`.
+- Live `e2e:lists`: dsiware/north-america 25/25.
 
 - `https://art.gametdb.com/ds/{type}/{region}/{gameCode}.{ext}`. For KQ9E:
   `cover` jpg, `coverS` **png**, `coverM` jpg, `coverHQ` jpg, `box` png all 200;
@@ -528,3 +752,69 @@ the TTL, and no more than `MAX_CONCURRENT_REQUESTS` in flight.
   per region, no images and no licence. Useful only as a key source.
 - **hShop**: pages show no title icons (no `<img>` besides its own UI).
 - No public, title-ID-indexed 3DS icon set on GitHub or a CDN was found.
+
+## Extension behaviour
+
+What the code does with the facts above, for reviewers.
+
+### Title pages (`/t/*`)
+
+- **Cover** (`coverly-shelf-cover`, first child of `.basic-meta`): full-size
+  chain, `coverHQ` then `cover` per region, then Libretro, then the
+  placeholder; base-title fallback as above.
+- **Cover zoom.** While real art is shown, the box (`.cs-stage`) is a button:
+  `role="button"`, `tabindex="0"`, `aria-label="View box art for {title} full
+  size"`, `aria-haspopup="dialog"`, a zoom-in cursor and a green focus ring.
+  Click, Enter or Space opens the art in the same lightbox as the screenshots
+  (`variant: 'art'`, smooth scaling, sized by the art's own aspect ratio,
+  dialog named "Box art viewer: {title}", image alt "{title} box art", close
+  button "Close box art"). Esc or a
+  backdrop click closes it, Tab stays inside it, and focus returns to the box.
+  The URL is the resolved one, which is GameTDB `coverHQ` whenever it exists
+  (the full-size chain tries it first in every region), else what the box
+  shows. The placeholder never gets the affordance, and a box whose image
+  fails to load loses it. Content-script strings are English (only the
+  options page is localised).
+- **Screenshots** (`coverly-shelf-gallery`), unchanged.
+- **Related Content.** Each `.related` row with a usable code gets the same
+  thumbnail host as a listing row (first child of the `<a>`, decorative,
+  nothing interactive inside, shared layout `<style>` from
+  `src/ui/thumb-layout.ts`), resolved lazily within 400 px of the viewport.
+
+### Listing pages (`/c/*`, `/search/results`)
+
+A thumbnail on every title row of every category (games, updates, DLC,
+virtual console, DSiWare, videos, extras and search results), main list and
+"Top content" list. Themes (`CTR-N-THEME`) and free-form codes get nothing.
+`thumb` size (`cover` only), lazy, top-list rows looked up through hShop at
+most 2 at a time with a cooldown on 429/5xx/challenge (`src/lib/lookup.ts`).
+
+### Requests
+
+- At most `MAX_CONCURRENT_REQUESTS` (4) artwork requests and
+  `LOOKUP.maxConcurrent` (2) hShop lookups at once.
+- **HEAD preflight** (`image:head`, `src/lib/background/head.ts`): in `direct`
+  mode a candidate URL is first checked with a HEAD request from the service
+  worker (https, the two artwork origins only, also after redirects, no
+  cookies, no referrer). A 2xx `image/*` answer is a hit and a 404/410 or a
+  non-image a miss, both without downloading image bytes; 408/429/5xx count as
+  unknown (not cached); no answer, 403/405/501, or a 2xx without type or
+  length falls back to loading the image in an `<img>`. The winning image is
+  then loaded once more through the same limiter for display.
+
+### Settings page (`options.html`) and toolbar button
+
+- Opens from the extension's toolbar button (a popup-less `action`, no extra
+  permission) or from the browser's extension details.
+- **Keep cached artwork:** This session, 1 day, 7 days (default), 30 days or
+  Until I clear it (`session`/`1d`/`7d`/`30d`/`forever`, stored in
+  `storage.sync` with a `storage.local` fallback, `src/lib/settings.ts`).
+  `session` keeps entries in `storage.session`; the others in `storage.local`
+  with that TTL (`src/lib/cache.ts`). hShop lookups keep their own 30-day TTL.
+- **Usage:** a live readout of how many games are cached and how much space
+  they take.
+- **Clear cache:** a two-step inline confirmation that removes every artwork
+  entry and lookup at once (the hShop cooldown and sweep bookkeeping stay).
+- Expired and old-version entries are swept by the background at most once a
+  day.
+- English and Spanish (`public/_locales`).

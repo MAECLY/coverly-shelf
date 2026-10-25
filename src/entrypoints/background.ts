@@ -2,8 +2,11 @@
  * Background service worker: answers the typed messages from
  * src/lib/messages.ts.
  * - `libretro:names` → No-Intro names for a serial, from the packaged map.
+ * - `libretro:vc`    → original-system name of a Virtual Console game code.
  * - `image:fetch`    → a data URL for an image on one of the two artwork hosts.
  * - `image:head`     → HEAD preflight of an artwork URL (src/lib/background/head.ts).
+ *
+ * A click on the toolbar button opens the settings page.
  *
  * It uses `sendResponse` + `return true` rather than returning a Promise, which
  * works the same in Chrome (no polyfill since WXT 0.20) and Firefox.
@@ -14,7 +17,7 @@ import { headImage } from '../lib/background/head';
 import { initCacheRetention } from '../lib/background/sweep';
 import { LIBRETRO } from '../lib/config';
 import { isAllowedImageUrl, isImageType, mediaType } from '../lib/image-url';
-import type { ExtMessage } from '../lib/messages';
+import { isVcName, type ExtMessage, type VcName } from '../lib/messages';
 
 export { ALLOWED_IMAGE_ORIGINS, isAllowedImageUrl } from '../lib/image-url';
 export const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
@@ -47,6 +50,25 @@ export async function libretroNames(serial: string): Promise<string[]> {
   return Array.isArray(names) ? names.filter((n) => typeof n === 'string') : [];
 }
 
+let vcPromise: Promise<Record<string, unknown>> | null = null;
+
+function loadVcMap(): Promise<Record<string, unknown>> {
+  vcPromise ??= fetch(browser.runtime.getURL(LIBRETRO.vcMapPath as Parameters<typeof browser.runtime.getURL>[0]))
+    .then((r) => (r.ok ? (r.json() as Promise<Record<string, unknown>>) : {}))
+    .catch(() => {
+      vcPromise = null; // allow a retry on the next message
+      return {};
+    });
+  return vcPromise;
+}
+
+/** The verified VC entry of a game code, or null (unknown code, malformed entry, unlisted system). */
+export async function libretroVc(gameCode: string): Promise<VcName | null> {
+  const map = await loadVcMap();
+  const entry = Object.hasOwn(map, gameCode) ? map[gameCode] : undefined;
+  return isVcName(entry) ? { system: entry.system, name: entry.name } : null;
+}
+
 export async function fetchImageAsDataUrl(url: string): Promise<string | null> {
   if (!isAllowedImageUrl(url)) return null;
   const ctrl = new AbortController();
@@ -76,14 +98,26 @@ export function handleMessage(msg: unknown): Promise<unknown> | undefined {
   if (!msg || typeof msg !== 'object') return undefined;
   const m = msg as Partial<ExtMessage>;
   if (m.type === 'libretro:names' && typeof m.serial === 'string') return libretroNames(m.serial);
+  if (m.type === 'libretro:vc' && typeof m.gameCode === 'string') return libretroVc(m.gameCode);
   if (m.type === 'image:fetch' && typeof m.url === 'string') return fetchImageAsDataUrl(m.url);
   if (m.type === 'image:head' && typeof m.url === 'string') return headImage(m.url);
   return undefined;
 }
 
+/** Opens the settings page; never throws (a failure only means the click does nothing). */
+export function openSettings(): void {
+  try {
+    void browser.runtime.openOptionsPage().catch(() => undefined);
+  } catch {
+    /* no options page API in this context */
+  }
+}
+
 export default defineBackground(() => {
   // Cache retention setting: session-area access, startup sweep, setting changes.
   initCacheRetention();
+  // MV3 `action`; the Firefox MV2 build turns it into `browser_action`.
+  (browser.action ?? browser.browserAction)?.onClicked.addListener(() => openSettings());
   browser.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     // Only our own extension pages and content scripts may ask.
     if (sender.id !== browser.runtime.id) return false;

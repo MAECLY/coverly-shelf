@@ -166,6 +166,22 @@
   transform: rotateY(-9deg);
 }
 
+/* Real art only (never the placeholder): the box is a button that opens it full size. */
+.cs-stage.is-zoomable {
+  cursor: zoom-in;
+  border-radius: 6px;
+}
+.cs-stage.is-zoomable:focus {
+  outline: none;
+}
+.cs-stage.is-zoomable:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+.cs-stage.is-zoomable:focus-visible .cs-box {
+  transform: rotateY(-9deg);
+}
+
 .cs-face {
   position: absolute;
   inset: 0;
@@ -230,7 +246,7 @@
   to { background-position: 0 0; }
 }
 
-.cs-placeholder {
+.cs-face .cs-placeholder {
   position: absolute;
   inset: 0;
   display: flex;
@@ -250,13 +266,13 @@
   color: var(--wb);
   text-align: center;
 }
-.cs-placeholder-initials {
+.cs-face .cs-placeholder-initials {
   font-weight: 900;
   font-size: 2.6em;
   line-height: 1;
   letter-spacing: 0.02em;
 }
-.cs-placeholder-title {
+.cs-face .cs-placeholder-title {
   margin-top: 0.6em;
   font-weight: bold;
   font-size: 0.7em;
@@ -272,6 +288,8 @@
 }
 
 /* ---------------------------------------------------------------- gallery */
+
+/* Scoped to the grid: the Related Content thumbnails (src/ui/thumb.css) reuse the `cs-thumb` name. */
 
 /* Matches hShop's `<h3 class="bold">Description:</h3>`. */
 .cs-heading {
@@ -289,7 +307,7 @@
   list-style: none;
 }
 
-.cs-thumb {
+.cs-grid .cs-thumb {
   display: block;
   width: 100%;
   aspect-ratio: 4 / 3;
@@ -299,10 +317,10 @@
   cursor: zoom-in;
   transition: background-color var(--cs-fast) ease;
 }
-.cs-thumb:hover {
+.cs-grid .cs-thumb:hover {
   background: var(--clevel-2-hover);
 }
-.cs-thumb-img {
+.cs-grid .cs-thumb-img {
   width: 100%;
   height: 100%;
   object-fit: contain; /* 3DS shots may stack both screens */
@@ -345,16 +363,31 @@
 }
 
 .cs-lightbox-img {
-  /* Upscale the 400×240 (or stacked 400×480) snaps; contain letterboxes on narrow screens. */
-  height: min(calc(100vh - 160px), 600px);
-  width: auto;
   /* Fit the panel's content box (64px side padding) so the prev/next buttons never cover the shot. */
-  max-width: min(calc(100vw - 128px), 1000px);
+  --cs-lb-max-w: min(calc(100vw - 128px), 1000px);
+  --cs-lb-max-h: min(calc(100vh - 160px), 600px);
+  /* Upscale the 400×240 (or stacked 400×480) snaps; contain letterboxes on narrow screens. */
+  height: var(--cs-lb-max-h);
+  width: auto;
+  max-width: var(--cs-lb-max-w);
   object-fit: contain;
   border-radius: 10px;
   background: var(--clevel-2);
   /* Native-resolution snaps: keep the pixels crisp when upscaled. */
   image-rendering: pixelated;
+}
+/*
+ * Box art: a 768×680 (or 497×680, …) scan, scaled smoothly rather than as
+ * pixel art. Sized by its own aspect ratio (--cs-art-ratio, set by the
+ * lightbox once the image loads) so the box fits the art exactly at every
+ * width: no grey bands above and below it on phones and tablets.
+ */
+.cs-lightbox.is-art .cs-lightbox-img {
+  --cs-lb-max-h: min(calc(100vh - 160px), 680px);
+  width: min(var(--cs-lb-max-w), calc(var(--cs-lb-max-h) * var(--cs-art-ratio, 1)));
+  height: auto;
+  max-height: var(--cs-lb-max-h);
+  image-rendering: auto;
 }
 .cs-lightbox-img.is-broken {
   visibility: hidden;
@@ -405,7 +438,7 @@
     padding: 64px 8px 72px;
   }
   .cs-lightbox-img {
-    max-width: calc(100vw - 16px);
+    --cs-lb-max-w: calc(100vw - 16px);
   }
   .cs-lightbox-prev,
   .cs-lightbox-next {
@@ -422,7 +455,8 @@
     transition: none !important;
     animation: none !important;
   }
-  .cs-cover:hover .cs-box {
+  .cs-cover:hover .cs-box,
+  .cs-stage.is-zoomable:focus-visible .cs-box {
     transform: rotateY(-18deg);
   }
 }

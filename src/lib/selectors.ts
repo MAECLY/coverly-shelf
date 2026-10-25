@@ -22,6 +22,17 @@ export const SELECTORS = {
     description: '.description-container',
   },
   /**
+   * "Related Content" box of a title page (`/t/6881`): `.related` holds an
+   * `<h3>` and `a.list-entry` rows built exactly like main-list rows (so the
+   * `list` selectors read them), minus the "content in" line, plus a
+   * `Relation: …` badge in the row's `.base-info > .meta`.
+   */
+  related: {
+    container: '.landing.sectioned-l > .related',
+    /** Badge that reads `Relation: Base Title` (see RELATIONS). */
+    relation: ':scope > .base-info > .meta > .meta-content',
+  },
+  /**
    * Listing pages (`/c/{cat}`, `/c/{cat}/s/{slug}`, `/search/results`). See
    * "Listing pages" in docs/REFERENCE.md. Row-relative selectors start with
    * `:scope >` so the badge box nested in `.base-info` (its own `.meta`) never
@@ -42,6 +53,8 @@ export const SELECTORS = {
     infoLines: ':scope > .base-info > h4',
     /** Labelled values: first span = value, last span = label (`Product Code`, `Title ID`, …). */
     metaContent: ':scope > .meta > .meta-content',
+    /** Badge box inside `.base-info`: one single-span entry per flag (`Virtual Console: Game Boy`). */
+    badges: ':scope > .base-info > .meta > .meta-content',
   },
 } as const;
 
@@ -51,8 +64,22 @@ export const META_LABELS = {
   productCode: 'Product Code',
 } as const;
 
+/** Text that starts a related row's badge: `Relation: Base Title`. */
+export const RELATION_PREFIX = 'Relation:';
+
+/** Every relation hShop was seen printing (docs/REFERENCE.md, "Related Content"). */
+export const RELATIONS = {
+  base: 'Base Title',
+  demo: 'Demo Title',
+  update: 'Update Data',
+  dlc: 'Downloadable Content',
+} as const;
+
 /** Text that starts the breadcrumb `<h4>` of a list row (`content in games ➞ japan`). */
 export const LIST_BREADCRUMB_PREFIX = 'content in';
+
+/** Text that starts a Virtual Console badge (`Virtual Console: Game Boy Color`); only read by scripts/gen-vc-map.ts. */
+export const VC_BADGE_PREFIX = 'Virtual Console:';
 
 /** Marker set on the anchor nodes once the extension has enhanced them. */
 export const ENHANCED_ATTR = 'data-hshop-enhanced';

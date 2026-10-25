@@ -5,7 +5,8 @@
  *    content-script scope, CSS that cannot leak, the Libretro serial map).
  * 2. Loads it into a real Chromium (Playwright, new headless) and drives the
  *    LIVE hshop.erista.me title pages: cover, regions, digital titles, themes,
- *    gallery + lightbox keyboard, idempotence, request concurrency, cache and
+ *    gallery + lightbox keyboard, cover zoom, Related Content thumbnails and
+ *    the base-title fallback, idempotence, request concurrency, cache and
  *    responsive screenshots (saved to docs/screenshots/).
  * 3. Drives LIVE listing pages (/c/*, /search/results): row thumbnails, row
  *    links, layout overflow, DSiWare art, themes left untouched, idempotence
@@ -22,6 +23,8 @@ import { chromium, type BrowserContext, type Page, type Request } from 'playwrig
 
 // hShop's QR code encodes a live download token; keep it out of committed screenshots.
 const HIDE_DOWNLOAD_QR = '.landing-dl img { visibility: hidden !important; }';
+// hShop's fixed top and bottom bars, for element captures taller than the viewport.
+const HIDE_FIXED_BARS = 'body > header, body > footer { visibility: hidden !important; }';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const out = join(root, '.output', 'chrome-mv3');
@@ -128,24 +131,55 @@ check(mapOk, 'libretro-3ds.json maps product codes to 1-3 No-Intro names');
 
 // ─── 2. Live browser checks ────────────────────────────────────────────────
 
+/**
+ * Overlap below this many milliseconds is clock noise, not a fifth request: the
+ * page and the service worker are timed by separate targets, and a request that
+ * starts the instant another ends can land up to a fraction of a millisecond
+ * before it. A real fifth request overlaps by a whole response time (~180 ms+).
+ */
+const OVERLAP_TOLERANCE_MS = 2;
+
+interface ArtSpan {
+  /** Epoch ms, from the browser's own timing of the request. */
+  start: number;
+  end: number;
+  mark: string;
+  label: string;
+}
+
 /** Network bookkeeping for the two artwork hosts, shared by every page of a context. */
 class ArtTracker {
+  /** Open art requests by Playwright's events; used only to wait for quiet. */
   inFlight = 0;
-  maxInFlight = 0;
+  /** Peak of `inFlight`: reported, not checked (event order across page and worker is not request order). */
+  eventPeak = 0;
   log: { url: string; method: string; status: number | null; failed: boolean; mark: string }[] = [];
-  private live = new Set<Request>();
+  private live = new Map<Request, { at: number; mark: string }>();
+  /** Every settled art request as the browser timed it. */
+  spans: ArtSpan[] = [];
   mark = '';
 
   attach(context: BrowserContext): void {
     context.on('request', (req) => {
       if (!isArt(req.url())) return;
-      this.live.add(req);
+      this.live.set(req, { at: Date.now(), mark: this.mark });
       this.inFlight += 1;
-      this.maxInFlight = Math.max(this.maxInFlight, this.inFlight);
+      this.eventPeak = Math.max(this.eventPeak, this.inFlight);
     });
     const settle = (req: Request, failed: boolean): void => {
-      if (!this.live.delete(req)) return;
+      const open = this.live.get(req);
+      if (!open) return;
+      this.live.delete(req);
       this.inFlight -= 1;
+      // Playwright reports the worker's HEADs as failed once their unread
+      // Response is dropped, well after the answer arrived: a HEAD has no body,
+      // so its response start is its end.
+      const t = req.timing();
+      const rel = req.method() === 'HEAD' ? t.responseStart : Math.max(t.responseEnd, t.responseStart);
+      const start = t.startTime > 0 ? t.startTime : open.at;
+      const end = t.startTime > 0 && rel >= 0 ? t.startTime + rel : Date.now();
+      const label = `${open.mark} ${req.method()} ${req.serviceWorker() ? 'worker' : 'page'} ${req.url().split('/').slice(-3).join('/')}`;
+      this.spans.push({ start, end: Math.max(end, start), mark: open.mark, label });
       void (async () => {
         const res = failed ? null : await req.response().catch(() => null);
         this.log.push({ url: req.url(), method: req.method(), status: res?.status() ?? null, failed, mark: this.mark });
@@ -153,6 +187,49 @@ class ArtTracker {
     };
     context.on('requestfinished', (req) => settle(req, false));
     context.on('requestfailed', (req) => settle(req, true));
+  }
+
+  /**
+   * Most art requests open at one instant by the browser's timing, per step and
+   * overall, with the requests open at the overall peak. Requests still open
+   * count until the end of the run.
+   */
+  peak(): { peak: number; perMark: Record<string, number>; at: string[] } {
+    const spans: ArtSpan[] = [
+      ...this.spans,
+      ...[...this.live].map(([req, o]) => ({ start: o.at, end: Number.POSITIVE_INFINITY, mark: o.mark, label: `${o.mark} ${req.method()} ${req.url()} (never settled)` })),
+    ];
+    // A span no longer than the tolerance (a memory-cache hit) overlaps nothing.
+    const events = spans.flatMap((sp, i) =>
+      sp.end - OVERLAP_TOLERANCE_MS > sp.start
+        ? [
+            { t: sp.start, d: 1, i },
+            { t: sp.end - OVERLAP_TOLERANCE_MS, d: -1, i },
+          ]
+        : [],
+    );
+    // Ends before starts at the same instant: back-to-back requests do not overlap.
+    events.sort((x, y) => x.t - y.t || x.d - y.d);
+    const open = new Set<number>();
+    const perMark: Record<string, number> = {};
+    let peak = 0;
+    let at: string[] = [];
+    for (const e of events) {
+      if (e.d > 0) open.add(e.i);
+      else open.delete(e.i);
+      const mark = spans[e.i]!.mark;
+      perMark[mark] = Math.max(perMark[mark] ?? 0, open.size);
+      if (open.size > peak) {
+        peak = open.size;
+        // Each open request with its window relative to the moment of the peak, in ms.
+        at = [...open].map((j) => {
+          const sp = spans[j]!;
+          const rel = (t: number): string => (Number.isFinite(t) ? (t - e.t).toFixed(1) : '…');
+          return `${sp.label} [${rel(sp.start)}, ${rel(sp.end)}]`;
+        });
+      }
+    }
+    return { peak, perMark, at };
   }
 
   /**
@@ -381,6 +458,139 @@ async function waitForThumbs(page: Page, timeout = 45_000): Promise<boolean> {
     .catch(() => false);
 }
 
+/** State of the cover's zoom affordance (the `.cs-stage` button) and its dialog. */
+function zoomState(page: Page) {
+  return page.evaluate((host) => {
+    const h = document.querySelector(host);
+    const root = h?.shadowRoot;
+    const stage = root?.querySelector<HTMLElement>('.cs-stage') ?? null;
+    const dialog = root?.querySelector<HTMLElement>('[role="dialog"]') ?? null;
+    const img = dialog?.querySelector<HTMLImageElement>('img.cs-lightbox-img') ?? null;
+    const active = root?.activeElement ?? null;
+    return {
+      role: stage?.getAttribute('role') ?? null,
+      tabindex: stage?.getAttribute('tabindex') ?? null,
+      label: stage?.getAttribute('aria-label') ?? null,
+      cursor: stage ? getComputedStyle(stage).cursor : '',
+      dialog: !!dialog,
+      dialogLabel: dialog?.getAttribute('aria-label') ?? null,
+      imgSrc: img?.getAttribute('src') ?? null,
+      imgLoaded: !!img && img.complete && img.naturalWidth > 0,
+      focusInDialog: document.activeElement === h && !!active && !!dialog && dialog.contains(active),
+      focusOnStage: document.activeElement === h && !!stage && active === stage,
+      outline: stage && active === stage ? getComputedStyle(stage).outlineStyle : '',
+    };
+  }, COVER_HOST);
+}
+
+/**
+ * Cover zoom on a title page whose cover shows real art: the box is a labelled
+ * button, click / Enter / Space open the full-size art in the lightbox, Tab is
+ * trapped, Esc closes and focus goes back to the box. Clicks elsewhere on the
+ * page never open it.
+ */
+async function checkCoverZoom(page: Page, tag: string, expectedSrc: string | null): Promise<void> {
+  const stage = page.locator(`${COVER_HOST} .cs-stage`);
+  const z0 = await zoomState(page);
+  check(z0.role === 'button' && z0.tabindex === '0', `${tag}: cover is a focusable button (role=button, tabindex=0)`, JSON.stringify(z0));
+  check(!!z0.label && z0.label.includes('full size'), `${tag}: cover button has an accessible label`, String(z0.label));
+  check(z0.cursor === 'zoom-in', `${tag}: cover shows a zoom-in cursor`, z0.cursor);
+
+  // A click elsewhere on the card (the technical table) opens nothing.
+  await page.locator('.basic-meta > p').last().click();
+  check(!(await zoomState(page)).dialog, `${tag}: clicking the technical table does not open the viewer`);
+
+  await stage.scrollIntoViewIfNeeded();
+  await stage.click();
+  await page
+    .waitForFunction(
+      (host) => {
+        const i = document.querySelector(host)?.shadowRoot?.querySelector<HTMLImageElement>('[role="dialog"] img.cs-lightbox-img');
+        return !!i && i.complete && i.naturalWidth > 0;
+      },
+      COVER_HOST,
+      { timeout: 10_000 },
+    )
+    .catch(() => null);
+  const z1 = await zoomState(page);
+  check(z1.dialog && z1.imgLoaded, `${tag}: clicking the cover opens the full-size art in a dialog`, JSON.stringify({ src: z1.imgSrc, loaded: z1.imgLoaded }));
+  if (expectedSrc) check(z1.imgSrc === expectedSrc, `${tag}: the viewer shows the resolved full-size art`, String(z1.imgSrc));
+  check(z1.focusInDialog, `${tag}: focus moves into the dialog`);
+  if (tag === '1814') {
+    await sleep(400); // let the 180 ms fade-in finish
+    await page.screenshot({ style: HIDE_DOWNLOAD_QR, path: join(shotsDir, 'cover-zoom-1440.png') });
+  }
+
+  let trapped = true;
+  for (let i = 0; i < 4; i += 1) {
+    await page.keyboard.press('Tab');
+    if (!(await zoomState(page)).focusInDialog) trapped = false;
+  }
+  check(trapped, `${tag}: Tab keeps focus inside the cover viewer (4 presses)`);
+  await page.keyboard.press('Escape');
+  await sleep(200);
+  const z2 = await zoomState(page);
+  check(!z2.dialog, `${tag}: Escape closes the cover viewer`);
+  check(z2.focusOnStage, `${tag}: focus returns to the cover`);
+  check(z2.outline !== '' && z2.outline !== 'none', `${tag}: the focused cover shows a focus ring`, z2.outline);
+
+  await page.keyboard.press('Enter');
+  await sleep(300);
+  check((await zoomState(page)).dialog, `${tag}: Enter on the focused cover opens the viewer`);
+  await page.keyboard.press('Escape');
+  await sleep(200);
+
+  const scrollBefore = await page.evaluate(() => scrollY);
+  await page.keyboard.press('Space');
+  await sleep(300);
+  const z3 = await zoomState(page);
+  const scrollAfter = await page.evaluate(() => scrollY);
+  check(z3.dialog, `${tag}: Space on the focused cover opens the viewer`);
+  check(scrollAfter === scrollBefore, `${tag}: Space does not scroll the page`, `${scrollBefore} -> ${scrollAfter}`);
+  await page.keyboard.press('Escape');
+  await sleep(200);
+  check((await zoomState(page)).focusOnStage, `${tag}: focus is back on the cover after Space + Escape`);
+}
+
+/**
+ * Opens the cover zoom at the current viewport and checks that the image box
+ * has the art's own aspect ratio (within 2%), so no grey band shows above,
+ * below or beside the box art. Saves `cover-zoom-{w}.png` when `shot` is set.
+ */
+async function checkZoomFit(page: Page, w: number, shot: boolean): Promise<void> {
+  const stage = page.locator(`${COVER_HOST} .cs-stage`);
+  await stage.scrollIntoViewIfNeeded();
+  await stage.click();
+  await page
+    .waitForFunction(
+      (host) => {
+        const i = document.querySelector(host)?.shadowRoot?.querySelector<HTMLImageElement>('[role="dialog"] img.cs-lightbox-img');
+        return !!i && i.complete && i.naturalWidth > 0 && i.style.getPropertyValue('--cs-art-ratio') !== '';
+      },
+      COVER_HOST,
+      { timeout: 10_000 },
+    )
+    .catch(() => null);
+  await sleep(400); // let the 180 ms fade-in finish
+  const fit = await page.evaluate((host) => {
+    const i = document.querySelector(host)?.shadowRoot?.querySelector<HTMLImageElement>('[role="dialog"] img.cs-lightbox-img');
+    if (!i || i.naturalWidth === 0) return null;
+    const r = i.getBoundingClientRect();
+    return { w: Math.round(r.width), h: Math.round(r.height), nw: i.naturalWidth, nh: i.naturalHeight, vw: innerWidth, vh: innerHeight };
+  }, COVER_HOST);
+  const ok =
+    !!fit &&
+    fit.w > 0 &&
+    fit.h > 0 &&
+    Math.abs(fit.w / fit.h / (fit.nw / fit.nh) - 1) < 0.02 &&
+    fit.w <= fit.vw &&
+    fit.h <= fit.vh;
+  check(ok, `${w}: the zoomed box art box matches the art's aspect ratio (no letterbox bands)`, JSON.stringify(fit));
+  if (shot) await page.screenshot({ style: HIDE_DOWNLOAD_QR, path: join(shotsDir, `cover-zoom-${w}.png`) });
+  await page.keyboard.press('Escape');
+  await sleep(200);
+}
+
 async function main(): Promise<void> {
   mkdirSync(shotsDir, { recursive: true });
   const headless = process.env.E2E_HEADED !== '1';
@@ -507,6 +717,10 @@ async function main(): Promise<void> {
       check(focusBack, '1814: focus returns to the first thumbnail');
     }
 
+    // ── 5b. Cover zoom (same page)
+    console.log('\n── 5b. cover zoom on /t/1814');
+    await checkCoverZoom(page, '1814', s1.src);
+
     // ── 6. Idempotence
     console.log('\n── 6. idempotence');
     // Re-run the content-script logic in place: a committed path change on the same document.
@@ -588,6 +802,101 @@ async function main(): Promise<void> {
     check(!(await page.locator('[data-hshop-enhanced]').count()), '15834: no enhanced marker');
     check(art.during('15834').length === 0, '15834: no requests to the art hosts');
 
+    // ── 4b. Related Content and the base-title fallback
+    console.log('\n── 4b. related content + base-title fallback');
+    const AXXP_HQ = 'https://art.gametdb.com/3ds/coverHQ/EN/AXXP.jpg';
+    const relatedThumbs = (p: Page) =>
+      p.evaluate((host) => {
+        const rows = [...document.querySelectorAll<HTMLAnchorElement>('.related > a.list-entry')];
+        return rows.map((a) => {
+          const h = a.querySelector(`:scope > ${host}`);
+          const img = h?.shadowRoot?.querySelector<HTMLImageElement>('img.cs-thumb-art') ?? null;
+          return {
+            href: a.getAttribute('href'),
+            first: a.firstElementChild === h && !!h,
+            state: h?.shadowRoot?.querySelector('.cs-thumb')?.getAttribute('data-state') ?? 'none',
+            src: img && img.complete && img.naturalWidth > 0 ? img.currentSrc || img.src : null,
+            interactive: h?.shadowRoot?.querySelectorAll('a, button, [tabindex], [role="button"]').length ?? 0,
+          };
+        });
+      }, THUMB_HOST);
+
+    // /t/6881 (Demo A, CTR-T-AXXP): rows 6882 (Demo B, CTR-T-AZVP: no art anywhere) and 650 (Base Title, CTR-P-AXXP).
+    art.mark = 'related-6881';
+    await goto(page, '/t/6881');
+    check(await waitForCover(page), '6881: cover settled');
+    await page.locator('.related').scrollIntoViewIfNeeded();
+    const relSettled = await waitForThumbs(page, 45_000);
+    const rel = await relatedThumbs(page);
+    const relState = await listState(page);
+    check(relSettled, '6881: every related thumbnail left its loading state', JSON.stringify(rel.map((r) => r.state)));
+    check(rel.length === 2 && rel.every((r) => r.first), '6881: one thumbnail as the first child of each related row', JSON.stringify(rel));
+    check(relState.a11yLeaks.length === 0, '6881: related thumbnails are decorative', relState.a11yLeaks.join(' | '));
+    check(rel.every((r) => r.interactive === 0), '6881: nothing interactive inside the related row links');
+    check(relState.styleTags === 1, '6881: exactly one row layout <style>', `found ${relState.styleTags}`);
+    check(relState.overflow <= 0, '6881: no horizontal overflow at 1440', `${relState.overflow}px`);
+    const demoB = rel.find((r) => r.href === '/t/6882');
+    const base650 = rel.find((r) => r.href === '/t/650');
+    check(!!demoB?.src && demoB.src.includes('/AXXP.'), '6881: Demo B row (CTR-T-AZVP, no own art) shows the same game\'s art', String(demoB?.src));
+    check(!!base650?.src && base650.src.includes('/AXXP.'), '6881: Base Title row shows its art', String(base650?.src));
+    check(
+      art.during('related-6881').every((e) => !e.url.includes('/AZVP.') || e.method === 'HEAD' || e.status === 404 || e.failed),
+      '6881: AZVP was only probed, never displayed',
+    );
+    // The box only, with hShop's fixed bars hidden: a long capture would paint them mid-image.
+    await page.locator('.related').screenshot({ style: `${HIDE_DOWNLOAD_QR} ${HIDE_FIXED_BARS}`, path: join(shotsDir, 'related-6881-dark-1440.png') });
+
+    // Clicking a related thumbnail follows its row link (to /t/6882).
+    const demoHost = page.locator(`.related > a.list-entry[href="/t/6882"] > ${THUMB_HOST}`);
+    await demoHost.scrollIntoViewIfNeeded();
+    await tracker?.idle();
+    await demoHost.click();
+    await page.waitForURL((u) => u.pathname === '/t/6882', { timeout: 15_000 }).catch(() => null);
+    check(new URL(page.url()).pathname === '/t/6882', 'related: clicking a thumbnail opens the row title page', new URL(page.url()).pathname);
+
+    // /t/6882 itself: CTR-T-AZVP has no art; its Base Title CTR-P-AXXP does.
+    check(await waitForCover(page), '6882: cover settled');
+    const s6882 = await coverState(page);
+    check(s6882.src === AXXP_HQ && !s6882.placeholder, '6882: demo without art shows its Base Title cover (coverHQ/EN/AXXP)', String(s6882.src));
+    await checkCoverZoom(page, '6882', AXXP_HQ);
+
+    // /t/20600: a demo whose base (CTR-N-KLRJ) has no art either: placeholder, no zoom affordance.
+    art.mark = 'related-20600';
+    await goto(page, '/t/20600');
+    check(await waitForCover(page), '20600: cover settled');
+    const s20600 = await coverState(page);
+    check(s20600.placeholder, '20600: no verified art anywhere: the placeholder is shown', String(s20600.src));
+    const z20600 = await zoomState(page);
+    check(z20600.role === null && z20600.tabindex === null, '20600: the placeholder has no zoom affordance (no role, no tabindex)', JSON.stringify(z20600));
+    await page.locator(`${COVER_HOST} .cs-stage`).click();
+    await sleep(300);
+    check(!(await zoomState(page)).dialog, '20600: clicking the placeholder opens nothing');
+    await page.locator('.related').scrollIntoViewIfNeeded();
+    await waitForThumbs(page, 30_000);
+    const rel20600 = await relatedThumbs(page);
+    check(rel20600.length === 1 && rel20600[0]?.state === 'placeholder', '20600: Base Title row without art keeps the placeholder', JSON.stringify(rel20600));
+
+    // /t/20778 (DLC CTR-M-ALZE-00): its code already embeds the base game code ALZE.
+    await goto(page, '/t/20778');
+    check(await waitForCover(page), '20778: cover settled');
+    const s20778 = await coverState(page);
+    check(!!s20778.src && s20778.src.includes('/ALZE.') && !s20778.placeholder, '20778: DLC shows its base game art (ALZE)', String(s20778.src));
+    await page.locator('.related').scrollIntoViewIfNeeded();
+    await waitForThumbs(page, 30_000);
+    const rel20778 = await relatedThumbs(page);
+    check(rel20778.length === 2 && rel20778.every((r) => !!r.src && r.src.includes('/ALZE.')), '20778: Base Title and Update rows show the ALZE art', JSON.stringify(rel20778.map((r) => r.src)));
+
+    // Phone width: related rows keep the listing layout without overflow.
+    await page.setViewportSize({ width: 390, height: 844 });
+    await goto(page, '/t/6881');
+    await waitForCover(page);
+    await page.locator('.related').scrollIntoViewIfNeeded();
+    await waitForThumbs(page, 20_000);
+    const relPhone = await listState(page);
+    check(relPhone.overflow <= 0, '6881: no horizontal overflow at 390', `${relPhone.overflow}px`);
+    await page.locator('.related').screenshot({ style: `${HIDE_DOWNLOAD_QR} ${HIDE_FIXED_BARS}`, path: join(shotsDir, 'related-6881-dark-390.png') });
+    await page.setViewportSize({ width: 1440, height: 900 });
+
     // ── 9. Viewports and screenshots
     console.log('\n── 9. viewports and screenshots');
     for (const vp of [
@@ -610,6 +919,7 @@ async function main(): Promise<void> {
         }, COVER_HOST);
         check(!!geo && geo.coverH > 0 && geo.coverBottom <= geo.pTop + 0.5, '390: cover sits above the technical table', JSON.stringify(geo));
       }
+      await checkZoomFit(page, w, w === 390);
 
       await context.addCookies([{ name: 'colormode', value: 'light', domain: 'hshop.erista.me', path: '/' }]);
       await goto(page, '/t/1814');
@@ -646,6 +956,12 @@ async function main(): Promise<void> {
         await page.keyboard.press('Escape');
       }
     }
+    // Tablet width: the art box still fits the art (the old fixed height left bands here).
+    await page.setViewportSize({ width: 768, height: 1024 });
+    await goto(page, '/t/1814');
+    await waitForCover(page);
+    await checkZoomFit(page, 768, false);
+    await page.setViewportSize({ width: 1440, height: 900 });
     check(true, 'screenshots saved to docs/screenshots/');
 
     // ── 10. Listing pages
@@ -673,6 +989,13 @@ async function main(): Promise<void> {
     );
     check(na.overflow <= 0, 'list NA: no horizontal overflow at 1440', `${na.overflow}px`);
     check(na.styleTags === 1, 'list NA: exactly one layout <style> in the document', `found ${na.styleTags}`);
+    {
+      const gets = art.during('list-na').filter((e) => e.method === 'GET');
+      const seen = new Map<string, number>();
+      for (const e of gets) seen.set(e.url, (seen.get(e.url) ?? 0) + 1);
+      const twice = [...seen.values()].filter((n) => n > 1).length;
+      console.log(`info list NA: ${gets.length} art GET(s) for ${seen.size} URL(s); ${twice} URL(s) requested more than once`);
+    }
     await page.screenshot({ path: join(shotsDir, 'list-na-dark-1440.png') });
 
     const stored2 = await worker.evaluate(async () => {
@@ -689,6 +1012,7 @@ async function main(): Promise<void> {
     );
 
     // Idempotence: in-page path changes must not double any row.
+    art.mark = 'list-na-rerun';
     await page.evaluate(() => history.pushState(null, '', '/c/games/s/north-america/'));
     await sleep(1_500);
     await page.evaluate(() => history.pushState(null, '', '/c/games/s/north-america'));
@@ -701,12 +1025,15 @@ async function main(): Promise<void> {
     const firstHost = page.locator(THUMB_HOST).first();
     const rowHref = await firstHost.evaluate((h) => h.parentElement?.getAttribute('href') ?? '');
     await firstHost.scrollIntoViewIfNeeded();
+    // Like goto(): the listing's last HEAD preflights run in the worker and would count against the next page.
+    await tracker?.idle();
     await firstHost.click();
     await page.waitForURL((u) => u.pathname === rowHref, { timeout: 15_000 }).catch(() => null);
     check(new URL(page.url()).pathname === rowHref, 'list: clicking a thumbnail opens the row title page', `${rowHref} -> ${new URL(page.url()).pathname}`);
 
     // Phone width: no overflow.
     await page.setViewportSize({ width: 390, height: 844 });
+    art.mark = 'list-na-390';
     await goto(page, '/c/games/s/north-america');
     await page.waitForSelector(THUMB_HOST, { state: 'attached', timeout: 20_000 }).catch(() => null);
     await waitForThumbs(page, 20_000);
@@ -749,7 +1076,12 @@ async function main(): Promise<void> {
 
     // ── 7. Concurrency (whole run)
     console.log('\n── 7. concurrency');
-    check(art.maxInFlight <= MAX_IN_FLIGHT, `max simultaneous in-flight art requests <= ${MAX_IN_FLIGHT}`, `observed ${art.maxInFlight}`);
+    const flight = art.peak();
+    check(
+      flight.peak <= MAX_IN_FLIGHT,
+      `max simultaneous in-flight art requests <= ${MAX_IN_FLIGHT}`,
+      `observed ${flight.peak} by browser timing over ${art.spans.length} request(s) (${art.eventPeak} by event order); peaks ${JSON.stringify(flight.perMark)}; at peak: ${flight.at.join(' | ')}`,
+    );
 
     const allNew = watch.pageErrors.filter((e) => !baselineErrors.includes(e));
     check(allNew.length === 0, 'whole run: no page errors beyond the baseline', allNew.join(' | '));

@@ -1,6 +1,6 @@
 # Assumptions to verify
 
-What Coverly Shelf 0.1.0 assumes about hShop, GameTDB and Libretro that has
+What Coverly Shelf 0.2.0 assumes about hShop, GameTDB and Libretro that has
 not been fully confirmed, and how to check each one on the real site. Facts
 that *were* verified live on 2026-10-25 are in [REFERENCE.md](REFERENCE.md).
 
@@ -14,7 +14,7 @@ grep -rn "TODO(reference)" src docs
 
 | Where | Assumption | How to verify |
 |---|---|---|
-| `src/lib/config.ts` (`REGION_BY_CHAR`) | Game codes ending in `U`, `R`, `C`, `W` or `Z` have no region mapping, so they fall back to `EN` then `US`. `APNR` returned 404 in both `RU` and `EN`. | Open hShop titles whose product code ends in each letter (Australia, Russia, China, Taiwan, region-free). Check which `art.gametdb.com/3ds/cover/{REGION}/{code}.jpg` answers 200, then add the letter to `REGION_BY_CHAR`. |
+| `src/lib/config.ts` (`REGION_BY_CHAR`) | Game codes ending in `C`, `R` or `U` have no region mapping, so they fall back to the hShop slug, then `EN`, then `US`. Their only 3DS codes (JMKC, JREC, APNR) have no GameTDB art in any folder, and no 3DS code ends in `U`. | When hShop lists a new `C`/`R`/`U` title, check `art.gametdb.com/3ds/cover/{ZH,RU,AU,EN,US}/{code}.jpg` and add the letter only for a folder that answers 200. |
 | `src/lib/config.ts` (`REGION_BY_HSHOP_SLUG`) | The breadcrumb slugs `china`, `taiwan`, `france`, `germany`, `italy`, `spain`, `netherlands`, `russia` and `world` are not mapped. They are only used when the region letter is unknown. | On hShop, open `/c/games` and list every region slug in use. Check that each new slug actually exists before adding it. |
 | `src/entrypoints/title.content/style.css` (`--cs-shade`) | hShop has no shadow token, so the box spine and drop shadow use `--clevel-3`. | If hShop adds a shadow or elevation token in a future site version, switch to it. Compare both themes with the box on screen. |
 | `docs/REFERENCE.md` (Shadows) | Same as above: the 3D box shadow is our own. | Same as above. |
@@ -29,6 +29,7 @@ grep -rn "TODO(reference)" src docs
 | Navigation is full page loads, not a SPA. | The content script re-runs only on committed path changes. | Click between titles and use Back/Forward: there must be exactly one box per page. |
 | Title pages show no title icon, so the “hShop icon” step of the cover chain never fires. | It is coded but unused today. | If hShop starts showing an icon on `/t/` pages, record its selector in REFERENCE.md and pass its URL as `hshopIconUrl`. |
 | Themes and homebrew have no valid product code. | They are skipped. | Open `/t/15834` (a theme): no box, no gallery, no requests to the art hosts. |
+| Related Content rows say `Relation: Base Title`, `Demo Title`, `Update Data` or `Downloadable Content`, and a row hShop marks with one of those is the same game as the page. | Only those rows may borrow the Base Title's or the page's art (docs/REFERENCE.md, "Base-title fallback"); other rows keep the placeholder. | Open `/t/6881`, `/t/20778` and `/t/2624`: every related row shows a thumbnail, and Demo B on `/t/6881` shows Project X Zone's cover. A new relation label shows up as a placeholder until it is added to `RELATIONS`. |
 
 ## Behaviour still to check by hand
 
@@ -77,10 +78,7 @@ worth one look in an everyday Chrome with the unpacked build:
 
 ## Releases and the landing page
 
-- There is no GitHub release yet, so `releases/latest` links (README and the
-  landing) show an empty page until v0.1.0 is published with
-  `coverly-shelf-0.1.0-chrome.zip` attached (`bun run zip`).
-- The custom domain `coverly-shelf.maecly.com` needs its DNS record: run
-  `scripts/ops/add_dns.sh` in the landing repository
-  ([MAECLY/coverly-shelf-landing](https://github.com/MAECLY/coverly-shelf-landing)).
-  Until then the landing is at `https://coverly-shelf-landing.vercel.app`.
+- Each release attaches `coverly-shelf-{version}-chrome.zip` (`bun run zip`);
+  the README and the landing link to `releases/latest`.
+- The landing ([MAECLY/coverly-shelf-landing](https://github.com/MAECLY/coverly-shelf-landing))
+  is served at `https://coverly-shelf.maecly.com` (Cloudflare CNAME to Vercel).

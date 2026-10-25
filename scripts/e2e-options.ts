@@ -64,6 +64,7 @@ interface Manifest {
   permissions?: string[];
   default_locale?: string;
   options_ui?: { page?: string; open_in_tab?: boolean };
+  action?: { default_title?: string; default_popup?: string };
 }
 
 console.log('\n── static: manifest and locales');
@@ -71,6 +72,8 @@ const manifest = JSON.parse(readFileSync(join(out, 'manifest.json'), 'utf8')) as
 check(manifest.options_ui?.page === 'options.html', 'options_ui points at options.html');
 check(manifest.options_ui?.open_in_tab === true, 'options page opens in a tab');
 check(manifest.default_locale === 'en', 'default_locale is en');
+check(!!manifest.action && !manifest.action.default_popup, 'toolbar action has no popup (a click opens the settings page)', JSON.stringify(manifest.action));
+check(manifest.action?.default_title === '__MSG_optionsTitle__', 'toolbar action tooltip is the localised settings title');
 check(
   JSON.stringify(manifest.permissions) === JSON.stringify(['storage']),
   'permissions are still exactly ["storage"]',

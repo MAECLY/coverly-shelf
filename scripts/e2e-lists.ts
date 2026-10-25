@@ -16,9 +16,11 @@
  *   MAX_CONCURRENT_REQUESTS (4) artwork requests in flight at any time;
  * - no page errors beyond hShop's own, no console errors from the extension;
  * - no horizontal overflow at 1440 and at 390;
- * - row anchors still navigate (one click per category).
+ * - row anchors still navigate (one click per category);
+ * - explicit coverage floors (COVERAGE below) for the pages the VC, update,
+ *   DLC and DSiWare work targets: share of coded main rows showing art.
  *
- * Prints a coverage table (page → rows, images, placeholders) and saves
+ * Prints a coverage table (page → rows, images by source, placeholders) and saves
  * screenshots of games/north-america, games/japan, dsiware and virtual-console
  * at 1440 (dark + light) and 390 (dark + light) to docs/screenshots/.
  *
@@ -58,6 +60,18 @@ const SHOTS: { path: string; name: string }[] = [
   { path: '/c/games/s/japan', name: 'japan' },
   { path: '/c/dsiware/s/north-america', name: 'dsiware' },
   { path: '/c/virtual-console/s/north-america', name: 'vc' },
+];
+
+/**
+ * Minimum share of coded main-list rows (first page) that must show art.
+ * Measured 2026-10-25 with the live run: see "Coverage" in docs/REFERENCE.md.
+ * A drop below the floor means a regression in the region chain or a source.
+ */
+const COVERAGE: { path: string; min: number }[] = [
+  { path: '/c/virtual-console/s/north-america', min: 0.92 }, // 25/25 (24 GameTDB + 1 Libretro VC)
+  { path: '/c/updates/s/france', min: 0.85 }, // 7/7
+  { path: '/c/dlc/s/japan', min: 0.7 }, // 19/25
+  { path: '/c/dsiware/s/north-america', min: 0.92 }, // 25/25
 ];
 
 const failures: string[] = [];
@@ -189,6 +203,9 @@ interface Audit {
   /** Main rows with an unusable code that still got a host. */
   uncodedWithHost: string[];
   mainImages: number;
+  /** Main-row images by artwork host. */
+  mainGametdb: number;
+  mainLibretro: number;
   mainPlaceholders: number;
   mainLoading: number;
   topRows: number;
@@ -235,6 +252,8 @@ function audit(page: Page, noArt: boolean, topAll: boolean): Promise<Audit> {
         codedWrong: [],
         uncodedWithHost: [],
         mainImages: 0,
+        mainGametdb: 0,
+        mainLibretro: 0,
         mainPlaceholders: 0,
         mainLoading: 0,
         topRows: top.length,
@@ -261,7 +280,13 @@ function audit(page: Page, noArt: boolean, topAll: boolean): Promise<Audit> {
           if (n !== 1) r.codedWrong.push(`${href} ${code} hosts=${n}`);
         } else if (n > 0) r.uncodedWithHost.push(`${href} ${code ?? '(no code)'}`);
         const s = stateOf(a);
-        if (s === 'image') r.mainImages += 1;
+        if (s === 'image') {
+          r.mainImages += 1;
+          const img = a.querySelector(`:scope > ${host}`)?.shadowRoot?.querySelector('img');
+          const src = img?.currentSrc || img?.src || '';
+          if (src.startsWith('https://art.gametdb.com/')) r.mainGametdb += 1;
+          else if (src.startsWith('https://thumbnails.libretro.com/')) r.mainLibretro += 1;
+        }
         else if (s === 'placeholder') r.mainPlaceholders += 1;
         else if (s !== null) r.mainLoading += 1;
       }
@@ -392,6 +417,26 @@ function pad(s: string | number, n: number, right = false): string {
   return right ? v.padStart(n) : v.padEnd(n);
 }
 
+/** Per-page coverage of the COVERAGE pages, by source. */
+function printCoverage(rows: Row[]): void {
+  const picked = COVERAGE.map((c) => ({ c, r: rows.find((r) => r.page === c.path) }));
+  if (!picked.some((p) => p.r)) return;
+  console.log('\n── coverage of the targeted pages (main list, first page)');
+  console.log('| Page | Coded rows | GameTDB | Libretro | Placeholder | Art | Floor |');
+  console.log('|---|---|---|---|---|---|---|');
+  for (const { c, r } of picked) {
+    if (!r) {
+      console.log(`| ${c.path} | not run | | | | | ${Math.round(c.min * 100)}% |`);
+      continue;
+    }
+    const a = r.a;
+    const pct = a.coded ? `${Math.round((100 * a.mainImages) / a.coded)}%` : '—';
+    console.log(
+      `| ${c.path} | ${a.coded} | ${a.mainGametdb} | ${a.mainLibretro} | ${a.mainPlaceholders} | ${a.mainImages} (${pct}) | ${Math.round(c.min * 100)}% |`,
+    );
+  }
+}
+
 function printTable(rows: Row[]): void {
   console.log('\n── coverage (first page of each listing)');
   const head =
@@ -497,6 +542,13 @@ async function main(): Promise<void> {
       );
     }
     pages.push({ path: SEARCH_PATH, category: 'search', topAll: false, navCheck: true });
+    // The coverage pages are always checked, even if discovery stops listing them.
+    for (const { path } of COVERAGE) {
+      if (!pages.some((p) => p.path === path)) {
+        check(false, `discovery: ${path} is listed`);
+        pages.push({ path, category: path.split('/')[2] ?? '', topAll: topAllEverywhere, navCheck: false });
+      }
+    }
     const selected = only.length ? pages.filter((p) => only.some((o) => p.path.includes(o))) : pages;
     console.log(`${selected.length} page(s) to check`);
 
@@ -536,6 +588,15 @@ async function main(): Promise<void> {
       if (topAll && !noArt && a.topRows > 0) {
         check(a.topHosts > 0, `${p}: "Top content" rows resolve when scrolled into view`, `${a.topHosts}/${a.topRows} with a thumbnail, ${lookups.total} lookup(s)`);
       }
+      const floor = COVERAGE.find((c) => c.path === path);
+      if (floor) {
+        const share = a.coded ? a.mainImages / a.coded : 0;
+        check(
+          a.coded > 0 && share >= floor.min,
+          `${p}: at least ${Math.round(floor.min * 100)}% of coded rows show art`,
+          `${a.mainImages}/${a.coded} (${Math.round(share * 100)}%): GameTDB ${a.mainGametdb}, Libretro ${a.mainLibretro}, placeholder ${a.mainPlaceholders}`,
+        );
+      }
       if (noArt) check(a.styleTags === 0 && a.topHosts === 0, `${p}: no-art category gets no thumbnail and no <style>`);
       else check(a.styleTags === (a.coded + a.topHosts > 0 ? 1 : 0), `${p}: one layout <style> at most`, `found ${a.styleTags}`);
       check(lookups.peak <= MAX_LOOKUPS_IN_FLIGHT, `${p}: hShop lookups in flight <= ${MAX_LOOKUPS_IN_FLIGHT}`, `peak ${lookups.peak}, total ${lookups.total}${lookups.peak > MAX_LOOKUPS_IN_FLIGHT ? `: ${lookups.dump()}` : ''}`);
@@ -559,8 +620,12 @@ async function main(): Promise<void> {
         await host.click();
         await page.waitForURL((u) => u.pathname === href, { timeout: 15_000 }).catch(() => null);
         check(new URL(page.url()).pathname === href, `${p}: clicking a thumbnail follows the row link`, `${href} -> ${new URL(page.url()).pathname}`);
-        // Leave the title page before the next listing: its HQ cover requests,
-        // cancelled by the next navigation, would otherwise count as listing traffic.
+        // Let the title page's own cover requests start and finish here, then
+        // leave it: a request that starts after the next page's reset, or one
+        // cancelled by the next navigation, would count as listing traffic.
+        await page.waitForLoadState('load').catch(() => null);
+        await sleep(2_000);
+        await art.drain();
         await page.goto('about:blank');
       }
     }
@@ -601,6 +666,7 @@ async function main(): Promise<void> {
     console.log(`cache keys: ${Object.keys(stored).length} (lookup: ${Object.keys(stored).filter((k) => k.startsWith('lookup:')).length}, thumb: ${Object.keys(stored).filter((k) => k.startsWith('thumb:')).length})`);
   } finally {
     printTable(rows);
+    printCoverage(rows);
     await context.close();
     rmSync(profileDir, { recursive: true, force: true });
   }

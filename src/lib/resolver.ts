@@ -8,8 +8,10 @@
  * returned for this page view but not stored, so a passing transport failure
  * is never remembered as "no artwork" for a week.
  *
- * Cover chain: GameTDB (game region, then EN/US) → Libretro Named_Boxarts →
- * hShop's own icon → placeholder. DSiWare (TWL) uses GameTDB's `ds/` folder
+ * Cover chain: GameTDB (game region, then EN/US) → for Virtual Console codes,
+ * the original system's Libretro box art (public/libretro-vc.json, exact
+ * verified names only) → Libretro 3DS Named_Boxarts → hShop's own icon →
+ * placeholder. DSiWare (TWL) uses GameTDB's `ds/` folder
  * and skips Libretro, which has next to no DSi box art.
  *
  * Two sizes, cached apart so title pages keep their HQ art:
@@ -21,7 +23,8 @@
  */
 import { getCached, setCached } from './cache';
 import { regionChain } from './extract';
-import { requestLibretroNamesResult } from './messages';
+import { VC_CODE_LETTERS } from './config';
+import { requestLibretroNamesResult, requestLibretroVcResult, type VcName } from './messages';
 import { probeOutcome, type ProbeOutcome } from './probe';
 import { gametdbCoverCandidates, type CoverSize } from './sources/gametdb';
 import { libretroCandidates } from './sources/libretro';
@@ -139,6 +142,22 @@ export function libretroSerials(info: GameInfo): string[] {
   return serials;
 }
 
+/** Virtual Console codes (by first letter) may have original-system art. */
+const mayBeVc = (info: GameInfo): boolean => usesLibretro(info) && VC_CODE_LETTERS.includes(info.gameCode.charAt(0));
+
+/** The packaged VC entry for the row's game code, or null; a transport failure marks the run. */
+async function vcName(run: Run, info: GameInfo): Promise<VcName | null> {
+  if (!mayBeVc(info)) return null;
+  try {
+    const res = await requestLibretroVcResult(info.gameCode);
+    if (res.ok) return res.entry;
+  } catch {
+    /* treated as a transport failure below */
+  }
+  run.transient = true;
+  return null;
+}
+
 async function libretroNames(run: Run, info: GameInfo): Promise<string[]> {
   const answers = await Promise.all(
     libretroSerials(info).map(async (serial) => {
@@ -181,6 +200,12 @@ async function resolveArtwork(run: Run, info: GameInfo, size: CoverSize): Promis
     // Libretro was never asked: not a definite miss.
     run.transient = true;
     return PLACEHOLDER;
+  }
+
+  const vc = await vcName(run, info);
+  if (vc) {
+    const original = await firstHit(run, libretroCandidates([vc.name], 'cover', vc.system));
+    if (original) return { kind: 'image', url: original.url, source: original.source };
   }
 
   const names = await libretroNames(run, info);
@@ -238,7 +263,8 @@ export async function resolveCover(info: GameInfo, opts: ResolveOptions = {}): P
 }
 
 /**
- * Title screen and in-game snapshot from Libretro, at most one of each: for
+ * Title screen and in-game snapshot from Libretro (a VC title's original
+ * system first), at most one of each: for
  * every kind, the best-ranked name whose image exists. All probes go out at
  * once and the shared limiter keeps them to four in flight.
  */
@@ -250,10 +276,14 @@ export async function resolveGallery(info: GameInfo, opts: Pick<ResolveOptions, 
     if (isCandidateList(cached)) return cached;
 
     const run: Run = { transient: false };
-    const names = await libretroNames(run, info);
+    const [vc, names] = await Promise.all([vcName(run, info), libretroNames(run, info)]);
     const perKind = await Promise.all(
       GALLERY_KINDS.map(async (kind) => {
-        const candidates = libretroCandidates(names, kind);
+        // A VC title's own screens come from its original system, then any 3DS name.
+        const candidates = [
+          ...(vc ? libretroCandidates([vc.name], kind, vc.system) : []),
+          ...libretroCandidates(names, kind),
+        ];
         const hits = await Promise.all(candidates.map((c) => probeIn(run, c.url)));
         return candidates.find((_, i) => hits[i]) ?? null;
       }),

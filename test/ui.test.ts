@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { createCover, createCoverSkeleton } from '../src/ui/cover';
+import { createCover, createCoverSkeleton, zoomLabel } from '../src/ui/cover';
 import { createCredit } from '../src/ui/credits';
 import { createGallery } from '../src/ui/gallery';
 import { openLightbox } from '../src/ui/lightbox';
@@ -86,6 +86,133 @@ describe('cover', () => {
     const el = createCover({ title: 'Excitebike', result: { kind: 'placeholder' } });
     expect(el.querySelector('img')).toBeNull();
     expect(el.querySelector('.cs-credit')).toBeNull();
+  });
+});
+
+describe('cover zoom', () => {
+  const art = { kind: 'image', url: 'https://art.gametdb.com/3ds/coverHQ/US/AZEE.jpg', source: 'gametdb' } as const;
+
+  function zoomable(extra: { src?: string } = {}) {
+    const root = shadowHost();
+    const el = createCover({ title: 'Batman', result: art, zoom: { container: root, ...extra } });
+    root.append(el);
+    const stage = el.querySelector<HTMLElement>('.cs-stage')!;
+    return { root, el, stage };
+  }
+
+  it('makes the box a labelled, focusable button', () => {
+    const { stage } = zoomable();
+    expect(stage.getAttribute('role')).toBe('button');
+    expect(stage.getAttribute('tabindex')).toBe('0');
+    expect(stage.getAttribute('aria-label')).toBe(zoomLabel('Batman'));
+    expect(stage.getAttribute('aria-haspopup')).toBe('dialog');
+    expect(stage.classList.contains('is-zoomable')).toBe(true);
+  });
+
+  it('opens the full-size art in the lightbox on click', () => {
+    const { root, stage } = zoomable();
+    stage.click();
+    const dialog = root.querySelector<HTMLElement>('[role="dialog"]')!;
+    expect(dialog).not.toBeNull();
+    expect(dialog.classList.contains('is-art')).toBe(true);
+    expect(dialog.getAttribute('aria-label')).toBe('Box art viewer: Batman');
+    // The dialog and its only image get different names, so nothing is announced twice.
+    expect(dialog.querySelector('img')?.getAttribute('alt')).toBe('Batman box art');
+    expect(dialog.getAttribute('aria-label')).not.toBe(dialog.querySelector('img')?.getAttribute('alt'));
+    expect(dialog.querySelector('img')?.getAttribute('src')).toBe(art.url);
+    expect(dialog.querySelector('.cs-lightbox-close')?.getAttribute('aria-label')).toBe('Close box art');
+    expect(dialog.querySelectorAll('.cs-lightbox-prev, .cs-lightbox-next')).toHaveLength(0);
+    // A second click while open does not stack another dialog.
+    stage.click();
+    expect(root.querySelectorAll('[role="dialog"]')).toHaveLength(1);
+  });
+
+  it('prefers the given full-size src over the shown one', () => {
+    const { root, stage } = zoomable({ src: 'https://art.gametdb.com/3ds/coverHQ/EN/AXXP.jpg' });
+    stage.click();
+    expect(root.querySelector('[role="dialog"] img')?.getAttribute('src')).toBe('https://art.gametdb.com/3ds/coverHQ/EN/AXXP.jpg');
+  });
+
+  it('sizes the zoomed art by its own aspect ratio once it loads (no letterbox bands)', () => {
+    const { root, stage } = zoomable();
+    stage.click();
+    const img = root.querySelector<HTMLImageElement>('[role="dialog"] img')!;
+    Object.defineProperty(img, 'naturalWidth', { value: 768, configurable: true });
+    Object.defineProperty(img, 'naturalHeight', { value: 680, configurable: true });
+    img.dispatchEvent(new Event('load'));
+    expect(Number(img.style.getPropertyValue('--cs-art-ratio'))).toBeCloseTo(768 / 680, 5);
+
+    // Screenshots keep their fixed-height, contain-fit layout.
+    const shots = openLightbox({ container: shadowHost(), images: [{ src: 'https://x/1.png', alt: 'shot' }], index: 0, label: 'Shots' });
+    const shot = shots.element.querySelector<HTMLImageElement>('img')!;
+    Object.defineProperty(shot, 'naturalWidth', { value: 400, configurable: true });
+    Object.defineProperty(shot, 'naturalHeight', { value: 240, configurable: true });
+    shot.dispatchEvent(new Event('load'));
+    expect(shot.style.getPropertyValue('--cs-art-ratio')).toBe('');
+    shots.close();
+  });
+
+  it('opens on Enter and Space, keeps those keys from the page, and ignores other keys', () => {
+    for (const k of ['Enter', ' ']) {
+      const { root, stage } = zoomable();
+      let leaked = false;
+      const listener = () => (leaked = true);
+      document.addEventListener('keydown', listener);
+      const ev = key(stage, k);
+      document.removeEventListener('keydown', listener);
+      expect(ev.defaultPrevented).toBe(true);
+      expect(leaked).toBe(false);
+      expect(root.querySelector('[role="dialog"]')).not.toBeNull();
+      document.body.replaceChildren();
+    }
+    const { root, stage } = zoomable();
+    const ev = key(stage, 'a');
+    expect(ev.defaultPrevented).toBe(false);
+    expect(root.querySelector('[role="dialog"]')).toBeNull();
+  });
+
+  it('traps focus in the dialog, closes on Esc and gives focus back to the box', () => {
+    const { root, stage } = zoomable();
+    stage.focus();
+    key(stage, 'Enter');
+    const dialog = root.querySelector<HTMLElement>('[role="dialog"]')!;
+    const close = dialog.querySelector('.cs-lightbox-close');
+    expect(root.activeElement).toBe(close);
+    for (let i = 0; i < 3; i++) {
+      expect(key(root.activeElement!, 'Tab').defaultPrevented).toBe(true);
+      expect(root.activeElement).toBe(close);
+    }
+    key(dialog, 'Escape');
+    expect(root.querySelector('[role="dialog"]')).toBeNull();
+    expect(root.activeElement).toBe(stage);
+  });
+
+  it('never makes the placeholder zoomable', () => {
+    const root = shadowHost();
+    const el = createCover({ title: 'Batman', result: { kind: 'placeholder' }, zoom: { container: root } });
+    root.append(el);
+    const stage = el.querySelector<HTMLElement>('.cs-stage')!;
+    expect(stage.hasAttribute('role')).toBe(false);
+    expect(stage.hasAttribute('tabindex')).toBe(false);
+    stage.click();
+    expect(root.querySelector('[role="dialog"]')).toBeNull();
+  });
+
+  it('drops the affordance (and an open viewer) when the art fails to load', () => {
+    const { root, el, stage } = zoomable();
+    stage.click();
+    el.querySelector('img.cs-art')!.dispatchEvent(new Event('error'));
+    expect(root.querySelector('[role="dialog"]')).toBeNull();
+    expect(stage.hasAttribute('role')).toBe(false);
+    expect(stage.hasAttribute('tabindex')).toBe(false);
+    expect(stage.classList.contains('is-zoomable')).toBe(false);
+    stage.click();
+    expect(root.querySelector('[role="dialog"]')).toBeNull();
+  });
+
+  it('is off without the zoom option', () => {
+    const el = createCover({ title: 'Batman', result: art });
+    expect(el.querySelector('.cs-stage')?.hasAttribute('role')).toBe(false);
   });
 });
 

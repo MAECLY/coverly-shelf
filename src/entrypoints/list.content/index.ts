@@ -15,17 +15,17 @@
  * shows is stored for those lookups (`rememberShownCodes`), so a title seen
  * on any listing page never needs its `/t/{id}` fetched.
  */
-import './style.css';
+import '../../ui/thumb.css';
 import { createShadowRootUi, defineContentScript, type ContentScriptContext, type ShadowRootContentScriptUi } from '#imports';
 import { extractListEntries, type ListEntry } from '../../lib/extract';
 import { lookupGameInfo, rememberShownCodes } from '../../lib/lookup';
 import { createPathWatcher } from '../../lib/navigation';
-import { displaySrc } from '../../lib/probe';
+import { toDisplayable } from '../../lib/display';
 import { resolveCover } from '../../lib/resolver';
 import { ENHANCED_ATTR, SELECTORS } from '../../lib/selectors';
-import type { CoverResult, GameInfo } from '../../lib/types';
+import type { GameInfo } from '../../lib/types';
 import { createThumb, updateThumb } from '../../ui/thumb';
-import { injectLayoutStyle, THUMB_HOST } from './layout';
+import { injectLayoutStyle, THUMB_HOST } from '../../ui/thumb-layout';
 
 type Ui = ShadowRootContentScriptUi<HTMLElement>;
 
@@ -210,11 +210,4 @@ async function fill(run: Run, row: Row, isStale: () => boolean): Promise<void> {
   } catch {
     if (!isStale() && row.thumb) updateThumb(row.thumb, { kind: 'placeholder' });
   }
-}
-
-/** In background mode the art must become a data URL first; if that fails, show the placeholder. */
-async function toDisplayable(result: CoverResult): Promise<{ result: CoverResult; src: string | null }> {
-  if (result.kind !== 'image') return { result, src: null };
-  const src = await displaySrc(result.url);
-  return src ? { result, src } : { result: { kind: 'placeholder' }, src: null };
 }
