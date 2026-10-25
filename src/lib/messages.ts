@@ -5,7 +5,10 @@
  */
 import { browser } from 'wxt/browser';
 
-export type ExtMessage = { type: 'libretro:names'; serial: string } | { type: 'image:fetch'; url: string };
+export type ExtMessage =
+  | { type: 'libretro:names'; serial: string }
+  | { type: 'image:fetch'; url: string }
+  | { type: 'image:head'; url: string };
 
 /** Marks a messaging failure (no service worker, closed port, invalidated context). */
 const FAILED: unique symbol = Symbol('messaging-failed');
@@ -46,4 +49,38 @@ export async function requestImageDataResult(url: string): Promise<ImageDataResu
 export async function requestImageData(url: string): Promise<string | null> {
   const res = await requestImageDataResult(url);
   return res.ok ? res.data : null;
+}
+
+/** What a HEAD preflight of an artwork URL found (see src/lib/background/head.ts). */
+export interface ImageHead {
+  /** 2xx, `image/*`, still on an allowed origin and not declared empty. */
+  ok: boolean;
+  /** HTTP status; 0 when the URL was refused without a request. */
+  status: number;
+  /** Bare lower-cased media type, or null when the response had none. */
+  contentType: string | null;
+  /** Declared Content-Length, or null when absent. */
+  length: number | null;
+}
+
+function isImageHead(value: unknown): value is ImageHead {
+  if (typeof value !== 'object' || value === null) return false;
+  const v = value as Record<string, unknown>;
+  return (
+    typeof v.ok === 'boolean' &&
+    typeof v.status === 'number' &&
+    (v.contentType === null || typeof v.contentType === 'string') &&
+    (v.length === null || typeof v.length === 'number')
+  );
+}
+
+/**
+ * HEAD preflight of an artwork URL, done by the background. Null when there is
+ * no answer (messaging failure, or the HEAD itself failed for a network
+ * reason), so the caller can fall back to loading the image. Never rejects.
+ */
+export async function requestImageHead(url: string): Promise<ImageHead | null> {
+  const res = await send({ type: 'image:head', url });
+  if (!isImageHead(res)) return null;
+  return { ok: res.ok, status: res.status, contentType: res.contentType, length: res.length };
 }
