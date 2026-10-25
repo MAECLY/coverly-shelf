@@ -1,15 +1,20 @@
 /**
  * Picks the artwork to show for a game. DOM-free: every network check goes
- * through `probeImage`, every result is cached per game code (misses too, so
+ * through `probeOutcome`, every result is cached per game code (misses too, so
  * 404s are not repeated for a week), and nothing here ever rejects.
+ *
+ * A result is only cached when every step gave a definite answer. If the
+ * background could not be reached or a probe timed out, the outcome is still
+ * returned for this page view but not stored, so a passing transport failure
+ * is never remembered as "no artwork" for a week.
  *
  * Cover chain: GameTDB (game region, then EN/US) → Libretro Named_Boxarts →
  * hShop's own icon → placeholder.
  */
 import { getCached, setCached } from './cache';
 import { regionChain } from './extract';
-import { requestLibretroNames } from './messages';
-import { probeImage } from './probe';
+import { requestLibretroNamesResult } from './messages';
+import { probeOutcome, type ProbeOutcome } from './probe';
 import { gametdbCoverCandidates } from './sources/gametdb';
 import { libretroCandidates } from './sources/libretro';
 import type { CoverResult, GameInfo, ImageCandidate, ImageKind, ImageSource } from './types';
@@ -25,19 +30,30 @@ const GALLERY_KINDS: readonly ImageKind[] = ['title', 'snap'];
 const SOURCES: readonly ImageSource[] = ['gametdb', 'libretro', 'hshop'];
 const KINDS: readonly ImageKind[] = ['cover', 'snap', 'title'];
 
-/** One probe per URL per page, whoever asks for it. */
-const probeMemo = new Map<string, Promise<boolean>>();
+/** Tracks whether any step of one resolution failed for a transport reason. */
+interface Run {
+  transient: boolean;
+}
 
-function probeOnce(url: string): Promise<boolean> {
+/** One probe per URL per page, whoever asks for it. */
+const probeMemo = new Map<string, Promise<ProbeOutcome>>();
+
+function probeOnce(url: string): Promise<ProbeOutcome> {
   let pending = probeMemo.get(url);
   if (!pending) {
-    pending = probeImage(url).then(
-      (ok) => ok === true,
-      () => false,
+    pending = probeOutcome(url).then(
+      (o): ProbeOutcome => (o === 'hit' || o === 'miss' ? o : 'error'),
+      (): ProbeOutcome => 'error',
     );
     probeMemo.set(url, pending);
   }
   return pending;
+}
+
+async function probeIn(run: Run, url: string): Promise<boolean> {
+  const outcome = await probeOnce(url);
+  if (outcome === 'error') run.transient = true;
+  return outcome === 'hit';
 }
 
 /** Test hook: forget every probe made so far. */
@@ -70,30 +86,32 @@ function isCandidateList(value: unknown): value is ImageCandidate[] {
   );
 }
 
-async function libretroNames(info: GameInfo): Promise<string[]> {
+async function libretroNames(run: Run, info: GameInfo): Promise<string[]> {
   try {
-    const names = await requestLibretroNames(info.productCode);
-    return Array.isArray(names) ? names : [];
+    const names = await requestLibretroNamesResult(info.productCode);
+    if (Array.isArray(names)) return names;
   } catch {
-    return [];
+    /* treated as a transport failure below */
   }
+  run.transient = true;
+  return [];
 }
 
 /** First candidate whose probe succeeds, probing strictly one after another. */
-async function firstHit(candidates: readonly ImageCandidate[]): Promise<ImageCandidate | null> {
+async function firstHit(run: Run, candidates: readonly ImageCandidate[]): Promise<ImageCandidate | null> {
   for (const candidate of candidates) {
-    if (await probeOnce(candidate.url)) return candidate;
+    if (await probeIn(run, candidate.url)) return candidate;
   }
   return null;
 }
 
 /** Cover from the artwork hosts only (the cacheable part of the chain). */
-async function resolveArtwork(info: GameInfo): Promise<CoverResult> {
-  const gametdb = await firstHit(gametdbCoverCandidates(info, regionChain(info)));
+async function resolveArtwork(run: Run, info: GameInfo): Promise<CoverResult> {
+  const gametdb = await firstHit(run, gametdbCoverCandidates(info, regionChain(info)));
   if (gametdb) return { kind: 'image', url: gametdb.url, source: gametdb.source };
 
-  const names = await libretroNames(info);
-  const libretro = await firstHit(libretroCandidates(names, 'cover'));
+  const names = await libretroNames(run, info);
+  const libretro = await firstHit(run, libretroCandidates(names, 'cover'));
   if (libretro) return { kind: 'image', url: libretro.url, source: libretro.source };
 
   return PLACEHOLDER;
@@ -112,8 +130,10 @@ export async function resolveCover(info: GameInfo, opts: ResolveOptions = {}): P
     const cached = await getCached<unknown>(coverKey(info), now);
     if (isCoverResult(cached)) return withHshopFallback(cached, opts);
 
-    const result = await resolveArtwork(info);
-    await setCached(coverKey(info), result, now);
+    const run: Run = { transient: false };
+    const result = await resolveArtwork(run, info);
+    // A hit is always worth keeping; a miss only when every step really answered.
+    if (result.kind === 'image' || !run.transient) await setCached(coverKey(info), result, now);
     return withHshopFallback(result, opts);
   } catch {
     return withHshopFallback(PLACEHOLDER, opts);
@@ -131,16 +151,17 @@ export async function resolveGallery(info: GameInfo, opts: Pick<ResolveOptions, 
     const cached = await getCached<unknown>(galleryKey(info), now);
     if (isCandidateList(cached)) return cached;
 
-    const names = await libretroNames(info);
+    const run: Run = { transient: false };
+    const names = await libretroNames(run, info);
     const perKind = await Promise.all(
       GALLERY_KINDS.map(async (kind) => {
         const candidates = libretroCandidates(names, kind);
-        const hits = await Promise.all(candidates.map((c) => probeOnce(c.url)));
+        const hits = await Promise.all(candidates.map((c) => probeIn(run, c.url)));
         return candidates.find((_, i) => hits[i]) ?? null;
       }),
     );
     const gallery = perKind.filter((c): c is ImageCandidate => c !== null);
-    await setCached(galleryKey(info), gallery, now);
+    if (!run.transient) await setCached(galleryKey(info), gallery, now);
     return gallery;
   } catch {
     return [];

@@ -3,14 +3,25 @@ import { fakeBrowser } from 'wxt/testing/fake-browser';
 import { storage } from '#imports';
 import type { GameInfo } from '../src/lib/types';
 
-vi.mock('../src/lib/probe', () => ({
-  probeImage: vi.fn(),
-  displaySrc: vi.fn(async (url: string) => url),
-}));
-vi.mock('../src/lib/messages', () => ({
-  requestLibretroNames: vi.fn(),
-  requestImageData: vi.fn(async () => null),
-}));
+// The resolver calls the outcome-aware variants; they delegate to the boolean
+// mocks below so most tests only steer `probeImage` / `requestLibretroNames`.
+const outcomes = vi.hoisted(() => new Map<string, 'hit' | 'miss' | 'error'>());
+vi.mock('../src/lib/probe', () => {
+  const probeImage = vi.fn();
+  return {
+    probeImage,
+    probeOutcome: async (url: string) => outcomes.get(url) ?? ((await probeImage(url)) ? 'hit' : 'miss'),
+    displaySrc: vi.fn(async (url: string) => url),
+  };
+});
+vi.mock('../src/lib/messages', () => {
+  const requestLibretroNames = vi.fn();
+  return {
+    requestLibretroNames,
+    requestLibretroNamesResult: async (serial: string) => requestLibretroNames(serial),
+    requestImageData: vi.fn(async () => null),
+  };
+});
 vi.mock('../src/lib/sources/gametdb', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../src/lib/sources/gametdb')>();
   return { ...actual, gametdbCoverCandidates: vi.fn(actual.gametdbCoverCandidates) };
@@ -59,6 +70,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.restoreAllMocks();
   resetProbeMemo();
+  outcomes.clear();
   names.mockResolvedValue([NAME]);
   probe.mockResolvedValue(false);
 });
@@ -208,5 +220,44 @@ describe('resolveGallery', () => {
     vi.spyOn(storage, 'setItem').mockRejectedValue(new Error('storage'));
     probe.mockRejectedValue(new Error('probe'));
     await expect(resolveGallery(game())).resolves.toEqual([]);
+  });
+});
+
+describe('transport failures', () => {
+  const cover = `${LR}/Named_Boxarts/${FILE}.png`;
+  const snap = `${LR}/Named_Snaps/${FILE}.png`;
+
+  it('does not cache a placeholder when the background could not be reached', async () => {
+    names.mockResolvedValue(null as unknown as string[]);
+    await expect(resolveCover(game())).resolves.toEqual({ kind: 'placeholder' });
+    await expect(storage.getItem('local:cover:AZEE')).resolves.toBeNull();
+    resetProbeMemo();
+    names.mockResolvedValue([NAME]);
+    hits(cover);
+    await expect(resolveCover(game())).resolves.toEqual({ kind: 'image', url: cover, source: 'libretro' });
+  });
+
+  it('does not cache a placeholder when a probe timed out', async () => {
+    outcomes.set(cover, 'error');
+    await expect(resolveCover(game())).resolves.toEqual({ kind: 'placeholder' });
+    await expect(storage.getItem('local:cover:AZEE')).resolves.toBeNull();
+  });
+
+  it('still caches a hit found after a timed-out probe', async () => {
+    outcomes.set(`${GT}/coverHQ/US/AZEE.jpg`, 'error');
+    hits(cover);
+    await resolveCover(game());
+    await expect(storage.getItem('local:cover:AZEE')).resolves.toMatchObject({ value: { kind: 'image', url: cover } });
+  });
+
+  it('does not cache the gallery when messaging or a probe failed', async () => {
+    names.mockRejectedValue(new Error('Could not establish connection'));
+    await expect(resolveGallery(game())).resolves.toEqual([]);
+    await expect(storage.getItem('local:gallery:AZEE')).resolves.toBeNull();
+
+    names.mockResolvedValue([NAME]);
+    outcomes.set(snap, 'error');
+    await resolveGallery(game());
+    await expect(storage.getItem('local:gallery:AZEE')).resolves.toBeNull();
   });
 });
