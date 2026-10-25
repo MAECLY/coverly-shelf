@@ -21,19 +21,38 @@ export const SELECTORS = {
     extendedEntry: '.extended-meta > .extended-meta-entry',
     description: '.description-container',
   },
-  /** Listing pages (`/c/...`, `/search`) — not used in this iteration. */
+  /**
+   * Listing pages (`/c/{cat}`, `/c/{cat}/s/{slug}`, `/search/results`). See
+   * "Listing pages" in docs/REFERENCE.md. Row-relative selectors start with
+   * `:scope >` so the badge box nested in `.base-info` (its own `.meta`) never
+   * matches the row's meta.
+   */
   list: {
+    /** Every row of every list. Category roots also list subcategories (`/c/…/s/…`): filter by href. */
     entry: 'a.list-entry',
-    name: '.base-info > h3',
-    metaContent: '.meta > .meta-content',
+    /** Title rows only (`/t/{id}`): main list, top list and search. */
+    titleEntry: 'a.list-entry[href^="/t/"]',
+    /** "Top content in this subcategory" box: rows with no product code. */
+    topList: '.list.top-list',
+    /** Main list name: `<h3 class="green bold nospace">Name</h3>`. */
+    name: ':scope > .base-info > h3',
+    /** Top list name: `<h3>N. <span class="green bold">Name</span></h3>`. */
+    topName: ':scope > .base-info > h3 > span.green',
+    /** Name, "Also known as" and "content in … ➞ slug" lines; tell them apart by text. */
+    infoLines: ':scope > .base-info > h4',
+    /** Labelled values: first span = value, last span = label (`Product Code`, `Title ID`, …). */
+    metaContent: ':scope > .meta > .meta-content',
   },
 } as const;
 
-/** Row labels of the technical table, exactly as hShop prints them. */
+/** Row labels of the title page table and list row meta, exactly as hShop prints them. */
 export const META_LABELS = {
   titleId: 'Title ID',
   productCode: 'Product Code',
 } as const;
+
+/** Text that starts the breadcrumb `<h4>` of a list row (`content in games ➞ japan`). */
+export const LIST_BREADCRUMB_PREFIX = 'content in';
 
 /** Marker set on the anchor nodes once the extension has enhanced them. */
 export const ENHANCED_ATTR = 'data-hshop-enhanced';

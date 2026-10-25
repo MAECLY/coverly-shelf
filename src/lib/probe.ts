@@ -35,8 +35,12 @@ function fetchData(url: string): Promise<ImageDataResult> {
   return pending;
 }
 
-function loadDirect(url: string): Promise<ProbeOutcome> {
+function loadDirect(url: string, signal?: AbortSignal): Promise<ProbeOutcome> {
   return new Promise<ProbeOutcome>((resolve) => {
+    if (signal?.aborted) {
+      resolve('error');
+      return;
+    }
     let img: HTMLImageElement;
     try {
       img = new Image();
@@ -49,12 +53,16 @@ function loadDirect(url: string): Promise<ProbeOutcome> {
       if (done) return;
       done = true;
       clearTimeout(timer);
+      signal?.removeEventListener('abort', onAbort);
       img.onload = null;
       img.onerror = null;
       if (outcome !== 'hit') img.src = '';
       resolve(outcome);
     };
     const timer = setTimeout(() => finish('error'), PROBE_TIMEOUT_MS);
+    // Clearing src on abort cancels the download.
+    const onAbort = (): void => finish('error');
+    signal?.addEventListener('abort', onAbort, { once: true });
     img.onload = () => finish(img.naturalWidth > 0 ? 'hit' : 'miss');
     img.onerror = () => finish('miss');
     try {
@@ -67,15 +75,21 @@ function loadDirect(url: string): Promise<ProbeOutcome> {
   });
 }
 
+export interface ProbeOptions {
+  /** Aborting it skips the probe if still queued and cancels it if loading: `error`. */
+  signal?: AbortSignal;
+}
+
 /** Probe `url` and say whether it is a hit, a definite miss or unknown. Runs through the shared limiter; never rejects. */
-export async function probeOutcome(url: string): Promise<ProbeOutcome> {
+export async function probeOutcome(url: string, { signal }: ProbeOptions = {}): Promise<ProbeOutcome> {
   try {
+    if (signal?.aborted) return 'error';
     if (IMAGE_MODE === 'background') {
       const res = await fetchData(url);
       if (!res.ok) return 'error';
       return res.data !== null ? 'hit' : 'miss';
     }
-    return await limit(() => loadDirect(url));
+    return await limit(() => loadDirect(url, signal), signal);
   } catch {
     return 'error';
   }

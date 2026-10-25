@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createLimiter } from '../src/lib/queue';
 
 const tick = () => new Promise<void>((r) => setTimeout(r, 0));
@@ -55,5 +55,44 @@ describe('createLimiter', () => {
       }),
     ).rejects.toThrow('sync');
     await expect(run(async () => 'ok')).resolves.toBe('ok');
+  });
+});
+
+describe('createLimiter with an AbortSignal', () => {
+  it('never runs a task whose signal is already aborted', async () => {
+    const run = createLimiter(1);
+    const ctrl = new AbortController();
+    ctrl.abort();
+    const task = vi.fn(async () => 'x');
+    await expect(run(task, ctrl.signal)).rejects.toMatchObject({ name: 'AbortError' });
+    expect(task).not.toHaveBeenCalled();
+  });
+
+  it('drops queued tasks when their signal aborts and keeps the others', async () => {
+    const run = createLimiter(1);
+    const ctrl = new AbortController();
+    let release!: () => void;
+    const first = run(() => new Promise<string>((r) => (release = () => r('first'))));
+    const dropped = vi.fn(async () => 'dropped');
+    const queued = run(dropped, ctrl.signal);
+    const other = run(async () => 'other');
+    ctrl.abort();
+    await expect(queued).rejects.toMatchObject({ name: 'AbortError' });
+    release();
+    await expect(first).resolves.toBe('first');
+    await expect(other).resolves.toBe('other');
+    expect(dropped).not.toHaveBeenCalled();
+  });
+
+  it('lets a running task finish when its signal aborts', async () => {
+    const run = createLimiter(1);
+    const ctrl = new AbortController();
+    const running = run(async () => {
+      ctrl.abort();
+      await tick();
+      return 'done';
+    }, ctrl.signal);
+    await expect(running).resolves.toBe('done');
+    await expect(run(async () => 'next')).resolves.toBe('next');
   });
 });

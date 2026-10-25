@@ -18,7 +18,15 @@ export const REGION_BY_CHAR: Readonly<Record<string, GameTdbRegion>> = {
   F: 'EN', // AD3F, AF9F, AFJF, AH8F, AKKF, AL5F, AL6F → 200 in EN, none in FR
   S: 'EN', // AFJS, AKKS, AL5S, AL6S, AL8S, ALAS, ALZS → 200 in EN, none in ES
   H: 'EN', // AKKH, AL6H → 200 in EN, none in NL
-  // TODO(reference): U/R/C/W/Z variants are unverified on GameTDB (APNR → 404 in RU and EN).
+  // Verified 2026-10-25 (live 200s; see "Coverage" in docs/REFERENCE.md).
+  W: 'ZH', // Taiwan/Hong Kong: ABRW, ADAW, KC2W, AJJW → 200 in ZH, 404 in ZHTW/TW/EN/US/JA
+  V: 'EN', // BLJV, BTMV, ALEV → 200 in EN
+  X: 'EN', // BLSX, BLJX → 200 in EN (404 in ES)
+  Y: 'EN', // BLSY, KFPY → 200 in EN (404 in FR, KO)
+  A: 'EN', // BNDA, A2AA, KRXA → 200 in EN
+  // Z is left to the slug fallback on purpose: AAHZ, ARMZ, BMMZ → 200 in EN (already in
+  // FALLBACK_REGIONS), but Z is a mixed bucket (ALBZ, ABZZ, AMQZ have no art anywhere).
+  // TODO(reference): C (JMKC, JREC → 404 in ZH/EN/JA), R (APNR → 404 in RU/EN) and U have no verified folder.
 };
 
 /** Regions tried after the game's own region, in order. */
@@ -50,7 +58,12 @@ export const GAMETDB = {
     { type: 'coverHQ', ext: 'jpg', retailOnly: false },
     { type: 'cover', ext: 'jpg', retailOnly: false },
   ] satisfies GameTdbType[],
-  /** Other verified types, kept for the listing pages and future features. */
+  /**
+   * List rows: only the 160×144 `cover` (~11 KB). One type per region keeps a
+   * 75-row listing page to a few GameTDB requests per row (it rate-limits bursts).
+   */
+  thumbTypes: [{ type: 'cover', ext: 'jpg', retailOnly: false }] satisfies GameTdbType[],
+  /** Other verified types, kept for future features. */
   otherTypes: [
     { type: 'coverM', ext: 'jpg', retailOnly: false },
     { type: 'box', ext: 'png', retailOnly: false },
@@ -60,6 +73,28 @@ export const GAMETDB = {
   ] satisfies GameTdbType[],
   /** Distribution letter that usually means a digital-only release. */
   digitalDistribution: 'N',
+} as const;
+
+/**
+ * GameTDB for DSiWare (`TWL-N-XXXX` product codes), same URL pattern under `/ds/`.
+ * Verified 2026-10-25: KQ9E has cover, coverS (png), coverM, coverHQ and box in US;
+ * KF8E → US, KG4J → JA, KASV/KMQF/KBID/KFMU/KNRH/KKGP → EN. GameTDB files every
+ * DSiWare letter except E and J under EN (no DE/FR/AU/NL/KO hits); Korean K codes
+ * (KZIK, …) have no art. Libretro has almost no DSi box art, so TWL codes skip it.
+ */
+export const GAMETDB_DS = {
+  base: 'https://art.gametdb.com/ds',
+  /** Title pages: 768×680 first, then the 160×144 cover. */
+  coverTypes: [
+    { type: 'coverHQ', ext: 'jpg', retailOnly: false },
+    { type: 'cover', ext: 'jpg', retailOnly: false },
+  ] satisfies GameTdbType[],
+  /** List rows: `cover` is 160×144 (~11 KB). `coverS` is a png, smaller in pixels but larger in bytes. */
+  thumbTypes: [{ type: 'cover', ext: 'jpg', retailOnly: false }] satisfies GameTdbType[],
+  regionByChar: { E: 'US', J: 'JA' } as Readonly<Record<string, GameTdbRegion>>,
+  /** Every other DSiWare letter (P, V, D, F, I, S, H, U, T, O…) lives under EN. */
+  defaultRegion: 'EN' as GameTdbRegion,
+  fallbackRegions: ['EN', 'US'] as readonly GameTdbRegion[],
 } as const;
 
 export const LIBRETRO = {
@@ -84,5 +119,40 @@ export const IMAGE_MODE: 'direct' | 'background' = 'direct';
 
 export const MAX_CONCURRENT_REQUESTS = 4;
 export const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+/**
+ * hShop title lookups for list rows that show no product code (the "Top
+ * content" list): `/t/{id}` → GameInfo. A title's product code never changes,
+ * so hits and definite misses are kept for 30 days.
+ */
+export const LOOKUP = {
+  ttlMs: 30 * 24 * 60 * 60 * 1000,
+  /** Requests to hShop itself in flight at once, separate from the artwork limiter. */
+  maxConcurrent: 2,
+  timeoutMs: 15_000,
+  /**
+   * Pause after hShop signals overload (429, 5xx, a challenge page or a
+   * redirect away from the title): no lookup is sent until it ends. A
+   * `Retry-After` header wins, clamped to [min, max].
+   */
+  cooldownMs: 10 * 60 * 1000,
+  minCooldownMs: 30 * 1000,
+  maxCooldownMs: 60 * 60 * 1000,
+} as const;
+
+/**
+ * hShop categories whose titles never have box art (every themes row is
+ * `CTR-N-THEME`). Their "Top content" rows are not looked up, which saves up
+ * to 50 hShop requests per page view.
+ */
+export const NO_ART_CATEGORIES: readonly string[] = ['themes'];
+
+/**
+ * Expired and old-version cache entries are deleted by the background worker
+ * at most this often (on worker start-up, see pruneCacheIfDue).
+ */
+export const CACHE_PRUNE = {
+  intervalMs: 24 * 60 * 60 * 1000,
+} as const;
+
 /** Bump when the cache shape or the fallback chain changes. */
-export const CACHE_VERSION = 1;
+export const CACHE_VERSION = 3;

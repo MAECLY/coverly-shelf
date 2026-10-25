@@ -156,3 +156,36 @@ describe('background image fetch', async () => {
     expect(handleMessage({ type: 'image:fetch', url: 1 })).toBeUndefined();
   });
 });
+
+describe('gametdb sizes and DSiWare', () => {
+  const fire: GameInfo = {
+    ...batman,
+    title: 'Fire Panic',
+    productCode: 'TWL-N-KF8E',
+    platform: 'TWL',
+    distribution: 'N',
+    gameCode: 'KF8E',
+  };
+
+  it('uses only the small cover for list thumbnails', () => {
+    expect(gametdbCoverCandidates(batman, ['US', 'EN'], 'thumb').map((c) => c.url)).toEqual([
+      'https://art.gametdb.com/3ds/cover/US/AZEE.jpg',
+      'https://art.gametdb.com/3ds/cover/EN/AZEE.jpg',
+    ]);
+  });
+
+  it('keeps the full-size order by default', () => {
+    expect(gametdbCoverCandidates(batman, ['US'])).toEqual(gametdbCoverCandidates(batman, ['US'], 'full'));
+  });
+
+  it('builds DSiWare URLs under ds/', () => {
+    expect(gametdbCoverCandidates(fire, ['US', 'EN'], 'thumb').map((c) => c.url)).toEqual([
+      'https://art.gametdb.com/ds/cover/US/KF8E.jpg',
+      'https://art.gametdb.com/ds/cover/EN/KF8E.jpg',
+    ]);
+    expect(gametdbCoverCandidates(fire, ['US']).map((c) => c.url)).toEqual([
+      'https://art.gametdb.com/ds/coverHQ/US/KF8E.jpg',
+      'https://art.gametdb.com/ds/cover/US/KF8E.jpg',
+    ]);
+  });
+});

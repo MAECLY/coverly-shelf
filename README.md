@@ -69,7 +69,8 @@ extension skips the art types that only exist for retail releases.
 
 **Quiet and fast.** The winning cover and the screenshot list are cached for
 7 days, misses included, so a second visit makes no new requests and missing
-art is not asked for again. At most 4 image requests run at once.
+art is not asked for again. At most 4 image requests run at once. Expired
+entries are deleted once a day, so the cache does not keep growing.
 
 <table>
   <tr>

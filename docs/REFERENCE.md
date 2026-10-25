@@ -30,6 +30,7 @@ redacted) of:
 | `title-digital-us-18761.html` | `/t/18761` 3D Classics Excitebike | `CTR-N-SAEE` |
 | `title-theme-15834.html` | `/t/15834` a theme | `CTR-N-THEME` (not a game code: the regex rejects it) |
 | `list-games-north-america.html` | `/c/games/s/north-america` | 25 rows |
+| `lists/*.html` | every listing variant, see "Listing pages" | |
 | `css/*.css` | `dark`, `light`, `main`, `list`, `landing`, `sectioned` | |
 
 ### Title page structure (`/t/{id}`)
@@ -70,22 +71,260 @@ Layout facts that matter for injection:
 - `.sectioned` turns into a column under `max-width: 1200px` (hShop's own
   breakpoint).
 
-### Listing row (`a.list-entry`), for the next iteration
+### Listing pages (`/c/*`, `/search/results`)
+
+Surveyed 2026-10-25: the 8 category roots, the first page of all 81
+subcategories they link to, and one search results page. Fixtures (verbatim:
+listing pages carry no download links, tokens or nonces) live in
+`test/fixtures/hshop/lists/`:
+
+| File | URL | Main list | Top list | Why it is kept |
+|---|---|---|---|---|
+| `category-root-games.html` | `/c/games` | 19 subcategory rows | 50 | root variant (rows link to `/c/…/s/…`) |
+| `games-japan.html` | `/c/games/s/japan` | 25 | 50 | "Also known as" `<h4>`, badge `.meta` inside `.base-info` |
+| `games-digital-demos.html` | `/c/games/s/digital-demos` | 25 | 50 | `CTR-T-` demo codes |
+| `dlc-north-america.html` | `/c/dlc/s/north-america` | 25 | 50 | `CTR-M-XXXX-00` DLC codes |
+| `dsiware-north-america.html` | `/c/dsiware/s/north-america` | 25 | 50 | `TWL-N-` codes, Title ID `00048004…` |
+| `virtual-console-north-america.html` | `/c/virtual-console/s/north-america` | 25 | 50 | VC badges, `KTR-N-` codes |
+| `themes-north-america.html` | `/c/themes/s/north-america` | 25 | 50 | `CTR-N-THEME` (no art) |
+| `updates-europe.html` | `/c/updates/s/europe` | 25 | 50 | `CTR-U-`/`KTR-U-` update codes |
+| `extras-hb.html` | `/c/extras/s/hb` | 25 | 42 | free-form, non-Nintendo "codes" |
+| `search-mario.html` | `/search/results?q=mario&qt=Text` | 25 | — | search variant: `.list` without `pre-top`, no top list, mixed categories |
+
+The older `list-games-north-america.html` is the plain subcategory variant.
+
+#### URLs
+
+- Category roots: `/c/{category}` with `games`, `updates`, `dlc`,
+  `virtual-console`, `dsiware`, `videos`, `extras`, `themes`.
+- Subcategories: `/c/{category}/s/{slug}`. Slugs seen: regions
+  (`north-america`, `europe`, `japan`, `korea`, `taiwan`, `china`, `australia`,
+  `canada`, `france`, `germany`, `italy`, `spain`, `netherlands`, `russia`,
+  `united-kingdom`, `world`, `unknown-other`) plus non-regions
+  (`digital-demos`, `kiosk-demos`, `demo-updates`, `custom-dsiware`,
+  `devapps-misc`, `hb`, `rom-hacks`, `translated-games`). A slug is **not**
+  always a region, so a row's region must come from its product code first.
+- Pagination: plain links `?count={10|25|50|100}&offset=N` ("show next 25").
+  Sort (`#sort-method-sel`, `#sort-order-sel`) and count (`#countsel1`,
+  `#countsel2`) are `<select>`s handled by `/js/scat-list.min.js` and
+  `/js/paged.min.js`; every change is a full page load.
+- Search: the form `#normal-form` is `GET /search/results` with `q` and `qt`
+  (`Text`, `TitleID`, `ProductCode`, `UniqueID`); `/js/search.min.js` adds
+  include/exclude filters as `i` / `e`. Results paginate with the same
+  `count`/`offset` links.
+
+#### Page structure
+
+Subcategory page (`/c/{cat}/s/{slug}`):
 
 ```html
-<a href="/t/1814" class="list-entry block-link">
+<div class="sortsel-container">…two <select>…</div>
+<div class="list-container">
+  <div class="list pre-top">
+    <div class="next-container">showing 1 - 25 of 1560 … pagination…</div>
+    <div class="elements">  a.list-entry × N (≤ count)  </div>
+    <div class="next-container">…</div>
+  </div>
+</div>
+<h2 class="align-center nospace">Top content in this subcategory:</h2>
+<div class="list-container">
+  <div class="list top-list">
+    <div class="elements">  a.list-entry × min(50, titles)  </div>
+  </div>
+</div>
+```
+
+- Category root (`/c/{cat}`): same two lists, but the `.list.pre-top` rows are
+  **subcategories** (`href="/c/{cat}/s/{slug}"`, meta = Size / Titles /
+  Official / Legit / Downloads, `h3` without `nospace`). They are not titles and
+  must be skipped. The top list holds 50 title rows (`/t/{id}`).
+- Search results: one `.list` (classes exactly `list`, no `pre-top`), no
+  top list, rows identical to subcategory rows. Rows mix categories
+  (games, updates, VC, DSiWare, themes, …).
+- Every subcategory page has both lists, even with 1 title. Top list size =
+  `min(50, titles in subcategory)`, so it repeats rows of the main list on
+  small subcategories.
+
+Selectors that hold across all 90 pages:
+
+| What | Selector |
+|---|---|
+| Main list rows (subcategory) | `.list.pre-top > .elements > a.list-entry[href^="/t/"]` |
+| Main list rows (search) | `.list:not(.top-list) > .elements > a.list-entry[href^="/t/"]` |
+| Top list rows | `.list.top-list > .elements > a.list-entry[href^="/t/"]` |
+| Any title row | `a.list-entry[href^="/t/"]` (excludes subcategory rows on roots) |
+| Row classes | always exactly `list-entry block-link` (3398 rows checked) |
+
+#### Main-list title row (subcategory and search)
+
+```html
+<a href="/t/19093" class="list-entry block-link">
   <div class="base-info">
-    <h3 class="green bold nospace">Batman - Arkham Origins Blackgate</h3>
-    <h4>content in <span class="green bold">games</span> ➞ <span class="green bold">north-america</span></h4>
+    <h3 class="green bold nospace">マリオカート７</h3>
+    <!-- optional: romanized name, before the breadcrumb -->
+    <h4>Also known as: <span class="green">Mariokāto 7</span> (+<span class="green bold">1</span> other names)</h4>
+    <h4>content in <span class="green bold">games</span> ➞ <span class="green bold">japan</span></h4>
+    <!-- optional: badge box, one .meta-content per flag, single span -->
+    <div class="meta">
+      <div class="meta-content"><span class="green bold">Virtual Console: <span class="yellow bold">Game Boy Color</span></span></div>
+    </div>
   </div>
   <div class="meta">
-    <div class="meta-content"><span class="green bold">1814</span><span>ID</span></div>
-    <div class="meta-content"><span class="blue bold">00040000000D6B00</span><span>Title ID</span></div>
-    <div class="meta-content"><span class="pink bold">CTR-P-AZEE</span><span>Product Code</span></div>
-    ...
+    <div class="meta-content"><span class="green bold">19093</span><span>ID</span></div>
+    <div class="meta-content"><span class="green bold">Pirate Legit</span><span>Content Type</span></div>
+    <div class="meta-content"><span class="blue bold">0004000000030600</span><span>Title ID</span></div>
+    <div class="meta-content hover-meta">
+      <span class="yellow bold hover-default">632.78 MiB</span><span class="yellow bold hover-on">5062 ⊡</span><span>Size</span>
+    </div>
+    <div class="meta-content"><span class="red bold">2.4.0 (2112)</span><span>Version</span></div>
+    <div class="meta-content"><span class="pink bold">CTR-P-AMKJ</span><span>Product Code</span></div>
   </div>
 </a>
 ```
+
+- The outer `.meta` always has the same six entries in this order: ID,
+  Content Type (`Standard`, `Pirate Legit`, `Legit`), Title ID, Size
+  (`hover-meta`), Version, Product Code. 1089/1089 main-list rows have both a
+  Title ID and a Product Code.
+- Read values by label: the **last** `<span>` of a `.meta-content` is the
+  label, the first is the value. Use
+  `:scope > .meta > .meta-content` (direct child of the row). The current
+  `SELECTORS.list.metaContent` (`.meta > .meta-content`) also matches the
+  badge box inside `.base-info`, whose entries have a single span and no label.
+- Variants inside `.base-info` (counts over the 81 subcategory pages):
+  plain (65 pages), badge `.meta` (31: "Physical release only",
+  "Installer application", "May require locale emulation", "Compatible only
+  with New 3DS systems", "Virtual Console: {system}"), "Also known as" `<h4>`
+  (8 pages, nearly every Japanese row), both (4). The breadcrumb `<h4>` is
+  therefore **not** always the first `h4`; find it by text `content in` or take
+  the last `h4`.
+- The name is `.base-info > h3` text (HTML entities, often Japanese/Chinese
+  script). The romanized "Also known as" name is the first `span.green` of the
+  `h4` that starts with `Also known as:` (a possible name-search key for
+  Japanese rows; not verified against Libretro).
+
+#### Top-list row
+
+```html
+<a href="/t/989" class="list-entry block-link">
+  <div class="base-info">
+    <h3>1. <span class="green bold">ブレイブリーデフォルト - フォーザ・シークウェル</span></h3>
+    <h4>Also known as: <span class="green">Bureiburīdeforuto - fōza shīkuu~eru</span></h4>  <!-- optional -->
+  </div>
+  <div class="meta">
+    <div class="meta-content"><span class="yellow bold">257171</span><span>Downloads</span></div>
+  </div>
+</a>
+```
+
+- No product code, Title ID, breadcrumb or ID: the only identity is the
+  `/t/{id}` in `href`. The name is `h3 > span.green` (the `h3` text starts with
+  the rank `N. `). To resolve art, either reuse a main-list row with the same
+  `href` on the same page, or cache `/t/{id}` → product code from earlier
+  visits; fetching the title page per row is a site request and should not be
+  done in bulk.
+- The top list is a scroll box: `max-height: 500px; overflow: scroll` (see
+  layout below), so lazy loading must observe intersection with that box
+  (an `IntersectionObserver` with `root: null` already accounts for the
+  clipping ancestor).
+
+#### Product codes per category
+
+Format is `{platform}-{distribution}-{gameCode}`; the game code's 4th
+character is the region letter. Observed on the first page of every
+subcategory:
+
+| Category | Platform-distribution | Title ID high | Notes |
+|---|---|---|---|
+| games | `CTR-P` retail, `CTR-N` / `KTR-N` digital, `KTR-P` New 3DS retail | `00040000`, `00040002` (demos) | `digital-demos` = `CTR-T`, `kiosk-demos` = `CTR-B` (+2 `CTR-H`) |
+| updates | `CTR-U`, `KTR-U` | `0004000E` | game code = the base game's |
+| dlc | `CTR-M-XXXX-NN` (`KTR-M-…-00` too) | `0004008C` | **5th segment** (`-00`, `-01`, `-02`); `XXXX` = base game code (e.g. `CTR-M-BYGE-00` ↔ game `BYGE`) |
+| virtual-console | `CTR-N`, `KTR-N`; `world` mixes in `CTR-P` | `00040000` | system in a badge ("Virtual Console: Game Boy Color") |
+| dsiware | `TWL-N` only (all 124 rows) | `00048004` | GameTDB `ds/` folder, not `3ds/` |
+| videos | `CTR-N` only | `00040000` | |
+| themes | `CTR-N-THEME` on every row | `00040000` | not a game code; no art |
+| extras | mostly `CTR-P`/`CTR-N`/`CTR-U`/`KTR-*`, plus free text | mixed | seen: `DevMenu 2x`, `DrawAttack`, `CTR-HB-PICK`, `CTR-Vid`, `CTR-P-BBB`, `CTR-N-PICROSS-S`, `MOD-P-BT8J`, `MOD-M-BT8J-00`, `MC-N3DS-FRII-DLC`, `homuhomu`, `code` |
+| search | anything above | | |
+
+Region letters seen per subcategory (main list): north-america `E` (one
+DSiWare `O`); europe `P` plus `D`/`I`/`V`/`Y`/`Z`; japan `J`; korea `K`
+(+`Y`/`Z`); taiwan `W`/`Z`; china `C`/`W`; australia `U`/`Z`; canada `Z`;
+france `F`; germany `D`; italy `I`/`V`; spain `S`/`X`; netherlands `H`;
+russia `R`; united-kingdom `X`; world `A`; unknown-other `A`/`T`/`X`/`Y`/`Z`.
+
+Parsing consequences (for `src/lib/extract.ts`):
+
+- The current `PRODUCT_CODE_RE` (`\b(CTR|KTR)-([A-Z])-([A-Z0-9]{4})\b`)
+  already parses DLC as its base game (`CTR-M-BYGE-00` → `BYGE`), rejects
+  `CTR-N-THEME` (no word boundary after `THEM`), rejects `TWL-*`, and rejects
+  `CTR-P-BBB`, `MOD-*`, free text. Keep the trailing `\b`: a pattern without it
+  turns `CTR-N-THEME` into game code `THEM`.
+- DSiWare needs `TWL` added plus the GameTDB `ds` platform folder.
+
+#### Layout of `a.list-entry` (from `list.css` and `main.css`, `?v=2.10`)
+
+Global: `* { box-sizing: border-box }`; `a { text-decoration: none }`;
+`a.block-link { font-size: initial !important }`; `h3 { margin: 0 0 8px }`,
+`h4 { margin: 0 0 6px }`, `.nospace { margin: 0 !important; padding: 0 !important }`.
+Subcategory pages also load `scat-list.css` (only `.sortsel-container`,
+`.sel-container`), search loads `search-results.css` (only `.edit-query*`);
+neither touches rows.
+
+Desktop (> 1200px):
+
+- `.list`: flex column, `width: 80%` (`.list.full` 100%), `padding: 10px`,
+  `border-radius: 15px`, `background: var(--clevel-1)`.
+  `.list.top-list`: `max-height: 500px !important; overflow: scroll;
+  overflow-x: hidden`.
+- `.elements`: flex column.
+- `.list-entry`: `display: flex; flex-wrap: wrap; justify-content:
+  space-between; width: 100%; padding: 10px; border-radius: 10px;
+  margin-bottom: 10px` (0 on `:last-of-type`); background `--clevel-2`,
+  `--clevel-2-hover` on hover; `transition: var(--fade)`.
+- `.base-info`: flex column, `width: 50%`, `padding: 5px 10px 5px 5px`.
+  A nested `.base-info > .meta` is `flex-direction: column; flex: 1 !important;
+  justify-content: flex-end`; its entries get `margin: 0 0 10px` (last 0).
+- `.list-entry > .meta`: `display: flex; flex-wrap: wrap; width: 50%;
+  padding-left: 10px; align-self: flex-end`.
+- `.meta-content`: `inline-flex` column, centred, `flex: 1 0 25%`,
+  `padding: 5px; margin: 5px; border-radius: 5px`, background `--clevel-1`;
+  spans `white-space: nowrap`, value `font-size: var(--basic-font-size)`,
+  label `0.85em`.
+
+Mobile (`max-width: 1200px`, the only breakpoint that touches lists; the
+`max-height: 500px` query only unpins header/footer):
+
+- `.list { width: 100% }`; `.list-entry { flex-direction: column }`;
+  `.list-entry > .meta, .base-info { width: 100% }`; `.list-entry > .meta
+  { padding: 0 }`; `.base-info { padding: 5px }`; `.next-container` becomes a
+  column. `main` padding becomes `65px var(--half-spacing)`.
+
+Where a thumbnail fits without breaking the row:
+
+- The two children are 50% + 50% of a wrapping flex row. Any extra
+  **in-flow child of `a.list-entry`** overflows the line: on desktop it pushes
+  `.meta` (or itself) onto a new line. A thumbnail inserted there must come
+  with a width cut on `.base-info` from the extension's own stylesheet, e.g.
+  host `flex: 0 0 W` and `.base-info { width: calc(50% - W - gap) }`, scoped to
+  rows carrying the enhanced attribute so nothing changes when the extension
+  is absent or fails.
+- `.base-info` is a flex column, so a `float` inside it is ignored (same trap
+  as `.landing.sectioned-l`). A thumbnail as first child of `.base-info` sits
+  **above** the `h3`, which costs row height but needs no width math.
+- Least invasive placement: a host as first child of `a.list-entry`, styled
+  `flex: 0 0 W; align-self: center` plus the `.base-info` width cut above on
+  desktop; under 1200px the row is a column, so the host stacks above
+  `.base-info` (use `align-self: flex-start` and a smaller W there, or switch
+  the row to `flex-direction: row; flex-wrap: wrap` only for the header part).
+- The host is inside an `<a>`: clicks on it navigate to `/t/{id}`. Do not stop
+  propagation; do not put interactive elements in it.
+- Top-list rows are short (one `h3`, sometimes one `h4`, and a single
+  Downloads chip), inside a 500px scroll box: keep the thumbnail there small
+  (≈ row height, 48–64px tall) so the box still shows several rows.
+- Main-list row height is driven by the wrapped meta chips (`flex: 1 0 25%`
+  plus margins fits three per line, so six chips make two lines on desktop).
+  TODO(reference): measure the rendered row height before choosing the
+  thumbnail height; covers are ≈ 1.11 wider than tall.
 
 ### Design tokens
 
@@ -146,8 +385,8 @@ Probed with `AZEE` (retail), `AREE` (retail), `SAEE` (digital, `N`):
   code tried exists under `EN` (e.g. AD3F, AKKS, AL8I, AKKH). Some also have a
   localized cover: `DE` for `D` (AA3D, ADPD, AF2D, AF8D, AFJD) and `IT` for `I`
   (AE2I, AEEI, AKKI, AWTI). `FR`, `ES` and `NL` had no hit for `F`/`S`/`H`
-  codes, so those map to `EN`. `R` (APNR) returned 404 in `RU` and `EN`;
-  `U`/`C`/`W`/`Z` remain unverified.
+  codes, so those map to `EN`. `R` (APNR) returned 404 in `RU` and `EN`.
+  The other letters are covered in [Coverage](#coverage).
 - 404 for missing art, `Cache-Control: max-age=2592000`, no CORS headers (fine
   for `<img>`, not readable with `fetch` from the page).
 - Cover ratio: 160/144 ≈ 1.11, 768/680 ≈ 1.13 — wider than tall.
@@ -165,3 +404,127 @@ Probed with `AZEE` (retail), `AREE` (retail), `SAEE` (digital, `N`):
 - One serial can map to several names (e.g. `CTR-N-SAEE` → `(Rev 1) (eShop)`
   and `(eShop)`), so the generated map stores a short, ordered list.
 - Thumbnail file names replace `&*/:\`<>?\|` with `_`.
+
+## Coverage
+
+Measured 2026-10-25 for the listing pages. Sample: the first 10 rows (fewer
+when the subcategory is smaller) of all 19 `/c/games` subcategories plus
+`/c/virtual-console`, `/c/dsiware`, `/c/updates` and `/c/dlc` region
+subcategories: 332 rows. DLC and update rows carry the parent game's code
+(`CTR-M-ABEP-00`, `CTR-U-AX3P`), so they resolve like the game: GameTDB
+only uses the 4-character game code, and the Libretro step asks for the base
+game's `CTR-P-…` then `CTR-N-…` serial before the row's own code (the No-Intro
+map has almost no `M`/`U`/`T`/`B`/`H` serials).
+
+How "exists" was decided: GameTDB banned this machine's IP after a burst of
+HEAD requests (see the rate-limit note below), so the bulk check used the
+Wayback Machine CDX index of `art.gametdb.com/{3ds,ds}/cover/` (6000 3DS and
+≈1100 DSiWare `K…` covers archived with status 200) as a **lower bound**, plus
+live checks through an external HTTP checker for every code quoted here and in
+`src/lib/config.ts`. Libretro was checked against the full directory listings
+of `thumbnails.libretro.com`.
+
+| Rows | n | Chain before | Chain after `1fb2a37` + DSiWare |
+|---|---|---|---|
+| games/europe, france, germany, italy, spain, korea, kiosk-demos | 70 | 70 | 70 |
+| games/north-america | 10 | 9 | 9 |
+| games/japan | 10 | 5 | 5 |
+| games/taiwan | 10 | 7 | 9 (`W` → `ZH`) |
+| games/world | 10 | 7 | 7 |
+| games/digital-demos | 10 | 8 | 8 |
+| games/unknown-other | 10 | 1 | 1 (debug builds, E3 videos) |
+| games/australia, canada, china, netherlands, russia, united-kingdom | 12 | 9 | 9 |
+| virtual-console | 47 | 42 | 42 |
+| updates | 30 | 29 | 29 |
+| dlc | 49 | 42 | 44 |
+| dsiware | 64 | 0 | 41 (GameTDB `ds`) |
+| **Total** | **332** | **229 (69%)** | **274 (83%)** |
+
+Whole eShop catalog (hax0kartik/3dsdb lists, `CTR/KTR-N/P` codes, same
+lower-bound oracle): US 1071/1200 (89%), GB 1034/1129 (92%), JP 1053/1692
+(62%), KR 218/232 (94%), TW 85/99 → 93/99 (86% → 94%) with `W` → `ZH`.
+
+### Region letters (3DS, `cover`)
+
+| Letter | Folder | Live 200s | Notes |
+|---|---|---|---|
+| `W` | `ZH` | ABRW, ADAW, KC2W, AJJW | 404 in `ZHTW`, `TW`, `EN`, `US`, `JA`. All 26 archived `W` codes are only in `ZH`. |
+| `V` | `EN` | BLJV, BTMV, ALEV | |
+| `X` | `EN` | BLSX, BLJX | 404 in `ES` |
+| `Y` | `EN` | BLSY, KFPY | 404 in `FR`, `KO` |
+| `A` | `EN` | BNDA, A2AA, KRXA | |
+| `Z` | `EN` (via fallback) | AAHZ, ARMZ, BMMZ | ALBZ, ABZZ, AMQZ have nothing anywhere; left unmapped so the slug fallback still runs |
+| `C` | — | — | JMKC, JREC 404 in `ZH`, `EN`, `JA`; no `C` code archived |
+
+Folders that exist on GameTDB 3DS (archived counts): `EN` 1552, `US` 1197,
+`JA` 1063, `DE` 505, `IT` 319, `FR` 293, `ES` 216, `NL` 156, `AU` 148, `KO` 127,
+`PT` 102, `SE` 61, `DK` 59, `other` 52, `RU` 49, `FI` 47, `ZH` 31, `NO` 22.
+`ZHTW`, `ZHCN`, `TW`, `CN` do not exist. Every code found in a localized
+folder (`DE`, `FR`, …) is also in `EN` or `US`, so those folders never add a hit.
+
+### DSiWare (`TWL-N-XXXX`)
+
+- `https://art.gametdb.com/ds/{type}/{region}/{gameCode}.{ext}`. For KQ9E:
+  `cover` jpg, `coverS` **png**, `coverM` jpg, `coverHQ` jpg, `box` png all 200;
+  `coverS` as jpg is 404.
+- Region folders: `E` → `US` (KF8E), `J` → `JA` (KG4J), every other letter →
+  `EN` (KASV, KMQF, KBID, KFMU, KNRH, KKGP; 404 in `FR`, `DE`, `AU`, `NL`).
+  Korean `K` codes (KZIK, KDUK…) have no art: korea DSiWare is 0/10.
+- Libretro does not help: `Nintendo - Nintendo DSi.dat` has 1060 entries keyed
+  by bare game code (`serial "KJUJ"`), but only 13 DSi thumbnails exist and 9
+  of the DAT names match a `Nintendo - Nintendo DS` boxart.
+
+### Thumbnail sizes for list rows
+
+| URL | Pixels | Bytes |
+|---|---|---|
+| `3ds/cover/US/AZEE.jpg` | 160×144 | 11 135 |
+| `3ds/coverM/US/AZEE.jpg` | 400×352 | 52 707 |
+| `3ds/coverHQ/US/AZEE.jpg` | 768×680 | 188 576 |
+| `ds/cover/US/K29E.jpg` | 160×144 | 10 885 |
+| `ds/coverS/US/KQ9E.png` | 128×115 | 13 432 |
+| `ds/coverM/US/K29E.jpg` | 400×352 | 44 428 |
+| `ds/coverHQ/US/K29E.jpg` | 768×680 | 108 590 |
+
+List rows should probe and show **`cover` only** (≈11 KB, sharp up to ~80 px
+CSS height on 2× screens). `coverHQ` is ~17× heavier and gives no extra hit:
+both types exist for the same codes.
+
+### Libretro on listing pages
+
+- `public/libretro-3ds.json` has 2632 serials; 1698 of them have a
+  `Named_Boxarts` file. **None** of the 720 eShop-only serials do: the 3DS
+  thumbnail set has no `(eShop)` names at all, so Libretro only helps retail
+  rows that GameTDB lacks. `Nintendo - New Nintendo 3DS (Digital).dat` has no
+  serials. `thumbnails.libretro.com/Nintendo - Nintendo 3DS (Digital)/` is empty.
+- Libretro still answers when GameTDB is unreachable, which makes it the only
+  fallback during a GameTDB ban.
+
+### Rate limit (important)
+
+`art.gametdb.com` dropped all TCP connections from this machine for ≈50 min
+after roughly a thousand HEAD requests at concurrency 8 (and again minutes
+after it came back, while other agents were browsing hShop with the
+extension). External checkers reached it fine at the same time, so it is a
+per-IP ban, and while it lasts every cover on every page fails. A listing page
+has up to 25 + 50 rows and today's chain tries up to 6 GameTDB URLs per row, so
+one page view can mean ~450 requests. Keep it far below that: `cover` only,
+one probe per row in the common case (own region first), lazy probes for
+rows in view, the top list reusing the main list's results, misses cached for
+the TTL, and no more than `MAX_CONCURRENT_REQUESTS` in flight.
+
+### Sources checked and rejected
+
+- **Nintendo eShop CDNs** (`samurai.ctr.shop.nintendo.net`,
+  `kanzashi-wup.cdn.nintendo.net`, `idbe-ctr.cdn.nintendo.net`): they answer,
+  but with Nintendo's private CA (`unknown CA` TLS alert), so a browser `<img>`
+  fails; IDBE icons are also AES-encrypted. The icons are archived on the
+  Wayback Machine (`https://web.archive.org/web/2022id_/https://kanzashi-wup.cdn.nintendo.net/i/{hash}.jpg`,
+  72×72 or 384×384), and samurai maps the eShop UID from 3dsdb to that hash.
+  Verified for JCPJ, J2YJ, JLEJ, JU9J, KDHJ (all GameTDB misses), but it means
+  scraping Nintendo's private API at build time, hotlinking archive.org, and
+  showing Nintendo-hosted icons rather than box art: not used.
+- **hax0kartik/3dsdb**: JSON lists (title ID, eShop UID, product code, name)
+  per region, no images and no licence. Useful only as a key source.
+- **hShop**: pages show no title icons (no `<img>` besides its own UI).
+- No public, title-ID-indexed 3DS icon set on GitHub or a CDN was found.
