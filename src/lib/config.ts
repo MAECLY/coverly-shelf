@@ -146,5 +146,13 @@ export const LOOKUP = {
  */
 export const NO_ART_CATEGORIES: readonly string[] = ['themes'];
 
+/**
+ * Expired and old-version cache entries are deleted by the background worker
+ * at most this often (on worker start-up, see pruneCacheIfDue).
+ */
+export const CACHE_PRUNE = {
+  intervalMs: 24 * 60 * 60 * 1000,
+} as const;
+
 /** Bump when the cache shape or the fallback chain changes. */
 export const CACHE_VERSION = 3;

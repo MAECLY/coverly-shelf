@@ -1,6 +1,7 @@
 /**
  * Background service worker: answers the two typed messages from
- * src/lib/messages.ts.
+ * src/lib/messages.ts, and prunes stale cache entries at most once a day
+ * when it starts (pruneCacheIfDue).
  * - `libretro:names` → No-Intro names for a serial, from the packaged map.
  * - `image:fetch`    → a data URL for an image on one of the two artwork hosts.
  *
@@ -9,6 +10,7 @@
  */
 import { browser } from 'wxt/browser';
 import { defineBackground } from 'wxt/utils/define-background';
+import { pruneCacheIfDue } from '../lib/cache';
 import { LIBRETRO } from '../lib/config';
 import type { ExtMessage } from '../lib/messages';
 
@@ -90,6 +92,8 @@ export function handleMessage(msg: unknown): Promise<unknown> | undefined {
 }
 
 export default defineBackground(() => {
+  // Expired and old-version cache entries would otherwise stay in storage for good.
+  void pruneCacheIfDue();
   browser.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     // Only our own extension pages and content scripts may ask.
     if (sender.id !== browser.runtime.id) return false;
