@@ -48,13 +48,13 @@
           <p class="intro" data-i18n="cacheIntro"></p>
 
           <fieldset class="retention">
-            <legend data-i18n="retentionLegend">Remember artwork for</legend>
+            <legend data-i18n="retentionLegend">Keep cached artwork</legend>
             <div class="segments" id="segments">
-              <label class="segment"><input type="radio" name="retention" value="session" /><span data-i18n="retentionSession">This session</span></label>
-              <label class="segment"><input type="radio" name="retention" value="1d" /><span data-i18n="retention1d">1 day</span></label>
-              <label class="segment"><input type="radio" name="retention" value="7d" /><span data-i18n="retention7d">7 days</span></label>
-              <label class="segment"><input type="radio" name="retention" value="30d" /><span data-i18n="retention30d">30 days</span></label>
-              <label class="segment"><input type="radio" name="retention" value="forever" /><span data-i18n="retentionForever">Until I clear it</span></label>
+              <label class="segment"><input type="radio" name="retention" aria-describedby="retention-hint" value="session" /><span data-i18n="retentionSession">This session</span></label>
+              <label class="segment"><input type="radio" name="retention" aria-describedby="retention-hint" value="1d" /><span data-i18n="retention1d">1 day</span></label>
+              <label class="segment"><input type="radio" name="retention" aria-describedby="retention-hint" value="7d" /><span data-i18n="retention7d">7 days</span></label>
+              <label class="segment"><input type="radio" name="retention" aria-describedby="retention-hint" value="30d" /><span data-i18n="retention30d">30 days</span></label>
+              <label class="segment"><input type="radio" name="retention" aria-describedby="retention-hint" value="forever" /><span data-i18n="retentionForever">Until I clear it</span></label>
             </div>
             <p class="hint" id="retention-hint"></p>
           </fieldset>
