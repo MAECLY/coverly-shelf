@@ -7,20 +7,43 @@ import { browser } from 'wxt/browser';
 
 export type ExtMessage = { type: 'libretro:names'; serial: string } | { type: 'image:fetch'; url: string };
 
+/** Marks a messaging failure (no service worker, closed port, invalidated context). */
+const FAILED: unique symbol = Symbol('messaging-failed');
+
 async function send(message: ExtMessage): Promise<unknown> {
   try {
     return await browser.runtime.sendMessage(message);
   } catch {
-    return undefined;
+    return FAILED;
   }
 }
 
-export async function requestLibretroNames(serial: string): Promise<string[]> {
+/**
+ * No-Intro names for a serial, or null when the background could not be
+ * reached. Callers that cache results use this to tell a transport failure
+ * apart from "Libretro has no names" (an empty array). Never rejects.
+ */
+export async function requestLibretroNamesResult(serial: string): Promise<string[] | null> {
   const res = await send({ type: 'libretro:names', serial });
-  return Array.isArray(res) ? res.filter((n): n is string => typeof n === 'string') : [];
+  if (!Array.isArray(res)) return null;
+  return res.filter((n): n is string => typeof n === 'string');
+}
+
+export async function requestLibretroNames(serial: string): Promise<string[]> {
+  return (await requestLibretroNamesResult(serial)) ?? [];
+}
+
+/** `ok: false` = the background could not be reached; `data: null` = it answered with no image. */
+export type ImageDataResult = { ok: true; data: string | null } | { ok: false };
+
+/** Like requestImageData, but tells a messaging failure apart from a definite miss. Never rejects. */
+export async function requestImageDataResult(url: string): Promise<ImageDataResult> {
+  const res = await send({ type: 'image:fetch', url });
+  if (res === FAILED || res === undefined) return { ok: false };
+  return { ok: true, data: typeof res === 'string' && res.startsWith('data:image/') ? res : null };
 }
 
 export async function requestImageData(url: string): Promise<string | null> {
-  const res = await send({ type: 'image:fetch', url });
-  return typeof res === 'string' && res.startsWith('data:image/') ? res : null;
+  const res = await requestImageDataResult(url);
+  return res.ok ? res.data : null;
 }
