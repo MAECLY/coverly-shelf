@@ -6,12 +6,16 @@
  * shadow boundary, so the UI follows hShop's theme toggle with no JS.
  *
  * Tailwind v4 notes:
- * - WXT rewrites `:root` to `:host` and moves `@property` rules to the
- *   document, but transforms, shadows and gradients below are still written in
- *   plain CSS so nothing depends on `--tw-*` registrations inside the shadow.
+ * - Only the theme and preflight layers are imported. The utilities layer
+ *   emits `@property --tw-*` rules, which WXT moves out of the shadow root into
+ *   a <style> in hShop's own document. Without it nothing leaves the shadow.
+ *   Every rule below is plain CSS on `cs-*` classes.
+ * - WXT rewrites `:root` to `:host`, so theme variables stay in the shadow.
  * - Preflight runs inside the shadow root only, so it never touches hShop.
  */
-@import "tailwindcss";
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
 
 @theme inline {
   --color-*: initial;
