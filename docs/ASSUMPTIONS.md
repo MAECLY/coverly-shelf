@@ -29,6 +29,7 @@ grep -rn "TODO(reference)" src docs
 | Navigation is full page loads, not a SPA. | The content script re-runs only on committed path changes. | Click between titles and use Back/Forward: there must be exactly one box per page. |
 | Title pages show no title icon, so the “hShop icon” step of the cover chain never fires. | It is coded but unused today. | If hShop starts showing an icon on `/t/` pages, record its selector in REFERENCE.md and pass its URL as `hshopIconUrl`. |
 | Themes and homebrew have no valid product code. | They are skipped. | Open `/t/15834` (a theme): no box, no gallery, no requests to the art hosts. |
+| Related Content rows say `Relation: Base Title`, `Demo Title`, `Update Data` or `Downloadable Content`, and a row hShop marks with one of those is the same game as the page. | Only those rows may borrow the Base Title's or the page's art (docs/REFERENCE.md, "Base-title fallback"); other rows keep the placeholder. | Open `/t/6881`, `/t/20778` and `/t/2624`: every related row shows a thumbnail, and Demo B on `/t/6881` shows Project X Zone's cover. A new relation label shows up as a placeholder until it is added to `RELATIONS`. |
 
 ## Behaviour still to check by hand
 
