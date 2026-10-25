@@ -203,11 +203,13 @@ extract  →  sources  →  resolver  →  ui
 | **resolver** | `src/lib/resolver.ts`, `related.ts`, `probe.ts`, `queue.ts`, `cache.ts`, `settings.ts` | Prueba los candidatos en orden (primero con HEAD, gana el primero que existe, como mucho 4 a la vez), aplica el respaldo del juego base y guarda el resultado el tiempo elegido. |
 | **ui** | `src/ui/*`, `src/entrypoints/{title,list}.content/`, `options/` | Dibuja la caja, el visor a tamaño completo, la portada de reserva, la galería, las miniaturas de las filas y la página de ajustes, con los colores del propio hShop. |
 
-El service worker (`src/entrypoints/background.ts`) responde a tres mensajes:
-los nombres de Libretro de un código de producto, la comprobación HEAD de una
-URL de imagen (`image:head`) y una descarga de imagen que queda de reserva para
-el día en que hShop añada una Content Security Policy (`IMAGE_MODE` en
-`src/lib/config.ts`). También abre la página de ajustes desde el botón de la
+El service worker (`src/entrypoints/background.ts`) responde a cuatro mensajes:
+los nombres de Libretro de un código de producto (`libretro:names`), el nombre
+en el sistema original de un código de juego de Virtual Console, leído del
+`public/libretro-vc.json` empaquetado sin ninguna petición de red
+(`libretro:vc`), la comprobación HEAD de una URL de imagen (`image:head`) y una
+descarga de imagen que queda de reserva para el día en que hShop añada una
+Content Security Policy (`image:fetch`, `IMAGE_MODE` en `src/lib/config.ts`). También abre la página de ajustes desde el botón de la
 barra y borra las entradas caducadas de la caché.
 
 Cada selector, color y patrón de URL que usa el código está anotado en

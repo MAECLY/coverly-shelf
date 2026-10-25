@@ -195,10 +195,13 @@ extract  →  sources  →  resolver  →  ui
 | **resolver** | `src/lib/resolver.ts`, `related.ts`, `probe.ts`, `queue.ts`, `cache.ts`, `settings.ts` | Tries the candidates in order (HEAD preflight first, first hit wins, 4 at a time at most), applies the base-title fallback and caches the result for the chosen time. |
 | **ui** | `src/ui/*`, `src/entrypoints/{title,list}.content/`, `options/` | Draws the box, the zoom viewer, the placeholder, the gallery, the row thumbnails and the settings page, with hShop's own colour tokens. |
 
-The background service worker (`src/entrypoints/background.ts`) answers three
-messages: Libretro names for a product code, the HEAD preflight of an artwork
-URL (`image:head`), and an image fetch kept for the day hShop adds a Content
-Security Policy (`IMAGE_MODE` in `src/lib/config.ts`). It also opens the
+The background service worker (`src/entrypoints/background.ts`) answers four
+messages: Libretro names for a product code (`libretro:names`), the
+original-system name of a Virtual Console game code, read from the packaged
+`public/libretro-vc.json` with no network request (`libretro:vc`), the HEAD
+preflight of an artwork URL (`image:head`), and an image fetch kept for the
+day hShop adds a Content Security Policy (`image:fetch`, `IMAGE_MODE` in
+`src/lib/config.ts`). It also opens the
 settings page from the toolbar button and sweeps expired cache entries.
 
 Every selector, colour and URL pattern the code uses is recorded in
