@@ -83,6 +83,16 @@ describe('libretro', () => {
     expect(libretroUrl('cover', 'Title: Sub?')).toContain('/Title_%20Sub_.png');
   });
 
+  it('builds original-system URLs for Virtual Console names', () => {
+    expect(libretroUrl('cover', 'Mach Rider (Japan, USA) (En)', 'Nintendo - Nintendo Entertainment System')).toBe(
+      'https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%20Entertainment%20System/Named_Boxarts/Mach%20Rider%20(Japan%2C%20USA)%20(En).png',
+    );
+    expect(libretroUrl('snap', 'A: B', 'Sega - Game Gear')).toBe(
+      'https://thumbnails.libretro.com/Sega%20-%20Game%20Gear/Named_Snaps/A_%20B.png',
+    );
+    expect(libretroCandidates(['X'], 'title', 'Nintendo - Game Boy')[0]?.url).toContain('/Nintendo%20-%20Game%20Boy/Named_Titles/X.png');
+  });
+
   it('builds de-duplicated candidates in name order', () => {
     const c = libretroCandidates(['B', 'A', 'B'], 'snap');
     expect(c.map((x) => x.url)).toEqual([libretroUrl('snap', 'B'), libretroUrl('snap', 'A')]);
@@ -148,6 +158,26 @@ describe('background image fetch', async () => {
     expect(await fetchImageAsDataUrl(url)).toBeNull();
     vi.stubGlobal('fetch', vi.fn(async () => Promise.reject(new Error('offline'))));
     expect(await fetchImageAsDataUrl(url)).toBeNull();
+  });
+
+  it('answers libretro:vc only with well-formed entries of a listed system', async () => {
+    const { libretroVc } = await import('../src/entrypoints/background');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        Response.json({
+          RAME: { system: 'Nintendo - Game Boy', name: 'Radar Mission (USA, Europe)' },
+          TBAD: { system: 'Evil - System', name: 'X (USA)' },
+          TNUL: { system: 'Nintendo - Game Boy' },
+        }),
+      ),
+    );
+    await expect(libretroVc('RAME')).resolves.toEqual({ system: 'Nintendo - Game Boy', name: 'Radar Mission (USA, Europe)' });
+    await expect(libretroVc('TBAD')).resolves.toBeNull();
+    await expect(libretroVc('TNUL')).resolves.toBeNull();
+    await expect(libretroVc('toString')).resolves.toBeNull();
+    await expect(handleMessage({ type: 'libretro:vc', gameCode: 'RAME' })).resolves.toMatchObject({ name: 'Radar Mission (USA, Europe)' });
+    expect(handleMessage({ type: 'libretro:vc', gameCode: 1 })).toBeUndefined();
   });
 
   it('ignores unknown messages', () => {

@@ -4,9 +4,12 @@
  * result so the page is left exactly as it was.
  */
 import { browser } from 'wxt/browser';
+import type { LibretroVcSystem } from './config';
+import { isLibretroVcSystem } from './sources/libretro';
 
 export type ExtMessage =
   | { type: 'libretro:names'; serial: string }
+  | { type: 'libretro:vc'; gameCode: string }
   | { type: 'image:fetch'; url: string }
   | { type: 'image:head'; url: string };
 
@@ -30,6 +33,31 @@ export async function requestLibretroNamesResult(serial: string): Promise<string
   const res = await send({ type: 'libretro:names', serial });
   if (!Array.isArray(res)) return null;
   return res.filter((n): n is string => typeof n === 'string');
+}
+
+/** Original-system thumbnail name of a Virtual Console game code (public/libretro-vc.json). */
+export interface VcName {
+  system: LibretroVcSystem;
+  name: string;
+}
+
+/** True for a well-formed entry whose system is one of LIBRETRO_VC_SYSTEMS. */
+export function isVcName(value: unknown): value is VcName {
+  if (typeof value !== 'object' || value === null) return false;
+  const v = value as Record<string, unknown>;
+  return isLibretroVcSystem(v.system) && typeof v.name === 'string' && v.name.length > 0;
+}
+
+/**
+ * `{ ok: true, entry }` when the background answered (entry null = not a
+ * mapped VC code), `{ ok: false }` when it could not be reached. Never rejects.
+ */
+export async function requestLibretroVcResult(
+  gameCode: string,
+): Promise<{ ok: true; entry: VcName | null } | { ok: false }> {
+  const res = await send({ type: 'libretro:vc', gameCode });
+  if (res === FAILED || res === undefined) return { ok: false };
+  return { ok: true, entry: isVcName(res) ? { system: res.system, name: res.name } : null };
 }
 
 export async function requestLibretroNames(serial: string): Promise<string[]> {

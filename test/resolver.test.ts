@@ -19,6 +19,7 @@ vi.mock('../src/lib/messages', () => {
   return {
     requestLibretroNames,
     requestLibretroNamesResult: async (serial: string) => requestLibretroNames(serial),
+    requestLibretroVcResult: vi.fn(async () => ({ ok: true, entry: null })),
     requestImageData: vi.fn(async () => null),
   };
 });
@@ -28,7 +29,7 @@ vi.mock('../src/lib/sources/gametdb', async (importOriginal) => {
 });
 
 const { probeImage } = await import('../src/lib/probe');
-const { requestLibretroNames } = await import('../src/lib/messages');
+const { requestLibretroNames, requestLibretroVcResult } = await import('../src/lib/messages');
 const { gametdbCoverCandidates } = await import('../src/lib/sources/gametdb');
 const { resolveCover, resolveGallery, resetProbeMemo } = await import('../src/lib/resolver');
 const { setCached } = await import('../src/lib/cache');
@@ -36,6 +37,7 @@ const { CACHE_TTL_MS } = await import('../src/lib/config');
 
 const probe = vi.mocked(probeImage);
 const names = vi.mocked(requestLibretroNames);
+const vcLookup = vi.mocked(requestLibretroVcResult);
 const coverCandidates = vi.mocked(gametdbCoverCandidates);
 
 const GT = 'https://art.gametdb.com/3ds';
@@ -72,6 +74,7 @@ beforeEach(() => {
   resetProbeMemo();
   outcomes.clear();
   names.mockResolvedValue([NAME]);
+  vcLookup.mockResolvedValue({ ok: true, entry: null });
   probe.mockResolvedValue(false);
 });
 
@@ -315,5 +318,78 @@ describe('transport failures', () => {
     outcomes.set(snap, 'error');
     await resolveGallery(game());
     await expect(storage.getItem('local:gallery:AZEE')).resolves.toBeNull();
+  });
+});
+
+describe('Virtual Console (original-system Libretro art)', () => {
+  const GB = 'Nintendo - Game Boy';
+  const GB_BASE = 'https://thumbnails.libretro.com/Nintendo%20-%20Game%20Boy';
+  const VC_NAME = 'Radar Mission (USA, Europe)';
+  const VC_FILE = encodeURIComponent(VC_NAME);
+  const vcGame = (over: Partial<GameInfo> = {}): GameInfo =>
+    game({ title: 'Radar Mission', productCode: 'CTR-N-RAME', distribution: 'N', gameCode: 'RAME', ...over });
+
+  beforeEach(() => {
+    vcLookup.mockResolvedValue({ ok: true, entry: { system: GB, name: VC_NAME } });
+    names.mockResolvedValue([]);
+  });
+
+  it('keeps GameTDB first: a GameTDB hit never asks for the VC map', async () => {
+    hits(`${GT}/cover/US/RAME.jpg`);
+    await expect(resolveCover(vcGame(), { size: 'thumb' })).resolves.toMatchObject({ source: 'gametdb' });
+    expect(vcLookup).not.toHaveBeenCalled();
+  });
+
+  it('falls back to the original system box art after every GameTDB region', async () => {
+    const url = `${GB_BASE}/Named_Boxarts/${VC_FILE}.png`;
+    hits(url);
+    await expect(resolveCover(vcGame(), { size: 'thumb' })).resolves.toEqual({ kind: 'image', url, source: 'libretro' });
+    expect(vcLookup).toHaveBeenCalledWith('RAME');
+    expect(probed()).toEqual([`${GT}/cover/US/RAME.jpg`, `${GT}/cover/EN/RAME.jpg`, url]);
+    // A VC hit needs no 3DS name.
+    expect(names).not.toHaveBeenCalled();
+  });
+
+  it('serves updates of a VC title with the same art (same game code)', async () => {
+    const url = `${GB_BASE}/Named_Boxarts/${VC_FILE}.png`;
+    hits(url);
+    await expect(resolveCover(vcGame({ productCode: 'CTR-U-RAME', distribution: 'U' }))).resolves.toMatchObject({ url });
+  });
+
+  it('continues with the 3DS names when the VC thumbnail is gone', async () => {
+    names.mockResolvedValue([NAME]);
+    hits(`${LR}/Named_Boxarts/${FILE}.png`);
+    await expect(resolveCover(vcGame(), { size: 'thumb' })).resolves.toMatchObject({ url: `${LR}/Named_Boxarts/${FILE}.png` });
+  });
+
+  it('only asks for codes that start with a VC letter, and never for DSiWare', async () => {
+    await resolveCover(game(), { size: 'thumb' });
+    await resolveCover(
+      game({ productCode: 'TWL-N-RAME', platform: 'TWL', distribution: 'N', gameCode: 'RAME' }),
+      { size: 'thumb' },
+    );
+    expect(vcLookup).not.toHaveBeenCalled();
+  });
+
+  it('does not cache a placeholder when the VC lookup could not reach the background', async () => {
+    vcLookup.mockResolvedValue({ ok: false });
+    await expect(resolveCover(vcGame(), { size: 'thumb' })).resolves.toEqual({ kind: 'placeholder' });
+    await expect(storage.getItem('local:thumb:RAME')).resolves.toBeNull();
+  });
+
+  it('caches a definite VC miss like any other placeholder', async () => {
+    vcLookup.mockResolvedValue({ ok: true, entry: null });
+    await expect(resolveCover(vcGame(), { size: 'thumb' })).resolves.toEqual({ kind: 'placeholder' });
+    await expect(storage.getItem('local:thumb:RAME')).resolves.toMatchObject({ value: { kind: 'placeholder' } });
+  });
+
+  it('takes the gallery from the original system first', async () => {
+    const snap = `${GB_BASE}/Named_Snaps/${VC_FILE}.png`;
+    const title = `${GB_BASE}/Named_Titles/${VC_FILE}.png`;
+    hits(snap, title);
+    await expect(resolveGallery(vcGame())).resolves.toEqual([
+      { url: title, source: 'libretro', kind: 'title' },
+      { url: snap, source: 'libretro', kind: 'snap' },
+    ]);
   });
 });
