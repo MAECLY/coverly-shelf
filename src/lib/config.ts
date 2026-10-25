@@ -22,11 +22,18 @@ export const REGION_BY_CHAR: Readonly<Record<string, GameTdbRegion>> = {
   W: 'ZH', // Taiwan/Hong Kong: ABRW, ADAW, KC2W, AJJW → 200 in ZH, 404 in ZHTW/TW/EN/US/JA
   V: 'EN', // BLJV, BTMV, ALEV → 200 in EN
   X: 'EN', // BLSX, BLJX → 200 in EN (404 in ES)
-  Y: 'EN', // BLSY, KFPY → 200 in EN (404 in FR, KO)
+  // Y re-verified 2026-10-25: BLSY, BTMY, AXRY, KGNY, ASCY, BG6Y, KFPY, APNY → 200 in EN only
+  // (404 in KO, ZH, US, RU).
+  Y: 'EN',
   A: 'EN', // BNDA, A2AA, KRXA → 200 in EN
-  // Z is left to the slug fallback on purpose: AAHZ, ARMZ, BMMZ → 200 in EN (already in
-  // FALLBACK_REGIONS), but Z is a mixed bucket (ALBZ, ABZZ, AMQZ have no art anywhere).
-  // TODO(reference): C (JMKC, JREC → 404 in ZH/EN/JA), R (APNR → 404 in RU/EN) and U have no verified folder.
+  // Re-verified 2026-10-25 (live, cover/{AU,EN,US,ZH,KO}): 10 of 12 Z codes are in EN
+  // (AYWZ, BYGZ, BYHZ only also in AU; AXCZ also in ZH), AS7Z (Canada) only in US,
+  // ALBZ nowhere, none only in AU/ZH/KO. EN first, then the US fallback, covers all.
+  Z: 'EN',
+  // Left unmapped on purpose (fallback EN then US), 2026-10-25:
+  // C — JMKC, JREC 404 in ZH, EN, US, JA and other (the only C codes on hShop);
+  // R — APNR 404 in RU, EN, US and other (the only R code);
+  // U — no 3DS code on hShop ends in U (Australian games use Z; U is DSiWare only).
 };
 
 /** Regions tried after the game's own region, in order. */
