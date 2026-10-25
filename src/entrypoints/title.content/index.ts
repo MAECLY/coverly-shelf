@@ -10,6 +10,7 @@ import './style.css';
 import { createShadowRootUi, defineContentScript, type ContentScriptContext, type ShadowRootContentScriptUi } from '#imports';
 import { extractGameInfo } from '../../lib/extract';
 import { createPathWatcher } from '../../lib/navigation';
+import { preflightTitlePage } from '../../lib/preflight';
 import { displaySrc } from '../../lib/probe';
 import { resolveCover, resolveGallery } from '../../lib/resolver';
 import { ENHANCED_ATTR, SELECTORS } from '../../lib/selectors';
@@ -73,6 +74,13 @@ export default defineContentScript({
 });
 
 async function enhance(ctx: ContentScriptContext, run: Run, isStale: () => boolean): Promise<void> {
+  // hShop markup we do not recognise: leave the page alone rather than guess.
+  const preflight = preflightTitlePage(document);
+  if (!preflight.ok) {
+    console.debug(`[coverly-shelf] page preflight failed (${preflight.reason}); page left untouched`);
+    return;
+  }
+
   const info = extractGameInfo(document);
   if (!info) return; // themes, homebrew, anything without a product code
 
