@@ -1,0 +1,11 @@
+node_modules/
+.output/
+.wxt/
+stats.html
+stats-*.json
+web-ext.config.ts
+.DS_Store
+*.log
+test-results/
+playwright-report/
+.e2e-profile/

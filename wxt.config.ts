@@ -1,0 +1,19 @@
+import tailwindcss from '@tailwindcss/vite';
+import { defineConfig } from 'wxt';
+
+// Manifest permissions are kept to the minimum the spec allows: `storage`
+// for the per-game cache and host access only to the two artwork hosts.
+// The content script's own match pattern grants access to hShop pages.
+export default defineConfig({
+  srcDir: 'src',
+  manifest: {
+    name: 'Coverly Shelf',
+    description:
+      'Box art and screenshots for 3DS game pages. Purely cosmetic: it never touches downloads.',
+    permissions: ['storage'],
+    host_permissions: ['https://art.gametdb.com/*', 'https://thumbnails.libretro.com/*'],
+  },
+  vite: () => ({
+    plugins: [tailwindcss()],
+  }),
+});
