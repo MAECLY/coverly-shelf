@@ -1,7 +1,16 @@
 import type { CoverResult } from '../lib/types';
 import { creditText, createCredit } from './credits';
 import { h } from './dom';
+import { openLightbox, type LightboxHandle } from './lightbox';
 import { createPlaceholder } from './placeholder';
+
+/** Opening the box art full size in the lightbox (title pages). */
+export interface CoverZoom {
+  /** Where the lightbox overlay is appended: the cover's own shadow root. */
+  container: ShadowRoot | HTMLElement;
+  /** Full-size art for the viewer. Defaults to what the box shows. */
+  src?: string | null;
+}
 
 export interface CoverOptions {
   /** Game title: used for the image's alt text and the placeholder. */
@@ -12,7 +21,68 @@ export interface CoverOptions {
    * passes a data URL here when images go through the background worker.
    */
   src?: string | null;
+  /**
+   * When set, the box becomes a button that opens the art full size. Never
+   * applied to the placeholder, and removed again if the art fails to load.
+   */
+  zoom?: CoverZoom | null;
   doc?: Document;
+}
+
+/** Accessible name of the zoomable box. Content-script strings are English, like the rest of the page UI. */
+export const zoomLabel = (title: string): string => `View box art for ${title} full size`;
+
+/**
+ * Turns the cover's `.cs-stage` into a button (role, tabindex, label) that
+ * opens `src` in the lightbox on click, Enter or Space. Only the stage listens,
+ * so clicks anywhere else on the page are never intercepted. Returns a
+ * function that removes the affordance and closes an open viewer.
+ */
+function enableZoom(stage: HTMLElement, title: string, src: string, zoom: CoverZoom): () => void {
+  let lightbox: LightboxHandle | null = null;
+  const open = (): void => {
+    if (lightbox) return;
+    lightbox = openLightbox({
+      container: zoom.container,
+      images: [{ src, alt: `${title} box art` }],
+      index: 0,
+      label: `${title} box art`,
+      closeLabel: 'Close box art',
+      variant: 'art',
+      opener: stage,
+      onClose: () => {
+        lightbox = null;
+      },
+    });
+  };
+  const onClick = (event: MouseEvent): void => {
+    event.preventDefault();
+    open();
+  };
+  const onKey = (event: KeyboardEvent): void => {
+    if (event.key !== 'Enter' && event.key !== ' ' && event.key !== 'Spacebar') return;
+    // Space would scroll the page; neither key may reach hShop's own listeners.
+    event.preventDefault();
+    event.stopPropagation();
+    if (!event.repeat) open();
+  };
+  const attrs: Record<string, string> = {
+    role: 'button',
+    tabindex: '0',
+    'aria-label': zoomLabel(title),
+    'aria-haspopup': 'dialog',
+  };
+  for (const [name, value] of Object.entries(attrs)) stage.setAttribute(name, value);
+  stage.classList.add('is-zoomable');
+  stage.addEventListener('click', onClick);
+  stage.addEventListener('keydown', onKey);
+  return () => {
+    stage.removeEventListener('click', onClick);
+    stage.removeEventListener('keydown', onKey);
+    for (const name of Object.keys(attrs)) stage.removeAttribute(name);
+    stage.classList.remove('is-zoomable');
+    lightbox?.close();
+  };
 }
 
 /**
@@ -22,16 +92,13 @@ export interface CoverOptions {
  */
 function frame(face: HTMLElement, doc: Document, extra: { busy?: boolean } = {}): {
   figure: HTMLElement;
+  stage: HTMLElement;
   box: HTMLElement;
 } {
   const box = h('div', { class: 'cs-box' }, [h('div', { class: 'cs-face' }, [face], doc)], doc);
-  const figure = h(
-    'figure',
-    { class: 'cs-cover', 'aria-busy': extra.busy ? 'true' : null },
-    [h('div', { class: 'cs-stage' }, [box], doc)],
-    doc,
-  );
-  return { figure, box };
+  const stage = h('div', { class: 'cs-stage' }, [box], doc);
+  const figure = h('figure', { class: 'cs-cover', 'aria-busy': extra.busy ? 'true' : null }, [stage], doc);
+  return { figure, stage, box };
 }
 
 /** Loading state shown while the fallback chain runs. */
@@ -45,7 +112,7 @@ export function createCoverSkeleton(title: string, doc: Document = document): HT
  * broken image: if the `<img>` fails, the face swaps to the placeholder and
  * the credit line is dropped.
  */
-export function createCover({ title, result, src, doc = document }: CoverOptions): HTMLElement {
+export function createCover({ title, result, src, zoom, doc = document }: CoverOptions): HTMLElement {
   if (result.kind === 'placeholder') {
     const { figure } = frame(createPlaceholder(title, doc), doc);
     figure.classList.add('is-placeholder');
@@ -66,7 +133,8 @@ export function createCover({ title, result, src, doc = document }: CoverOptions
     doc,
   );
   img.referrerPolicy = 'no-referrer';
-  const { figure, box } = frame(img, doc);
+  const { figure, stage, box } = frame(img, doc);
+  const shown = src ?? result.url;
   const credit = createCredit([result.source], 'figcaption', doc);
   if (credit) figure.append(credit);
   const tip = creditText([result.source]);
@@ -84,10 +152,13 @@ export function createCover({ title, result, src, doc = document }: CoverOptions
       figure.classList.remove('is-loaded');
       figure.removeAttribute('title');
       credit?.remove();
+      disableZoom?.();
     },
     { once: true },
   );
+  // The placeholder never zooms: the affordance exists only while real art is shown.
+  const disableZoom = zoom ? enableZoom(stage, title, zoom.src || shown, zoom) : null;
   // Set src last so the listeners are in place before the request starts.
-  img.src = src ?? result.url;
+  img.src = shown;
   return figure;
 }

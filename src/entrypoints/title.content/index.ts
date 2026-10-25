@@ -109,7 +109,16 @@ async function enhance(ctx: ContentScriptContext, run: Run, isStale: () => boole
     resolveGallery(info).then(toGalleryImages).catch((): GalleryImage[] => []),
   ]);
   if (isStale()) return;
-  cover.uiContainer.replaceChildren(createCover({ title: info.title, result: result.result, src: result.src }));
+  cover.uiContainer.replaceChildren(
+    createCover({
+      title: info.title,
+      result: result.result,
+      src: result.src,
+      // Full size = the resolved art itself: the full-size chain already tries
+      // GameTDB coverHQ first for every region, so this is coverHQ whenever it exists.
+      zoom: { container: cover.shadow, src: result.src },
+    }),
+  );
 
   await mountGallery(ctx, run, info, gallery, isStale);
 }

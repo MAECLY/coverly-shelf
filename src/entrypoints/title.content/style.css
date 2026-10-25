@@ -166,6 +166,22 @@
   transform: rotateY(-9deg);
 }
 
+/* Real art only (never the placeholder): the box is a button that opens it full size. */
+.cs-stage.is-zoomable {
+  cursor: zoom-in;
+  border-radius: 6px;
+}
+.cs-stage.is-zoomable:focus {
+  outline: none;
+}
+.cs-stage.is-zoomable:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+.cs-stage.is-zoomable:focus-visible .cs-box {
+  transform: rotateY(-9deg);
+}
+
 .cs-face {
   position: absolute;
   inset: 0;
@@ -356,6 +372,11 @@
   /* Native-resolution snaps: keep the pixels crisp when upscaled. */
   image-rendering: pixelated;
 }
+/* Box art: a 768×680 scan, scaled smoothly rather than as pixel art. */
+.cs-lightbox.is-art .cs-lightbox-img {
+  height: min(calc(100vh - 160px), 680px);
+  image-rendering: auto;
+}
 .cs-lightbox-img.is-broken {
   visibility: hidden;
 }
@@ -422,7 +443,8 @@
     transition: none !important;
     animation: none !important;
   }
-  .cs-cover:hover .cs-box {
+  .cs-cover:hover .cs-box,
+  .cs-stage.is-zoomable:focus-visible .cs-box {
     transform: rotateY(-18deg);
   }
 }
