@@ -15,6 +15,10 @@
 
 <p align="center">
   <a href="https://github.com/MAECLY/coverly-shelf/releases/latest"><img alt="Última versión" src="https://img.shields.io/github/v/release/MAECLY/coverly-shelf?style=flat-square&label=versi%C3%B3n&color=0E5E6F&labelColor=1B1E1B"></a>
+  <a href="https://github.com/MAECLY/coverly-shelf/releases"><img alt="Descargas" src="https://img.shields.io/github/downloads/MAECLY/coverly-shelf/total?style=flat-square&color=0E5E6F&labelColor=1B1E1B&label=descargas"></a>
+  <a href="https://github.com/MAECLY/coverly-shelf/stargazers"><img alt="Estrellas en GitHub" src="https://img.shields.io/github/stars/MAECLY/coverly-shelf?style=flat-square&color=0E5E6F&labelColor=1B1E1B&label=estrellas"></a>
+  <a href="https://hits.sh/github.com/MAECLY/coverly-shelf/"><img alt="Visitas al repositorio" src="https://hits.sh/github.com/MAECLY/coverly-shelf.svg?style=flat-square&label=visitas&color=0E5E6F&labelColor=1B1E1B"></a>
+  <a href="https://github.com/MAECLY/coverly-shelf/commits/main"><img alt="Último commit" src="https://img.shields.io/github/last-commit/MAECLY/coverly-shelf?style=flat-square&color=0E5E6F&labelColor=1B1E1B&label=último%20commit"></a>
   <a href="LICENSE"><img alt="Licencia: AGPL-3.0" src="https://img.shields.io/badge/licencia-AGPL--3.0-0E5E6F?style=flat-square&labelColor=1B1E1B"></a>
   <a href="#instalación"><img alt="Chrome, Edge y Brave" src="https://img.shields.io/badge/Chrome%20%C2%B7%20Edge%20%C2%B7%20Brave-MV3-0E5E6F?style=flat-square&labelColor=1B1E1B"></a>
   <a href="#por-qué-es-segura"><img alt="Sin telemetría" src="https://img.shields.io/badge/telemetr%C3%ADa-ninguna-0E5E6F?style=flat-square&labelColor=1B1E1B"></a>
