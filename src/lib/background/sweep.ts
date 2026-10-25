@@ -59,13 +59,10 @@ export function initCacheRetention(): void {
   } catch {
     // runtime events unavailable (tests)
   }
-  let last: Retention | null = null;
-  void getSettings().then((s) => {
-    last ??= s.retention;
-  });
+  // No in-memory "previous value": an MV3 worker woken by this very change
+  // would read the new value at start-up and skip the work. applyRetention is
+  // idempotent, so it simply runs on every settings change.
   watchSettings((s) => {
-    if (s.retention === last) return;
-    last = s.retention;
     void applyRetention(s.retention);
   });
 }

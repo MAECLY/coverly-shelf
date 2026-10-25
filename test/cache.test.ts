@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fakeBrowser } from 'wxt/testing/fake-browser';
 import { storage } from '#imports';
 import { cacheUsage, clearCache, getCached, setCached, sweepExpired } from '../src/lib/cache';
-import { applyRetention, sweepOnStartup } from '../src/lib/background/sweep';
+import { applyRetention, initCacheRetention, sweepOnStartup } from '../src/lib/background/sweep';
 import { CACHE_TTL_MS, CACHE_VERSION } from '../src/lib/config';
 import { setSettings } from '../src/lib/settings';
 
@@ -152,6 +152,19 @@ describe('cache retention', () => {
     await setSettings({ retention: '7d' });
     await applyRetention('7d');
     expect(await fakeBrowser.storage.session.get(null)).toEqual({});
+  });
+
+  it('a worker woken by the settings change still applies the new retention', async () => {
+    await setCached('local:cover:AZEE', 'x');
+    // The change is already stored when the sleeping MV3 worker starts.
+    await fakeBrowser.storage.sync.set({ settings: { v: 1, retention: 'session' } });
+    initCacheRetention();
+    await new Promise((r) => setTimeout(r, 0));
+    // ...and only then is the queued onChanged event delivered.
+    await fakeBrowser.storage.sync.onChanged.trigger({
+      settings: { oldValue: { v: 1, retention: '7d' }, newValue: { v: 1, retention: 'session' } },
+    });
+    await vi.waitFor(async () => expect(await fakeBrowser.storage.local.get(null)).toEqual({}));
   });
 
   it('startup in session mode drops local fallback copies', async () => {
