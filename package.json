@@ -17,7 +17,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "gen:libretro": "bun scripts/gen-libretro-map.ts",
-    "e2e": "bun scripts/e2e.ts"
+    "e2e": "bun scripts/e2e.ts",
+    "check": "bun run typecheck && bun run test && bun run build"
   },
   "devDependencies": {
     "@tailwindcss/vite": "4.3.3",
