@@ -477,6 +477,76 @@ Probed with `AZEE` (retail), `AREE` (retail), `SAEE` (digital, `N`):
   for `<img>`, not readable with `fetch` from the page).
 - Cover ratio: 160/144 ≈ 1.11, 768/680 ≈ 1.13 — wider than tall.
 
+## Virtual Console (`/c/virtual-console/s/*`)
+
+Surveyed 2026-10-25: all 691 VC titles (europe 163, france 1, germany 3,
+japan 290, korea 3, north-america 197, world 34). The **first letter** of the
+game code is the original system, always in agreement with the row badge
+(`Virtual Console: …`, read via `SELECTORS.list.badges`):
+
+| Letter | System (badge) | Titles |
+|---|---|---|
+| `T` | NES / Famicom (one Japanese row has no badge) | 241 |
+| `R` | Game Boy | 179 |
+| `Q` | Game Boy Color | 103 |
+| `U` | SNES / Super Famicom (`KTR`, New 3DS only) | 80 |
+| `G` | Game Gear | 54 |
+| `P` | Game Boy Advance (30) or PC Engine (4, Japan, badge `TurboGrafx-16)`) | 34 |
+
+No other letter is used. Region letters: `J` 287, `E` 197, `P` 163, `A` 39
+(region-free Pokémon in every language), `D` 3, `F` 1, `Z` 1.
+
+- **GameTDB does have VC art.** Live probes (`3ds/cover`, own region then
+  `EN`): TAAE, RA4E, QAZE, TC8E, GADE, UAKE (`US`), TAAP (`EN`) all 200; only
+  PAEE missed. A sample of 47 VC titles (10 per large region) had GameTDB art
+  for 43; the 4 misses were Japanese. Earlier "0 art" readings came from the
+  GameTDB outage.
+- **Libretro fallback** (`public/libretro-vc.json`, `bun run gen:vc`): game
+  code → `{system, name}` for the original system's `Named_Boxarts`. Built by
+  `scripts/gen-vc-map.ts`, which crawls every VC listing (`?count=100`,
+  11 pages, 2 s apart), loads the system's No-Intro DAT from
+  libretro-database, and matches **exactly** after a fixed normalisation
+  (strip ™ ® ©, unify quotes, collapse spaces, ignore case; `: ` ↔ ` - `;
+  a leading "The" moved behind the title like No-Intro). Lookup keys, best
+  first: the base of the No-Intro name the 3DS DATs give the title's serial
+  (91 VC serials, e.g. `CTR-N-PAAE` → `F-Zero - Maximum Velocity (USA) (GBA)
+  (Virtual Console)`), then hShop's name. Region variants follow the code's
+  letter: `E` → `(USA)`, `(USA, …)`, `(World)`; `P` → `(Europe)`, `(…,
+  Europe)`, `(World)`; `J` → `(Japan)`…; `D`/`F` add their country first.
+  Betas, protos, demos and re-releases (e-Reader, Evercade, Switch Online,
+  Classic Mini, collections) are never used. Every kept name was HEAD-checked
+  on `thumbnails.libretro.com/{system}/Named_Boxarts/` (one request at a time).
+- Result: **280 of 691** titles (41%).
+
+| hShop region | Titles | Verified | Exact name, no thumbnail | No exact name |
+|---|---|---|---|---|
+| europe | 163 | 108 (66%) | 1 | 54 |
+| north-america | 197 | 154 (78%) | 1 | 42 |
+| japan | 290 | 17 (6%) | 4 | 269 |
+| korea | 3 | 1 | 0 | 2 |
+| france, germany | 4 | 0 | 0 | 4 |
+| world | 34 | 0 | 0 | 34 |
+
+| System | Titles | Verified |
+|---|---|---|
+| Game Boy Advance | 30 | 27 (90%) |
+| Game Gear | 54 | 26 (48%) |
+| Game Boy | 179 | 79 (44%) |
+| NES | 241 | 87 (36%) |
+| Game Boy Color | 103 | 37 (36%) |
+| SNES | 80 | 24 (30%) |
+| PC Engine | 4 | 0 |
+
+  Most misses are hShop names without No-Intro's ` - ` separator
+  (`Castlevania III Dracula's Curse`), Japanese script (No-Intro names are
+  romanized), or localized Pokémon names; they keep the placeholder (or the
+  GameTDB art). Nothing is guessed.
+- The resolver asks for it only after every GameTDB region missed, and only
+  for `CTR`/`KTR` codes whose first letter is a VC letter
+  (`VC_CODE_LETTERS`). Title pages also take `Named_Snaps`/`Named_Titles` of
+  that system. Live `e2e:lists`: virtual-console/north-america 25/25 (24
+  GameTDB, 1 Libretro VC).
+
 ## Libretro
 
 - Thumbnails: `https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%203DS/{Named_Boxarts|Named_Snaps|Named_Titles}/{name}.png`.
@@ -539,8 +609,11 @@ lower-bound oracle): US 1071/1200 (89%), GB 1034/1129 (92%), JP 1053/1692
 | `X` | `EN` | BLSX, BLJX | 404 in `ES` |
 | `Y` | `EN` | BLSY, KFPY | 404 in `FR`, `KO` |
 | `A` | `EN` | BNDA, A2AA, KRXA | |
-| `Z` | `EN` (via fallback) | AAHZ, ARMZ, BMMZ | ALBZ, ABZZ, AMQZ have nothing anywhere; left unmapped so the slug fallback still runs |
-| `C` | — | — | JMKC, JREC 404 in `ZH`, `EN`, `JA`; no `C` code archived |
+| `Z` | `EN` | AYWZ, BYGZ, BYHZ, BYSZ, AAHZ, AGKZ, AXCZ, ARMZ, ATHZ, ALEZ | Re-probed live 2026-10-25 on 12 codes: 10 in `EN` (AYWZ/BYGZ/BYHZ also `AU`, AXCZ also `ZH`), AS7Z (Canada) only `US` (the fallback), ALBZ nowhere; none only in `AU`/`ZH`/`KO` |
+| `Y` | `EN` | BLSY, BTMY, AXRY, KGNY, ASCY, BG6Y, KFPY, APNY | 8/8 only in `EN` (404 in `KO`, `ZH`, `US`, `RU`) |
+| `C` | — | — | JMKC, JREC (the only `C` codes) 404 in `ZH`, `EN`, `US`, `JA`, `other` |
+| `R` | — | — | APNR (the only `R` code) 404 in `RU`, `EN`, `US`, `other` |
+| `U` | — | — | no 3DS code on hShop ends in `U` (Australian games use `Z`); `U` is DSiWare only |
 
 Folders that exist on GameTDB 3DS (archived counts): `EN` 1552, `US` 1197,
 `JA` 1063, `DE` 505, `IT` 319, `FR` 293, `ES` 216, `NL` 156, `AU` 148, `KO` 127,
@@ -548,7 +621,64 @@ Folders that exist on GameTDB 3DS (archived counts): `EN` 1552, `US` 1197,
 `ZHTW`, `ZHCN`, `TW`, `CN` do not exist. Every code found in a localized
 folder (`DE`, `FR`, …) is also in `EN` or `US`, so those folders never add a hit.
 
+### Updates and DLC
+
+Re-probed live on 2026-10-25 (GameTDB was reachable again; an earlier pass
+during its outage gave false misses). Update (`CTR-U-XXXX`) and DLC
+(`CTR-M-XXXX-NN`) rows use the base game's 4-character code, so the same
+region chain applies. Two rows from every `/c/updates/s/*` and `/c/dlc/s/*`
+subcategory, walked with the extension's own chain (`cover`, one region at a
+time): **37 of 39 hit**. The misses are CTR-U-JUUJ (`demo-updates`) and
+CTR-U-BX2Z (`unknown-other`).
+
+| Subcategory | Rows | Chain | First hit |
+|---|---|---|---|
+| updates/france, dlc/france | ALZF, AFJF, JCVF | `EN` → `US` | `EN` (`FR` has none: AFJF 404) |
+| updates/germany, dlc/germany | ALZD, ARHD, JCVD | `DE` → `EN` → `US` | `EN` |
+| dlc/italy, updates/italy | JCVI, ALEV, BTMV | `IT`/`EN` → … | `EN` |
+| updates/spain, dlc/spain | ALEX, ALZS, JCVS | `EN` → `US` | `EN` |
+| updates/japan, dlc/japan | AQ2J, AP5J, BZMJ, BNUJ (+ A22J, AACJ, BASJ) | `JA` → `EN` → `US` | `JA` |
+| updates/korea, dlc/korea | A9CK, AR6K, BYGK | `KO` → `EN` → `US` | `KO` |
+| dlc/korea | BG6Y | `EN` → `US` | `EN` |
+| updates/taiwan, dlc/china | AJJW, ABEW | `ZH` → `EN` → `US` | `ZH` |
+| updates/taiwan, dlc/taiwan, australia | AH4Z, AAHZ, AMXZ, AYWZ, BYGZ | `EN` → `US` | `EN` |
+| updates/world | AY6A, ECRA | `EN` → `US` | `EN` |
+| updates/europe, dlc/europe | CAFP, KWPP, HMEP, KGBP | `EN` → `US` | `EN` |
+| updates/north-america, dlc/north-america | BD3E, BC4E, KRJE, ALZE | `US` → `EN` | `US` |
+
+Live `e2e:lists` (first page, main list): updates/france 7/7, dlc/japan
+19/25.
+
+#### Sibling-region fallback: rejected
+
+Trying the same 3-letter stem with another region letter (a `J` code falling
+back to its `E`/`P` sibling) is **not** used. In the No-Intro 3DS DATs, 351
+stems have both a `J` and an `E`/`P` serial; 116 share the base name and most
+of the other 235 are translations of the same game, but not all:
+`CTR-P-AT8J` is *Tamagotchi no Doki Doki Dream Omisetchi* while `CTR-N-AT8P`
+is *Urban Trial Freestyle*. One counterexample is enough to show a stem does
+not identify a game, so a sibling cover could be another game's box.
+
 ### DSiWare (`TWL-N-XXXX`)
+
+Re-verified live on 2026-10-25 with KYRJ, K7TV, KAIV, KKGP, KZXJ and 20 codes
+from every DSiWare subcategory (KSRE, KD7E, KVWE, KJQJ, K6AJ, KK4J, KEHV,
+KEWV, KZPV, K3TK, KWPK, KIWU, KTFU, KHDF, KBID, KHDD, KCNI, KPBS, KNRH,
+Z2AT), probing `cover` in `US`, `EN`, `JA` and the letter's language folder
+(`DE`, `FR`, `IT`, `ES`, `NL`, `KO`, `AU`), then `coverS`, `coverM`,
+`coverHQ`, `box`:
+
+- **20 of 25 have art**, and each of those has **all five types** in exactly
+  **one** folder: `E` → `US` (3/3), `J` → `JA` (4/5, KZXJ none), every other
+  letter → `EN` (13/13 for `P`, `V`, `U`, `D`, `I`, `S`, `H`; KGHO (`O`) too).
+  No code was in a second folder, and no language folder (`DE`, `FR`, `IT`,
+  `ES`, `NL`, `AU`, `KO`) had anything.
+- Misses: KZXJ, K3TK, KWPK (Korean `K` codes never have art), KHDF, KHDD
+  (localized releases of KHDx), Z2AT (`unknown-other`).
+- So the chain is the single folder (`GAMETDB_DS.fallbackRegions` is empty):
+  the `EN`/`US` fallbacks only added misses. Title pages try `coverHQ` then
+  `cover`, list rows `cover`.
+- Live `e2e:lists`: dsiware/north-america 25/25.
 
 - `https://art.gametdb.com/ds/{type}/{region}/{gameCode}.{ext}`. For KQ9E:
   `cover` jpg, `coverS` **png**, `coverM` jpg, `coverHQ` jpg, `box` png all 200;

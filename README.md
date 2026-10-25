@@ -161,6 +161,7 @@ bun run check          # typecheck, unit tests (vitest + happy-dom) and a produc
 bun run build          # build into .output/chrome-mv3
 bun run zip            # build the release zip into .output/
 bun run gen:libretro   # regenerate public/libretro-3ds.json from libretro-database
+bun run gen:vc         # regenerate public/libretro-vc.json (crawls hShop's VC listings, HEADs Libretro)
 bun run e2e            # build, then drive the extension on the live site with Playwright
 bun run e2e:lists      # sweep every listing page with the built extension (long)
 bun run e2e:options    # check the settings page and the toolbar action
@@ -188,7 +189,7 @@ extract  →  sources  →  resolver  →  ui
 | Step | Files | What it does |
 |---|---|---|
 | **extract** | `src/lib/extract.ts`, `selectors.ts`, `lookup.ts` | Reads the title, product code, title ID and region from title pages, listing rows and Related Content rows. No product code (themes, homebrew) means nothing to do. |
-| **sources** | `src/lib/sources/gametdb.ts`, `libretro.ts`, `public/libretro-3ds.json` | Turns a game into ordered image URLs: GameTDB covers by region, Libretro box art, title screens and snaps by No-Intro name. |
+| **sources** | `src/lib/sources/gametdb.ts`, `libretro.ts`, `vc-map.ts`, `public/libretro-3ds.json`, `public/libretro-vc.json` | Turns a game into ordered image URLs: GameTDB covers by region, Libretro box art, title screens and snaps by No-Intro name (Virtual Console titles from their original system). |
 | **resolver** | `src/lib/resolver.ts`, `related.ts`, `probe.ts`, `queue.ts`, `cache.ts`, `settings.ts` | Tries the candidates in order (HEAD preflight first, first hit wins, 4 at a time at most), applies the base-title fallback and caches the result for the chosen time. |
 | **ui** | `src/ui/*`, `src/entrypoints/{title,list}.content/`, `options/` | Draws the box, the zoom viewer, the placeholder, the gallery, the row thumbnails and the settings page, with hShop's own colour tokens. |
 

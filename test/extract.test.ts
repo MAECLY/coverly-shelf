@@ -87,12 +87,31 @@ describe('regionFor', () => {
   });
 
   it('falls back to the hShop slug for unknown chars', () => {
-    expect(regionFor('Z', 'japan')).toBe('JA');
+    expect(regionFor('R', 'japan')).toBe('JA');
+    expect(regionFor('C', 'north-america')).toBe('US');
   });
 
   it('falls back to EN when nothing is known', () => {
-    expect(regionFor('Z', null)).toBe('EN');
-    expect(regionFor('Z', 'atlantis')).toBe('EN');
+    expect(regionFor('R', null)).toBe('EN');
+    expect(regionFor('U', 'atlantis')).toBe('EN');
+  });
+
+  it.each([
+    // Live GameTDB folders, 2026-10-25 (see config.ts).
+    ['W', 'ZH'],
+    ['Y', 'EN'],
+    ['Z', 'EN'],
+    ['V', 'EN'],
+    ['X', 'EN'],
+    ['A', 'EN'],
+    ['F', 'EN'],
+    ['S', 'EN'],
+    ['H', 'EN'],
+    ['D', 'DE'],
+    ['I', 'IT'],
+  ])('maps verified letter %s to %s whatever the slug', (char, region) => {
+    expect(regionFor(char, 'korea')).toBe(region);
+    expect(regionFor(char, 'canada')).toBe(region);
   });
 });
 
