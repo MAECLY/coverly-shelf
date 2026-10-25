@@ -221,7 +221,12 @@ class ArtTracker {
       perMark[mark] = Math.max(perMark[mark] ?? 0, open.size);
       if (open.size > peak) {
         peak = open.size;
-        at = [...open].map((j) => spans[j]!.label);
+        // Each open request with its window relative to the moment of the peak, in ms.
+        at = [...open].map((j) => {
+          const sp = spans[j]!;
+          const rel = (t: number): string => (Number.isFinite(t) ? (t - e.t).toFixed(1) : '…');
+          return `${sp.label} [${rel(sp.start)}, ${rel(sp.end)}]`;
+        });
       }
     }
     return { peak, perMark, at };
