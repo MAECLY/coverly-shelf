@@ -7,7 +7,7 @@ vi.mock('../src/lib/messages', () => ({
 }));
 
 const { requestImageHead } = await import('../src/lib/messages');
-const { headVerdict, probeImage, probeOutcome } = await import('../src/lib/probe');
+const { displaySrc, headVerdict, probeImage, probeOutcome } = await import('../src/lib/probe');
 const head = vi.mocked(requestImageHead);
 
 const ART = 'https://art.gametdb.com/3ds/coverHQ/US/AZEE.jpg';
@@ -138,5 +138,57 @@ describe('probeOutcome (direct mode)', () => {
     expect(peak).toBeGreaterThan(1);
     expect(outcomes.slice(0, 2)).toEqual(['hit', 'hit']);
     expect(outcomes.slice(2).every((o) => o === 'miss')).toBe(true);
+  });
+});
+
+describe('displaySrc (direct mode)', () => {
+  it('loads a HEAD-verified image once before handing out its URL', async () => {
+    const url = 'https://art.gametdb.com/3ds/coverHQ/US/WARM.jpg';
+    expect(await displaySrc(url)).toBe(url);
+    expect(await displaySrc(url)).toBe(url);
+    expect(imgSrcs).toEqual([url]);
+    expect(head).not.toHaveBeenCalled();
+  });
+
+  it('returns null when the image does not load after all', async () => {
+    imgResult = 'error';
+    expect(await displaySrc('https://thumbnails.libretro.com/x/Named_Snaps/Gone.png')).toBeNull();
+  });
+
+  it('hands out non-allow-listed URLs as they are (already loaded by the <img> probe)', async () => {
+    expect(await displaySrc(HSHOP_ICON)).toBe(HSHOP_ICON);
+    expect(imgSrcs).toEqual([]);
+  });
+
+  it('shares the 4-request cap with HEAD probes', async () => {
+    let active = 0;
+    let peak = 0;
+    head.mockImplementation(async () => {
+      active += 1;
+      peak = Math.max(peak, active);
+      await new Promise((r) => setTimeout(r, 5));
+      active -= 1;
+      return h(404, false);
+    });
+    class CountingImage extends FakeImage {
+      override set src(v: string) {
+        if (v) {
+          active += 1;
+          peak = Math.max(peak, active);
+          setTimeout(() => {
+            active -= 1;
+          }, 0);
+        }
+        super.src = v;
+      }
+      override get src(): string {
+        return super.src;
+      }
+    }
+    vi.stubGlobal('Image', CountingImage);
+    const probes = Array.from({ length: 6 }, (_, i) => probeOutcome(`https://art.gametdb.com/3ds/cover/US/P-${i}.jpg`));
+    const shows = Array.from({ length: 6 }, (_, i) => displaySrc(`https://thumbnails.libretro.com/x/Named_Snaps/S-${i}.png`));
+    await Promise.all([...probes, ...shows]);
+    expect(peak).toBeLessThanOrEqual(4);
   });
 });

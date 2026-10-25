@@ -10,7 +10,10 @@
  * without downloading any image bytes. Only when that HEAD gets no usable
  * answer (messaging failure, network error, a host that refuses HEAD) does the
  * probe fall back to loading the image in an <img>. HEAD and fallback share one
- * slot of the shared limiter, so the hosts still see at most 4 requests at once.
+ * slot of the shared limiter. A HEAD hit downloads nothing, so `displaySrc`
+ * loads the winning image once more through the same limiter before handing
+ * the URL to the UI: the hosts still see at most 4 requests at once, and the
+ * cover and thumbnails then render from the browser's image cache.
  */
 import { IMAGE_MODE } from './config';
 import { isAllowedImageUrl } from './image-url';
@@ -116,14 +119,36 @@ export async function probeImage(url: string): Promise<boolean> {
   return (await probeOutcome(url)) === 'hit';
 }
 
-/** The value to put in `img.src` for `url`, or null when it cannot be shown. Never rejects. */
+/** Direct mode only: url → outcome of loading it once for display. Only hits are remembered. */
+const warmed = new Map<string, Promise<ProbeOutcome>>();
+
+function warmDirect(url: string): Promise<ProbeOutcome> {
+  let pending = warmed.get(url);
+  if (!pending) {
+    pending = limit(() => loadDirect(url)).catch((): ProbeOutcome => 'error');
+    warmed.set(url, pending);
+    void pending.then((outcome) => {
+      if (outcome !== 'hit' && warmed.get(url) === pending) warmed.delete(url);
+    });
+  }
+  return pending;
+}
+
+/**
+ * The value to put in `img.src` for `url`, or null when it cannot be shown. In
+ * direct mode an artwork URL is loaded once through the shared limiter first
+ * (a HEAD hit has not downloaded it yet), so showing many images never exceeds
+ * the request cap; null when that load says the image is not there. Never rejects.
+ */
 export async function displaySrc(url: string): Promise<string | null> {
   try {
     if (IMAGE_MODE === 'background') {
       const res = await fetchData(url);
       return res.ok ? res.data : null;
     }
-    return url;
+    // Other URLs (hShop's own icon) were already loaded by the <img> probe.
+    if (!isAllowedImageUrl(url)) return url;
+    return (await warmDirect(url)) === 'miss' ? null : url;
   } catch {
     return null;
   }
