@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="manifest.open_in_tab" content="true" />
+    <title>Coverly Shelf settings</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="masthead">
+        <svg class="mark" viewBox="120 220 820 600" aria-hidden="true" focusable="false">
+          <defs>
+            <mask id="seam" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
+              <rect width="1024" height="1024" fill="#fff" />
+              <g fill="none" stroke="#000" stroke-width="28">
+                <rect x="540" y="299" width="302" height="404" rx="50" />
+                <rect x="165.8" y="311.9" width="300" height="400" rx="48" transform="rotate(12 465.8 711.9)" />
+              </g>
+            </mask>
+          </defs>
+          <g transform="translate(-30 12)" fill="currentColor">
+            <g mask="url(#seam)">
+              <path d="M576 299l64-64h222a44 44 0 0 1 44 44v360l-64 64z" />
+              <rect x="540" y="299" width="302" height="404" rx="50" />
+            </g>
+            <rect x="165.8" y="311.9" width="300" height="400" rx="48" transform="rotate(12 465.8 711.9)" />
+            <rect class="mark-shelf" x="172" y="737" width="740" height="56" rx="28" />
+          </g>
+        </svg>
+        <div>
+          <p class="brand">Coverly Shelf</p>
+          <h1 class="subtitle" data-i18n="optionsSubtitle">Settings</h1>
+        </div>
+      </header>
+
+      <main>
+        <section class="panel" aria-labelledby="cache-heading">
+          <h2 id="cache-heading" class="panel-title" data-i18n="cacheHeading">Cache</h2>
+
+          <figure class="shelf" aria-hidden="true">
+            <div class="spines" id="spines"></div>
+            <div class="plank"></div>
+          </figure>
+          <p class="usage" id="usage" data-i18n="usageLoading">Reading the cache…</p>
+          <p class="intro" data-i18n="cacheIntro"></p>
+
+          <fieldset class="retention">
+            <legend data-i18n="retentionLegend">Remember artwork for</legend>
+            <div class="segments" id="segments">
+              <label class="segment"><input type="radio" name="retention" value="session" /><span data-i18n="retentionSession">This session</span></label>
+              <label class="segment"><input type="radio" name="retention" value="1d" /><span data-i18n="retention1d">1 day</span></label>
+              <label class="segment"><input type="radio" name="retention" value="7d" /><span data-i18n="retention7d">7 days</span></label>
+              <label class="segment"><input type="radio" name="retention" value="30d" /><span data-i18n="retention30d">30 days</span></label>
+              <label class="segment"><input type="radio" name="retention" value="forever" /><span data-i18n="retentionForever">Until I clear it</span></label>
+            </div>
+            <p class="hint" id="retention-hint"></p>
+          </fieldset>
+
+          <div class="clear" id="clear">
+            <button type="button" class="btn btn-quiet" id="clear-start" data-i18n="clearButton">Clear cache</button>
+            <div class="confirm" id="clear-confirm" role="group" aria-labelledby="clear-confirm-text" hidden>
+              <p id="clear-confirm-text" data-i18n="clearConfirmText"></p>
+              <div class="confirm-actions">
+                <button type="button" class="btn btn-danger" id="clear-yes" data-i18n="clearConfirm">Clear cache</button>
+                <button type="button" class="btn btn-quiet" id="clear-no" data-i18n="clearCancel">Keep it</button>
+              </div>
+            </div>
+          </div>
+          <p class="status" id="status" role="status" aria-live="polite"></p>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <p id="version"></p>
+        <p>
+          <a href="https://github.com/MAECLY/coverly-shelf" target="_blank" rel="noopener noreferrer" data-i18n="footerSource">Source code</a>
+          <a href="https://coverly-shelf.maecly.com" target="_blank" rel="noopener noreferrer" data-i18n="footerWebsite">Website</a>
+        </p>
+        <p class="credits">
+          <span data-i18n="footerCredits">Artwork from</span>
+          <a href="https://www.gametdb.com" target="_blank" rel="noopener noreferrer">GameTDB</a>
+          <span data-i18n="footerCreditsAnd">and</span>
+          <a href="https://thumbnails.libretro.com" target="_blank" rel="noopener noreferrer">Libretro</a>
+        </p>
+      </footer>
+    </div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
