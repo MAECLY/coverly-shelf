@@ -1,7 +1,8 @@
 # Chrome Web Store assets
 
 Listing images for the store, plus the scripts that generate them. The
-listing text (summary, description, category) is in [LISTING.md](LISTING.md).
+listing text (summary, description, category) is in [LISTING.md](LISTING.md),
+and the privacy tab answers are in [PRIVACY.md](PRIVACY.md).
 
 ## Which file goes in which store field
 
