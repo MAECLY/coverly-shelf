@@ -5,6 +5,8 @@
  * - `image:fetch`    → a data URL for an image on one of the two artwork hosts.
  * - `image:head`     → HEAD preflight of an artwork URL (src/lib/background/head.ts).
  *
+ * A click on the toolbar button opens the settings page.
+ *
  * It uses `sendResponse` + `return true` rather than returning a Promise, which
  * works the same in Chrome (no polyfill since WXT 0.20) and Firefox.
  */
@@ -81,9 +83,20 @@ export function handleMessage(msg: unknown): Promise<unknown> | undefined {
   return undefined;
 }
 
+/** Opens the settings page; never throws (a failure only means the click does nothing). */
+export function openSettings(): void {
+  try {
+    void browser.runtime.openOptionsPage().catch(() => undefined);
+  } catch {
+    /* no options page API in this context */
+  }
+}
+
 export default defineBackground(() => {
   // Cache retention setting: session-area access, startup sweep, setting changes.
   initCacheRetention();
+  // MV3 `action`; the Firefox MV2 build turns it into `browser_action`.
+  (browser.action ?? browser.browserAction)?.onClicked.addListener(() => openSettings());
   browser.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     // Only our own extension pages and content scripts may ask.
     if (sender.id !== browser.runtime.id) return false;
