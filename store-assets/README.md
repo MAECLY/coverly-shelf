@@ -6,19 +6,25 @@ Listing images for the store, plus the scripts that generate them.
 
 - `images/screenshot-1..5.png` — store screenshots, 1280×800, 24-bit RGB (no alpha):
   1. the 3D box next to the game details (dark theme),
-  2. the screenshot viewer,
-  3. the light theme,
-  4. a digital (eShop) release,
-  5. a phone-width page with the cover above the details.
+  2. a listing page with a cover thumbnail on every row (dark theme),
+  3. the cover zoom: the box art full size over the page,
+  4. the settings page: how long artwork is cached, and Clear cache,
+  5. the light theme.
 - `images/promo-small.png` — small promo tile, 440×280.
 - `images/promo-marquee.png` — marquee promo tile, 1400×560.
-- `raw/` — 2× captures of the extension on live hShop title pages
-  (`/t/1814`, `/t/18761`, `/t/98`), which the composed images are built from.
+- `raw/` — 2× captures the composed images are built from: the title page
+  `/t/1814` (dark and light cards, cover zoom), the first five rows of
+  `/c/games/s/north-america` sorted by downloads (1280 px wide), and the
+  extension's own settings page (`options.html`, dark, with the cache filled
+  by those visits).
 - `scripts/capture.ts` — launches Playwright Chromium with the built extension
   loaded (branded Chrome Stable no longer honors `--load-extension`), waits until
-  the cover and the gallery have settled, and captures each state. hShop's
-  download QR code carries a live token, so it is hidden in every capture; the
-  fixed nav and footer are hidden in the card captures so they do not overlap.
+  the cover, the gallery or every list thumbnail in the captured area has
+  settled, and captures each state. hShop's download QR code carries a live
+  token, so it is hidden in every capture of an hShop page; the fixed nav and
+  footer are hidden in the card and list captures so they do not overlap. The
+  settings page is shown with the English catalogue whatever the system
+  language.
 - `scripts/compose.py` — Pillow composition: rounds and shadows the captures
   over a Coverly-palette gradient, adds copy, and flattens everything to exact
   store sizes in 24-bit RGB.
@@ -35,4 +41,5 @@ python3 store-assets/scripts/compose.py     # -> store-assets/images/
 ```
 
 The captures come from the live site, so the numbers on the page (downloads,
-dates) change between runs.
+dates, the order of the most downloaded games) and the cache readout on the
+settings page change between runs.
