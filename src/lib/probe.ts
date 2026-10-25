@@ -81,14 +81,20 @@ function loadDirect(url: string): Promise<ProbeOutcome> {
 /**
  * Turns a HEAD preflight into a probe outcome, or `fallback` when it says
  * nothing and the image itself must be loaded:
- * - no answer, a refused request (status 0) or a host without HEAD (405/501) → `fallback`;
+ * - no answer, a refused request (status 0), a host without HEAD (405/501)
+ *   or one that rejects HEAD (403) → `fallback`;
  * - an `ok` answer (2xx `image/*` on an allowed origin) → `hit`;
+ * - a 2xx that leaves out Content-Type or reports Content-Length 0 (common
+ *   for HEAD) says nothing definite → `fallback`, never a cached miss;
  * - a timeout, rate limit or server error (408/429/5xx) → `error`, so it is not cached as a miss;
- * - anything else (404, 200 text/html, off-host redirect, empty body) → `miss`.
+ * - anything else (404/410, 2xx with a non-image type, off-host redirect) → `miss`.
  */
 export function headVerdict(head: ImageHead | null): ProbeOutcome | 'fallback' {
-  if (!head || head.status === 0 || head.status === 405 || head.status === 501) return 'fallback';
+  if (!head || head.status === 0 || head.status === 403 || head.status === 405 || head.status === 501)
+    return 'fallback';
   if (head.ok) return 'hit';
+  const success = head.status >= 200 && head.status < 300;
+  if (success && (head.contentType === null || head.length === 0)) return 'fallback';
   if (head.status === 408 || head.status === 429 || head.status >= 500) return 'error';
   return 'miss';
 }

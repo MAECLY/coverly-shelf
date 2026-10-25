@@ -65,7 +65,11 @@ describe('headVerdict', () => {
     expect(headVerdict(h(200, true))).toBe('hit');
     expect(headVerdict(h(404, false, 'text/html'))).toBe('miss');
     expect(headVerdict(h(200, false, 'text/html'))).toBe('miss');
-    expect(headVerdict(h(403, false))).toBe('miss');
+    expect(headVerdict(h(403, false))).toBe('fallback');
+    expect(headVerdict(h(410, false, null))).toBe('miss');
+    // A 2xx HEAD without a media type or with Content-Length 0 is not a definite answer.
+    expect(headVerdict(h(200, false, null))).toBe('fallback');
+    expect(headVerdict({ ok: false, status: 200, contentType: 'image/jpeg', length: 0 })).toBe('fallback');
     expect(headVerdict(h(429, false))).toBe('error');
     expect(headVerdict(h(408, false))).toBe('error');
     expect(headVerdict(h(503, false))).toBe('error');
@@ -112,6 +116,14 @@ describe('probeOutcome (direct mode)', () => {
     head.mockRejectedValueOnce(new Error('port closed'));
     expect(await probeOutcome(ART)).toBe('hit');
     head.mockResolvedValueOnce(h(405, false, null));
+    expect(await probeOutcome(ART)).toBe('hit');
+    expect(imgSrcs).toEqual([ART, ART]);
+  });
+
+  it('loads the image when a HEAD 200 omits Content-Type, or the host answers HEAD with 403', async () => {
+    head.mockResolvedValueOnce(h(200, false, null));
+    expect(await probeOutcome(ART)).toBe('hit');
+    head.mockResolvedValueOnce(h(403, false, null));
     expect(await probeOutcome(ART)).toBe('hit');
     expect(imgSrcs).toEqual([ART, ART]);
   });
