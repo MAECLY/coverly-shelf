@@ -115,7 +115,10 @@ describe('cover zoom', () => {
     const dialog = root.querySelector<HTMLElement>('[role="dialog"]')!;
     expect(dialog).not.toBeNull();
     expect(dialog.classList.contains('is-art')).toBe(true);
-    expect(dialog.getAttribute('aria-label')).toBe('Batman box art');
+    expect(dialog.getAttribute('aria-label')).toBe('Box art viewer: Batman');
+    // The dialog and its only image get different names, so nothing is announced twice.
+    expect(dialog.querySelector('img')?.getAttribute('alt')).toBe('Batman box art');
+    expect(dialog.getAttribute('aria-label')).not.toBe(dialog.querySelector('img')?.getAttribute('alt'));
     expect(dialog.querySelector('img')?.getAttribute('src')).toBe(art.url);
     expect(dialog.querySelector('.cs-lightbox-close')?.getAttribute('aria-label')).toBe('Close box art');
     expect(dialog.querySelectorAll('.cs-lightbox-prev, .cs-lightbox-next')).toHaveLength(0);

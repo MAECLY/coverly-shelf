@@ -46,7 +46,7 @@ function enableZoom(stage: HTMLElement, title: string, src: string, zoom: CoverZ
       container: zoom.container,
       images: [{ src, alt: `${title} box art` }],
       index: 0,
-      label: `${title} box art`,
+      label: `Box art viewer: ${title}`,
       closeLabel: 'Close box art',
       variant: 'art',
       opener: stage,

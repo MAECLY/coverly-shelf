@@ -766,7 +766,9 @@ What the code does with the facts above, for reviewers.
   `role="button"`, `tabindex="0"`, `aria-label="View box art for {title} full
   size"`, `aria-haspopup="dialog"`, a zoom-in cursor and a green focus ring.
   Click, Enter or Space opens the art in the same lightbox as the screenshots
-  (`variant: 'art'`, smooth scaling, close button "Close box art"). Esc or a
+  (`variant: 'art'`, smooth scaling, sized by the art's own aspect ratio,
+  dialog named "Box art viewer: {title}", image alt "{title} box art", close
+  button "Close box art"). Esc or a
   backdrop click closes it, Tab stays inside it, and focus returns to the box.
   The URL is the resolved one, which is GameTDB `coverHQ` whenever it exists
   (the full-size chain tries it first in every region), else what the box
