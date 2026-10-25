@@ -1,0 +1,428 @@
+/*
+ * Shadow-root styles for the title-page cover and gallery.
+ *
+ * Every colour comes from hShop's own custom properties (docs/REFERENCE.md).
+ * They are declared on body.dark-mode / body.light-mode and inherit through the
+ * shadow boundary, so the UI follows hShop's theme toggle with no JS.
+ *
+ * Tailwind v4 notes:
+ * - Only the theme and preflight layers are imported. The utilities layer
+ *   emits `@property --tw-*` rules, which WXT moves out of the shadow root into
+ *   a <style> in hShop's own document. Without it nothing leaves the shadow.
+ *   Every rule below is plain CSS on `cs-*` classes.
+ * - WXT rewrites `:root` to `:host`, so theme variables stay in the shadow.
+ * - Preflight runs inside the shadow root only, so it never touches hShop.
+ */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+
+@theme inline {
+  --color-*: initial;
+  --color-green: var(--green);
+  --color-yellow: var(--yellow);
+  --color-blue: var(--blue);
+  --color-red: var(--red);
+  --color-pink: var(--pink);
+  --color-orange: var(--orange);
+  --color-bg: var(--bg);
+  --color-card: var(--clevel-1);
+  --color-card-hover: var(--clevel-1-hover);
+  --color-row: var(--clevel-2);
+  --color-row-hover: var(--clevel-2-hover);
+  --color-deep: var(--clevel-3);
+  --color-bw: var(--bw);
+  --color-wb: var(--wb);
+
+  --radius-card: 10px;
+  --radius-btn: 5px;
+
+  --spacing-main: var(--main-spacing, 25px);
+  --spacing-half: var(--half-spacing, 12.5px);
+  --spacing-quarter: var(--quarter-spacing, 6.25px);
+
+  /* hShop loads Nunito with @font-face; we only name it. */
+  --font-sans: "Nunito", sans-serif;
+}
+
+/* ---------------------------------------------------------------- hosts */
+
+:host {
+  /* hShop sets its text colour on p, headings and links, not on body, so name the token
+     instead of inheriting the browser default from .basic-meta. */
+  font-family: "Nunito", sans-serif;
+  color: var(--wb);
+  line-height: normal;
+  --cs-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --cs-fast: 160ms;
+  /* Spine and drop shadow: hShop has no shadow token. --clevel-3 is the
+     darkest surface in both themes (#202020 / #9f9f9f); --bw would turn
+     into a white glow in light mode. TODO(reference): revisit if hShop adds one. */
+  --cs-shade: var(--clevel-3);
+}
+
+/* Cover host: first child of .basic-meta, floated so the table wraps it. */
+:host(coverly-shelf-cover) {
+  display: block;
+  float: right;
+  width: clamp(150px, 30%, 260px);
+  margin: 0 0 var(--half-spacing) var(--main-spacing);
+}
+
+/* Gallery host: sibling of hShop's .extended-meta-entry blocks. */
+:host(coverly-shelf-gallery) {
+  display: block;
+  clear: both;
+  margin-top: var(--main-spacing);
+}
+:host(coverly-shelf-gallery[data-trailing]) {
+  margin-bottom: var(--main-spacing);
+}
+
+@media (max-width: 767.98px) {
+  :host(coverly-shelf-cover) {
+    display: block;
+    float: none;
+    width: min(260px, 70%);
+    margin: 0 auto var(--half-spacing);
+  }
+}
+
+/* ---------------------------------------------------------------- shared */
+
+.cs-link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  transition: color var(--cs-fast) ease;
+}
+.cs-link:hover {
+  color: var(--green);
+}
+
+.cs-credit {
+  margin: 6px 0 0;
+  font-size: 0.75em;
+  color: color-mix(in srgb, var(--wb) 72%, transparent);
+}
+
+:where(button, a):focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------- cover */
+
+.cs-cover {
+  margin: 0;
+}
+
+.cs-stage {
+  perspective: 900px;
+  /* The eye sits right of centre so the right-hand side face (the spine) is in view. */
+  perspective-origin: 70% 50%;
+  /* Room for the tilt, the spine and the shadow so nothing is clipped by the card. */
+  padding: 4px 12px 12px 6px;
+}
+
+.cs-box {
+  position: relative;
+  aspect-ratio: 1.11 / 1; /* GameTDB coverHQ 768×680, cover 160×144 */
+  transform: rotateY(-18deg);
+  transform-style: preserve-3d;
+  transform-origin: 50% 50%;
+  border-radius: 4px 6px 6px 4px;
+  box-shadow:
+    0 1px 2px color-mix(in srgb, var(--cs-shade) 55%, transparent),
+    10px 14px 24px -8px color-mix(in srgb, var(--cs-shade) 70%, transparent);
+  transition: transform 180ms var(--cs-ease);
+}
+
+/*
+ * The case spine: a real side face hinged on the RIGHT edge. rotateY(-18deg)
+ * brings the right edge toward the viewer, so this is the side that shows;
+ * rotateY(-90deg) swings it back from that edge, behind the front face's
+ * plane, like the depth of a real case (about 10% of its width).
+ */
+.cs-box::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 10%;
+  transform-origin: right center;
+  transform: rotateY(-90deg);
+  border-radius: 0 2px 2px 0;
+  background: linear-gradient(
+    to left,
+    var(--cs-shade),
+    color-mix(in srgb, var(--cs-shade) 60%, var(--clevel-2))
+  );
+}
+
+.cs-cover:hover .cs-box {
+  transform: rotateY(-9deg);
+}
+
+.cs-face {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  background: var(--clevel-2);
+}
+
+/* Hinge shading on the front, so the box still reads as a case when 3D is flattened. */
+.cs-face::before,
+.cs-face::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+.cs-face::before {
+  right: auto;
+  width: 6%;
+  background: linear-gradient(
+    to right,
+    color-mix(in srgb, var(--cs-shade) 75%, transparent),
+    transparent
+  );
+}
+/* Light falling on the plastic sleeve (a lighting effect, not a palette colour). */
+.cs-face::after {
+  background: linear-gradient(
+    115deg,
+    color-mix(in srgb, white 16%, transparent) 0%,
+    transparent 38%
+  );
+}
+
+.cs-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+.cs-cover.is-loaded .cs-art {
+  opacity: 1;
+}
+
+.cs-skeleton {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    var(--clevel-2) 30%,
+    var(--clevel-2-hover) 50%,
+    var(--clevel-2) 70%
+  );
+  background-size: 300% 100%;
+  animation: cs-shimmer 1.4s linear infinite;
+}
+@keyframes cs-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: 0 0; }
+}
+
+.cs-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8% 10% 8% 14%;
+  /* Mostly neutral surfaces with a hint of hShop green, so --wb text stays AA
+     in both themes (≥ 4.5:1 on the darkest stop, ≥ 3:1 for the large initials). */
+  background:
+    linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--clevel-2) 82%, var(--green)) 0%,
+      color-mix(in srgb, var(--clevel-2) 86%, var(--blue)) 45%,
+      var(--clevel-3) 100%
+    );
+  color: var(--wb);
+  text-align: center;
+}
+.cs-placeholder-initials {
+  font-weight: 900;
+  font-size: 2.6em;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+.cs-placeholder-title {
+  margin-top: 0.6em;
+  font-weight: bold;
+  font-size: 0.7em;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.cs-cover > .cs-credit {
+  text-align: center;
+}
+
+/* ---------------------------------------------------------------- gallery */
+
+/* Matches hShop's `<h3 class="bold">Description:</h3>`. */
+.cs-heading {
+  margin: 0 0 8px;
+  font-size: 1.17em;
+  font-weight: bold;
+}
+
+.cs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: var(--half-spacing);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cs-thumb {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  padding: var(--quarter-spacing);
+  border-radius: 10px;
+  background: var(--clevel-2);
+  cursor: zoom-in;
+  transition: background-color var(--cs-fast) ease;
+}
+.cs-thumb:hover {
+  background: var(--clevel-2-hover);
+}
+.cs-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* 3DS shots may stack both screens */
+}
+
+.cs-gallery > .cs-credit {
+  margin-top: var(--half-spacing);
+}
+
+/* ---------------------------------------------------------------- lightbox */
+
+.cs-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  background: color-mix(in srgb, var(--bw) 84%, transparent);
+  animation: cs-fade 180ms ease;
+}
+.cs-lightbox:focus {
+  outline: none;
+}
+
+.cs-lightbox-panel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 56px 64px;
+}
+
+.cs-lightbox-figure {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--half-spacing);
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.cs-lightbox-img {
+  /* Upscale the 400×240 (or stacked 400×480) snaps; contain letterboxes on narrow screens. */
+  height: min(calc(100vh - 160px), 600px);
+  width: auto;
+  /* Fit the panel's content box (64px side padding) so the prev/next buttons never cover the shot. */
+  max-width: min(calc(100vw - 128px), 1000px);
+  object-fit: contain;
+  border-radius: 10px;
+  background: var(--clevel-2);
+  /* Native-resolution snaps: keep the pixels crisp when upscaled. */
+  image-rendering: pixelated;
+}
+.cs-lightbox-img.is-broken {
+  visibility: hidden;
+}
+
+.cs-lightbox-counter {
+  margin: 0;
+  font-size: 0.95em;
+  font-weight: bold;
+}
+
+.cs-lightbox-btn {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 5px;
+  background: var(--clevel-1);
+  color: var(--wb);
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color var(--cs-fast) ease;
+}
+.cs-lightbox-btn:hover {
+  background: var(--clevel-1-hover);
+}
+.cs-lightbox-close {
+  top: 12px;
+  right: 12px;
+}
+.cs-lightbox-prev,
+.cs-lightbox-next {
+  top: 50%;
+  translate: 0 -50%;
+}
+.cs-lightbox-prev { left: 12px; }
+.cs-lightbox-next { right: 12px; }
+
+@keyframes cs-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (max-width: 767.98px) {
+  .cs-lightbox-panel {
+    padding: 64px 8px 72px;
+  }
+  .cs-lightbox-img {
+    max-width: calc(100vw - 16px);
+  }
+  .cs-lightbox-prev,
+  .cs-lightbox-next {
+    top: auto;
+    bottom: 12px;
+    translate: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+  .cs-cover:hover .cs-box {
+    transform: rotateY(-18deg);
+  }
+}

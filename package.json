@@ -17,12 +17,14 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "gen:libretro": "bun scripts/gen-libretro-map.ts",
-    "e2e": "bun scripts/e2e.ts"
+    "e2e": "bun scripts/e2e.ts",
+    "check": "bun run typecheck && bun run test && bun run build"
   },
   "devDependencies": {
     "@tailwindcss/vite": "4.3.3",
     "@types/node": "^26.6.5",
     "happy-dom": "^21.0.4",
+    "playwright": "^1.64.1",
     "tailwindcss": "4.3.3",
     "typescript": "^7.0.2",
     "vitest": "5.0.5",

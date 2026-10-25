@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+<title>Coverly Shelf favicon</title>
+<style>.t{fill:#0E5E6F}.s{stroke:#0E5E6F}.p{fill:#FBFBF9}.m{fill:#E6C171}@media (prefers-color-scheme:dark){.t{fill:#205F6A}.s{stroke:#205F6A}.p{fill:#ECEEEA}}</style>
+<rect width="1024" height="1024" rx="224" class="t"/>
+<g transform="matrix(1.06 0 0 1.06 -48 -60)"><g transform="translate(-30 12)">
+<path d="M576 299l64-64h222a44 44 0 0 1 44 44v360l-64 64z" class="p"/>
+<rect x="540" y="299" width="302" height="404" rx="50" class="p s" stroke-width="40" paint-order="stroke"/>
+<rect x="165.8" y="311.9" width="300" height="400" rx="48" class="p s" stroke-width="40" paint-order="stroke" transform="rotate(12 465.8 711.9)"/>
+<rect x="172" y="737" width="740" height="64" rx="32" class="m"/>
+</g></g>
+</svg>

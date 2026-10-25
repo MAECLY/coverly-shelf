@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+<title>Coverly Shelf mark (light backgrounds)</title>
+<defs><mask id="seam" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024"><rect width="1024" height="1024" fill="#fff"/><g fill="none" stroke="#000" stroke-width="28"><rect x="540" y="299" width="302" height="404" rx="50"/><rect x="165.8" y="311.9" width="300" height="400" rx="48" transform="rotate(12 465.8 711.9)"/></g></mask></defs>
+<g id="mark" transform="translate(-30 12)" fill="#0E5E6F">
+<g mask="url(#seam)"><path d="M576 299l64-64h222a44 44 0 0 1 44 44v360l-64 64z"/><rect x="540" y="299" width="302" height="404" rx="50"/></g>
+<rect x="165.8" y="311.9" width="300" height="400" rx="48" transform="rotate(12 465.8 711.9)"/><rect x="172" y="737" width="740" height="56" rx="28"/>
+</g>
+</svg>
