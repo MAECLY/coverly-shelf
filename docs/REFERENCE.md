@@ -516,12 +516,20 @@ No other letter is used. Region letters: `J` 287, `E` 197, `P` 163, `A` 39
   Betas, protos, demos and re-releases (e-Reader, Evercade, Switch Online,
   Classic Mini, collections) are never used. Every kept name was HEAD-checked
   on `thumbnails.libretro.com/{system}/Named_Boxarts/` (one request at a time).
-- Result: **280 of 691** titles (41%).
+- A thumbnail that exists can still show another product: `(… Virtual
+  Console)` dumps are often filled with another release's box. The generator
+  prints every chosen VC-tagged name for a visual review, and names that fail
+  it go to `VC_ART_DENYLIST` (`src/lib/sources/vc-map.ts`), which the
+  generator never picks. Reviewed 2026-10-25: PAJE, TBNP, TD5P show their own
+  game; TAFE (`Donkey Kong - Original Edition (USA, Europe) (3DS Virtual
+  Console)`) shows the PAL *Donkey Kong Classics* box, so it is denied and
+  TAFE keeps the placeholder.
+- Result: **279 of 691** titles (40%).
 
 | hShop region | Titles | Verified | Exact name, no thumbnail | No exact name |
 |---|---|---|---|---|
 | europe | 163 | 108 (66%) | 1 | 54 |
-| north-america | 197 | 154 (78%) | 1 | 42 |
+| north-america | 197 | 153 (78%) | 1 | 43 |
 | japan | 290 | 17 (6%) | 4 | 269 |
 | korea | 3 | 1 | 0 | 2 |
 | france, germany | 4 | 0 | 0 | 4 |
@@ -532,7 +540,7 @@ No other letter is used. Region letters: `J` 287, `E` 197, `P` 163, `A` 39
 | Game Boy Advance | 30 | 27 (90%) |
 | Game Gear | 54 | 26 (48%) |
 | Game Boy | 179 | 79 (44%) |
-| NES | 241 | 87 (36%) |
+| NES | 241 | 86 (36%) |
 | Game Boy Color | 103 | 37 (36%) |
 | SNES | 80 | 24 (30%) |
 | PC Engine | 4 | 0 |
