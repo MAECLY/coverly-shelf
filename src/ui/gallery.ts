@@ -14,6 +14,11 @@ export interface GalleryOptions {
   /** Where the lightbox overlay is appended; defaults to the gallery's own root node. */
   overlayContainer?: ShadowRoot | HTMLElement;
   doc?: Document;
+  /**
+   * Called once when every thumbnail has failed and the section removed itself,
+   * so the caller can drop its host too and leave the page as it was.
+   */
+  onEmpty?: () => void;
 }
 
 /**
@@ -21,13 +26,15 @@ export interface GalleryOptions {
  * grid of thumbnail buttons that open a lightbox. Returns null for an empty
  * list so callers inject nothing at all.
  */
-export function createGallery({ title, images, overlayContainer, doc = document }: GalleryOptions): HTMLElement | null {
+export function createGallery({ title, images, overlayContainer, doc = document, onEmpty }: GalleryOptions): HTMLElement | null {
   if (images.length === 0) return null;
 
   const shots = images.map((image, i) => ({
     src: image.src ?? image.url,
     alt: `${title} — screenshot ${i + 1}`,
   }));
+  /** Shots whose thumbnail has not failed; the lightbox only ever walks these. */
+  const live = [...shots];
   let lightbox: LightboxHandle | null = null;
 
   const grid = h('ul', { class: 'cs-grid', role: 'list' }, [], doc);
@@ -56,15 +63,23 @@ export function createGallery({ title, images, overlayContainer, doc = document 
     // A thumbnail that fails to load disappears instead of showing a broken icon.
     img.addEventListener('error', () => {
       item.remove();
-      if (grid.childElementCount === 0) section.remove();
+      const at = live.indexOf(shot);
+      if (at !== -1) live.splice(at, 1);
+      if (grid.childElementCount === 0) {
+        lightbox?.close();
+        section.remove();
+        onEmpty?.();
+      }
     }, { once: true });
     button.addEventListener('click', () => {
+      const index = live.indexOf(shot);
+      if (index === -1) return;
       lightbox?.close();
       const container = overlayContainer ?? (section.getRootNode() instanceof ShadowRoot ? (section.getRootNode() as ShadowRoot) : section);
       lightbox = openLightbox({
         container,
-        images: shots,
-        index: i,
+        images: live.slice(),
+        index,
         label: `${title} screenshots`,
         opener: button,
         onClose: () => {

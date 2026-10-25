@@ -129,6 +129,44 @@ describe('gallery', () => {
     const dialog = root.querySelector('[role="dialog"]');
     expect(dialog?.getAttribute('aria-modal')).toBe('true');
   });
+
+  const three = [
+    { url: 'https://thumbnails.libretro.com/a.png', source: 'libretro', kind: 'title' },
+    { url: 'https://thumbnails.libretro.com/b.png', source: 'libretro', kind: 'snap' },
+    { url: 'https://thumbnails.libretro.com/c.png', source: 'libretro', kind: 'snap' },
+  ] as const;
+
+  it('leaves failed thumbnails out of the lightbox and its counter', () => {
+    const root = shadowHost();
+    const el = createGallery({ title: 'Excitebike', images: three })!;
+    root.append(el);
+    el.querySelectorAll('img')[1]!.dispatchEvent(new Event('error'));
+    const buttons = el.querySelectorAll<HTMLButtonElement>('button.cs-thumb');
+    expect(buttons).toHaveLength(2);
+    buttons[1]!.click();
+    const dialog = root.querySelector<HTMLElement>('[role="dialog"]')!;
+    const img = () => dialog.querySelector('.cs-lightbox-img')!;
+    expect(img().getAttribute('alt')).toBe('Excitebike — screenshot 3');
+    expect(dialog.querySelector('.cs-lightbox-counter')?.textContent).toBe('2 / 2');
+    key(dialog, 'ArrowRight');
+    expect(img().getAttribute('alt')).toBe('Excitebike — screenshot 1');
+    key(dialog, 'ArrowRight');
+    expect(img().getAttribute('alt')).toBe('Excitebike — screenshot 3');
+  });
+
+  it('removes itself and calls onEmpty once every thumbnail failed', () => {
+    let empty = 0;
+    const root = shadowHost();
+    const el = createGallery({ title: 'Excitebike', images: three, onEmpty: () => empty++ })!;
+    root.append(el);
+    const imgs = el.querySelectorAll('img');
+    imgs[0]!.dispatchEvent(new Event('error'));
+    imgs[1]!.dispatchEvent(new Event('error'));
+    expect(empty).toBe(0);
+    imgs[2]!.dispatchEvent(new Event('error'));
+    expect(empty).toBe(1);
+    expect(el.isConnected).toBe(false);
+  });
 });
 
 describe('lightbox', () => {
