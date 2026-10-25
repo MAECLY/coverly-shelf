@@ -83,8 +83,9 @@ foco no sale del visor hasta que lo cierras.
 **Primero la región correcta.** La portada sale de la región del propio juego
 (leída de su código de producto, por ejemplo `CTR-P-AZEE` → EE. UU.), después
 de las otras regiones en inglés y después de las carátulas de Libretro. Los
-juegos de DSiWare usan las portadas de DS de GameTDB. Si no
-hay nada, ocupa su sitio una portada sencilla con las iniciales del juego, así
+juegos de DSiWare usan las portadas de DS de GameTDB. Los de Consola Virtual
+que GameTDB no tiene usan la carátula verificada de la edición original en
+Libretro. Si no hay nada, ocupa su sitio una portada sencilla con las iniciales del juego, así
 la página nunca muestra una imagen rota.
 
 **También los juegos solo digitales.** Los juegos de eShop (`CTR-N-…`) tienen

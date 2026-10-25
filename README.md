@@ -77,7 +77,9 @@ focus stays inside the viewer until you close it.
 **The right region first.** The cover comes from the game's own region
 (read from its product code, for example `CTR-P-AZEE` → US), then from the
 other English regions, then from Libretro's box art. DSiWare titles use
-GameTDB's DS covers. If nothing is found, a
+GameTDB's DS covers. Virtual Console titles that GameTDB lacks fall back to
+the verified box art of the original system's release on Libretro. If nothing
+is found, a
 plain cover with the game's initials stands in, so the page never shows a
 broken image.
 
