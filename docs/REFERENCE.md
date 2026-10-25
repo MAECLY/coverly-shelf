@@ -385,8 +385,8 @@ Probed with `AZEE` (retail), `AREE` (retail), `SAEE` (digital, `N`):
   code tried exists under `EN` (e.g. AD3F, AKKS, AL8I, AKKH). Some also have a
   localized cover: `DE` for `D` (AA3D, ADPD, AF2D, AF8D, AFJD) and `IT` for `I`
   (AE2I, AEEI, AKKI, AWTI). `FR`, `ES` and `NL` had no hit for `F`/`S`/`H`
-  codes, so those map to `EN`. `R` (APNR) returned 404 in `RU` and `EN`;
-  `U`/`C`/`W`/`Z` remain unverified.
+  codes, so those map to `EN`. `R` (APNR) returned 404 in `RU` and `EN`.
+  The other letters are covered in [Coverage](#coverage).
 - 404 for missing art, `Cache-Control: max-age=2592000`, no CORS headers (fine
   for `<img>`, not readable with `fetch` from the page).
 - Cover ratio: 160/144 ≈ 1.11, 768/680 ≈ 1.13 — wider than tall.
@@ -404,3 +404,124 @@ Probed with `AZEE` (retail), `AREE` (retail), `SAEE` (digital, `N`):
 - One serial can map to several names (e.g. `CTR-N-SAEE` → `(Rev 1) (eShop)`
   and `(eShop)`), so the generated map stores a short, ordered list.
 - Thumbnail file names replace `&*/:\`<>?\|` with `_`.
+
+## Coverage
+
+Measured 2026-10-25 for the listing pages. Sample: the first 10 rows (fewer
+when the subcategory is smaller) of all 19 `/c/games` subcategories plus
+`/c/virtual-console`, `/c/dsiware`, `/c/updates` and `/c/dlc` region
+subcategories: 332 rows. DLC and update rows carry the parent game's code
+(`CTR-M-ABEP-00`, `CTR-U-AX3P`), so they resolve like the game.
+
+How "exists" was decided: GameTDB banned this machine's IP after a burst of
+HEAD requests (see the rate-limit note below), so the bulk check used the
+Wayback Machine CDX index of `art.gametdb.com/{3ds,ds}/cover/` (6000 3DS and
+≈1100 DSiWare `K…` covers archived with status 200) as a **lower bound**, plus
+live checks through an external HTTP checker for every code quoted here and in
+`src/lib/config.ts`. Libretro was checked against the full directory listings
+of `thumbnails.libretro.com`.
+
+| Rows | n | Chain before | Chain after `1fb2a37` + DSiWare |
+|---|---|---|---|
+| games/europe, france, germany, italy, spain, korea, kiosk-demos | 70 | 70 | 70 |
+| games/north-america | 10 | 9 | 9 |
+| games/japan | 10 | 5 | 5 |
+| games/taiwan | 10 | 7 | 9 (`W` → `ZH`) |
+| games/world | 10 | 7 | 7 |
+| games/digital-demos | 10 | 8 | 8 |
+| games/unknown-other | 10 | 1 | 1 (debug builds, E3 videos) |
+| games/australia, canada, china, netherlands, russia, united-kingdom | 12 | 9 | 9 |
+| virtual-console | 47 | 42 | 42 |
+| updates | 30 | 29 | 29 |
+| dlc | 49 | 42 | 44 |
+| dsiware | 64 | 0 | 41 (GameTDB `ds`) |
+| **Total** | **332** | **229 (69%)** | **274 (83%)** |
+
+Whole eShop catalog (hax0kartik/3dsdb lists, `CTR/KTR-N/P` codes, same
+lower-bound oracle): US 1071/1200 (89%), GB 1034/1129 (92%), JP 1053/1692
+(62%), KR 218/232 (94%), TW 85/99 → 93/99 (86% → 94%) with `W` → `ZH`.
+
+### Region letters (3DS, `cover`)
+
+| Letter | Folder | Live 200s | Notes |
+|---|---|---|---|
+| `W` | `ZH` | ABRW, ADAW, KC2W, AJJW | 404 in `ZHTW`, `TW`, `EN`, `US`, `JA`. All 26 archived `W` codes are only in `ZH`. |
+| `V` | `EN` | BLJV, BTMV, ALEV | |
+| `X` | `EN` | BLSX, BLJX | 404 in `ES` |
+| `Y` | `EN` | BLSY, KFPY | 404 in `FR`, `KO` |
+| `A` | `EN` | BNDA, A2AA, KRXA | |
+| `Z` | `EN` (via fallback) | AAHZ, ARMZ, BMMZ | ALBZ, ABZZ, AMQZ have nothing anywhere; left unmapped so the slug fallback still runs |
+| `C` | — | — | JMKC, JREC 404 in `ZH`, `EN`, `JA`; no `C` code archived |
+
+Folders that exist on GameTDB 3DS (archived counts): `EN` 1552, `US` 1197,
+`JA` 1063, `DE` 505, `IT` 319, `FR` 293, `ES` 216, `NL` 156, `AU` 148, `KO` 127,
+`PT` 102, `SE` 61, `DK` 59, `other` 52, `RU` 49, `FI` 47, `ZH` 31, `NO` 22.
+`ZHTW`, `ZHCN`, `TW`, `CN` do not exist. Every code found in a localized
+folder (`DE`, `FR`, …) is also in `EN` or `US`, so those folders never add a hit.
+
+### DSiWare (`TWL-N-XXXX`)
+
+- `https://art.gametdb.com/ds/{type}/{region}/{gameCode}.{ext}`. For KQ9E:
+  `cover` jpg, `coverS` **png**, `coverM` jpg, `coverHQ` jpg, `box` png all 200;
+  `coverS` as jpg is 404.
+- Region folders: `E` → `US` (KF8E), `J` → `JA` (KG4J), every other letter →
+  `EN` (KASV, KMQF, KBID, KFMU, KNRH, KKGP; 404 in `FR`, `DE`, `AU`, `NL`).
+  Korean `K` codes (KZIK, KDUK…) have no art: korea DSiWare is 0/10.
+- Libretro does not help: `Nintendo - Nintendo DSi.dat` has 1060 entries keyed
+  by bare game code (`serial "KJUJ"`), but only 13 DSi thumbnails exist and 9
+  of the DAT names match a `Nintendo - Nintendo DS` boxart.
+
+### Thumbnail sizes for list rows
+
+| URL | Pixels | Bytes |
+|---|---|---|
+| `3ds/cover/US/AZEE.jpg` | 160×144 | 11 135 |
+| `3ds/coverM/US/AZEE.jpg` | 400×352 | 52 707 |
+| `3ds/coverHQ/US/AZEE.jpg` | 768×680 | 188 576 |
+| `ds/cover/US/K29E.jpg` | 160×144 | 10 885 |
+| `ds/coverS/US/KQ9E.png` | 128×115 | 13 432 |
+| `ds/coverM/US/K29E.jpg` | 400×352 | 44 428 |
+| `ds/coverHQ/US/K29E.jpg` | 768×680 | 108 590 |
+
+List rows should probe and show **`cover` only** (≈11 KB, sharp up to ~80 px
+CSS height on 2× screens). `coverHQ` is ~17× heavier and gives no extra hit:
+both types exist for the same codes.
+
+### Libretro on listing pages
+
+- `public/libretro-3ds.json` has 2632 serials; 1698 of them have a
+  `Named_Boxarts` file. **None** of the 720 eShop-only serials do: the 3DS
+  thumbnail set has no `(eShop)` names at all, so Libretro only helps retail
+  rows that GameTDB lacks. `Nintendo - New Nintendo 3DS (Digital).dat` has no
+  serials. `thumbnails.libretro.com/Nintendo - Nintendo 3DS (Digital)/` is empty.
+- Libretro still answers when GameTDB is unreachable, which makes it the only
+  fallback during a GameTDB ban.
+
+### Rate limit (important)
+
+`art.gametdb.com` dropped all TCP connections from this machine for ≈50 min
+after roughly a thousand HEAD requests at concurrency 8 (and again minutes
+after it came back, while other agents were browsing hShop with the
+extension). External checkers reached it fine at the same time, so it is a
+per-IP ban, and while it lasts every cover on every page fails. A listing page
+has up to 25 + 50 rows and today's chain tries up to 6 GameTDB URLs per row, so
+one page view can mean ~450 requests. Keep it far below that: `cover` only,
+one probe per row in the common case (own region first), lazy probes for
+rows in view, the top list reusing the main list's results, misses cached for
+the TTL, and no more than `MAX_CONCURRENT_REQUESTS` in flight.
+
+### Sources checked and rejected
+
+- **Nintendo eShop CDNs** (`samurai.ctr.shop.nintendo.net`,
+  `kanzashi-wup.cdn.nintendo.net`, `idbe-ctr.cdn.nintendo.net`): they answer,
+  but with Nintendo's private CA (`unknown CA` TLS alert), so a browser `<img>`
+  fails; IDBE icons are also AES-encrypted. The icons are archived on the
+  Wayback Machine (`https://web.archive.org/web/2022id_/https://kanzashi-wup.cdn.nintendo.net/i/{hash}.jpg`,
+  72×72 or 384×384), and samurai maps the eShop UID from 3dsdb to that hash.
+  Verified for JCPJ, J2YJ, JLEJ, JU9J, KDHJ (all GameTDB misses), but it means
+  scraping Nintendo's private API at build time, hotlinking archive.org, and
+  showing Nintendo-hosted icons rather than box art: not used.
+- **hax0kartik/3dsdb**: JSON lists (title ID, eShop UID, product code, name)
+  per region, no images and no licence. Useful only as a key source.
+- **hShop**: pages show no title icons (no `<img>` besides its own UI).
+- No public, title-ID-indexed 3DS icon set on GitHub or a CDN was found.
