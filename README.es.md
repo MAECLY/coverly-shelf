@@ -14,6 +14,7 @@
 </p>
 
 <p align="center">
+  <a href="https://chromewebstore.google.com/detail/coverly-shelf/ahafjflkfcijeoaggjhjpgekbchjpfie"><img alt="Versión en la Chrome Web Store" src="https://img.shields.io/chrome-web-store/v/ahafjflkfcijeoaggjhjpgekbchjpfie?style=flat-square&label=Chrome%20Web%20Store&color=0E5E6F&labelColor=1B1E1B"></a>
   <a href="https://github.com/MAECLY/coverly-shelf/releases/latest"><img alt="Última versión" src="https://img.shields.io/github/v/release/MAECLY/coverly-shelf?style=flat-square&label=versi%C3%B3n&color=0E5E6F&labelColor=1B1E1B"></a>
   <a href="https://github.com/MAECLY/coverly-shelf/releases"><img alt="Descargas" src="https://img.shields.io/github/downloads/MAECLY/coverly-shelf/total?style=flat-square&color=0E5E6F&labelColor=1B1E1B&label=descargas"></a>
   <a href="https://github.com/MAECLY/coverly-shelf/stargazers"><img alt="Estrellas en GitHub" src="https://img.shields.io/github/stars/MAECLY/coverly-shelf?style=flat-square&color=0E5E6F&labelColor=1B1E1B&label=estrellas"></a>
@@ -150,8 +151,16 @@ no muestra código de producto. La
 
 ## Instalación
 
-Coverly Shelf aún no está en la Chrome Web Store. Se instala desde una versión
-publicada:
+Instala Coverly Shelf desde la
+[Chrome Web Store](https://chromewebstore.google.com/detail/coverly-shelf/ahafjflkfcijeoaggjhjpgekbchjpfie). Funciona en Chrome, Edge y Brave, y el navegador la
+mantiene actualizada por sí solo.
+
+Después abre cualquier juego o listado en [hShop](https://hshop.erista.me/),
+por ejemplo una página bajo `/t/` o `/c/`.
+
+### Instalación manual
+
+Si prefieres no usar la tienda, carga una versión publicada a mano:
 
 1. Descarga `coverly-shelf-<versión>-chrome.zip` de la
    [última versión](https://github.com/MAECLY/coverly-shelf/releases/latest) y
@@ -159,11 +168,10 @@ publicada:
 2. Abre `chrome://extensions` (o `edge://extensions`, `brave://extensions`) y
    activa el **Modo de desarrollador**.
 3. Pulsa **Cargar descomprimida** y elige la carpeta descomprimida.
-4. Abre cualquier juego o listado en [hShop](https://hshop.erista.me/), por
-   ejemplo una página bajo `/t/` o `/c/`.
 
-Para actualizar, descomprime la nueva versión sobre la misma carpeta y pulsa el
-botón de recargar en la tarjeta de la extensión.
+La instalación manual no se actualiza sola. Para actualizar, descomprime la
+nueva versión sobre la misma carpeta y pulsa el botón de recargar en la tarjeta
+de la extensión.
 
 ## Desarrollo
 

@@ -14,6 +14,7 @@
 </p>
 
 <p align="center">
+  <a href="https://chromewebstore.google.com/detail/coverly-shelf/ahafjflkfcijeoaggjhjpgekbchjpfie"><img alt="Chrome Web Store version" src="https://img.shields.io/chrome-web-store/v/ahafjflkfcijeoaggjhjpgekbchjpfie?style=flat-square&label=Chrome%20Web%20Store&color=0E5E6F&labelColor=1B1E1B"></a>
   <a href="https://github.com/MAECLY/coverly-shelf/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/MAECLY/coverly-shelf?style=flat-square&label=release&color=0E5E6F&labelColor=1B1E1B"></a>
   <a href="https://github.com/MAECLY/coverly-shelf/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/MAECLY/coverly-shelf/total?style=flat-square&color=0E5E6F&labelColor=1B1E1B"></a>
   <a href="https://github.com/MAECLY/coverly-shelf/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/MAECLY/coverly-shelf?style=flat-square&color=0E5E6F&labelColor=1B1E1B"></a>
@@ -142,7 +143,16 @@ a confirmation).
 
 ## Install
 
-Coverly Shelf is not in the Chrome Web Store yet. Install it from a release:
+Install Coverly Shelf from the
+[Chrome Web Store](https://chromewebstore.google.com/detail/coverly-shelf/ahafjflkfcijeoaggjhjpgekbchjpfie). It works in Chrome, Edge and Brave, and the browser
+keeps it up to date on its own.
+
+Then open any game or list on [hShop](https://hshop.erista.me/), for example a
+page under `/t/` or `/c/`.
+
+### Manual install
+
+If you'd rather not use the store, load a release by hand:
 
 1. Download `coverly-shelf-<version>-chrome.zip` from the
    [latest release](https://github.com/MAECLY/coverly-shelf/releases/latest)
@@ -150,11 +160,9 @@ Coverly Shelf is not in the Chrome Web Store yet. Install it from a release:
 2. Open `chrome://extensions` (or `edge://extensions`, `brave://extensions`)
    and turn on **Developer mode**.
 3. Click **Load unpacked** and pick the unzipped folder.
-4. Open any game or list on [hShop](https://hshop.erista.me/), for example a
-   page under `/t/` or `/c/`.
 
-To update, unzip the new release over the same folder and press the reload
-button on the extension's card.
+A manual install does not update itself. To update, unzip the new release over
+the same folder and press the reload button on the extension's card.
 
 ## Development
 
