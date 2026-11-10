@@ -78,7 +78,11 @@ worth one look in an everyday Chrome with the unpacked build:
 
 ## Releases and the landing page
 
-- Each release attaches `coverly-shelf-{version}-chrome.zip` (`bun run zip`);
-  the README and the landing link to `releases/latest`.
+- Each version is published on the
+  [Chrome Web Store](https://chromewebstore.google.com/detail/coverly-shelf/ahafjflkfcijeoaggjhjpgekbchjpfie)
+  (0.2.0 is live) and also attached to the GitHub release as
+  `coverly-shelf-{version}-chrome.zip` (`bun run zip`). The README and the
+  landing link to the store first, and to `releases/latest` as the manual
+  alternative.
 - The landing ([MAECLY/coverly-shelf-landing](https://github.com/MAECLY/coverly-shelf-landing))
   is served at `https://coverly-shelf.maecly.com` (Cloudflare CNAME to Vercel).
