@@ -7,6 +7,10 @@ field named in its heading. The images for the listing are in
 The store shows the description as plain text: line breaks are kept, Markdown
 is not rendered, so the blocks below use none.
 
+The store prints the summary right above the description, so the
+description opens with its own line instead of repeating it, and names hShop
+in its first sentence for search.
+
 ## Product details (Detalles del producto)
 
 ### Title (Título del paquete)
@@ -28,23 +32,25 @@ Box art and screenshots for 3DS game pages. Purely cosmetic: it never touches do
 ### Description (Descripción)
 
 ```text
-Every game on the shelf gets its cover.
+Turn hShop into a real game shelf: every 3DS game on hShop gets its cover.
 
-Coverly Shelf adds box art and screenshots to the 3DS title and listing pages of hShop (hshop.erista.me). It is purely cosmetic: it only adds images to the page and never reads, changes or clicks downloads, QR codes or links.
+Coverly Shelf adds the box art, in a 3D case, and a screenshot gallery to every 3DS title page on hShop (hshop.erista.me), and a cover thumbnail to every row of hShop's lists. Browse games, updates, DLC, Virtual Console and DSiWare by their covers instead of a wall of text.
 
-WHAT IT DOES
+It only changes how hShop looks. Download buttons, QR codes and links are never read, changed or clicked, and if anything goes wrong the page is left exactly as it was.
 
-• A box for every game. On a title page, the game's cover appears next to the technical details as a small 3D box. It follows the site's light or dark theme and fits on a phone-width window too.
+WHAT IT DOES ON HSHOP
+
+• A box for every game. On an hShop title page, the game's cover appears next to the technical details as a small 3D box. It follows hShop's light or dark theme and fits on a phone-width window too.
 
 • Zoom into the cover. Click the box (or press Enter on it) to see the art full size. Esc closes it.
 
-• Thumbnails in every list. Games, updates, DLC, Virtual Console, DSiWare and search results get a small cover at the start of each row. Rows load their art only when they scroll near the screen.
+• Thumbnails in every hShop list. Games, updates, DLC, Virtual Console, DSiWare, videos, extras and search results get a small cover at the start of each row, in the main list and in "Top content". Rows load their art only when they scroll near the screen.
 
-• Related content too. Demos, updates and DLC listed under Related Content get thumbnails, and when one has no art of its own it shows the cover of the game the site marks as its base title. Covers are never guessed by name.
+• Related content too. Demos, updates and DLC listed under Related Content get thumbnails, and when one has no art of its own it shows the cover of the game hShop marks as its base title. Covers are never guessed by name.
 
 • Screenshots, when there are any. Under the description, a Screenshots section shows the title screen and in-game captures, with a keyboard-friendly viewer.
 
-• The right region first. The cover comes from the game's own region, then the other English regions, then Libretro's box art. If nothing is found, a plain cover with the game's initials stands in, so the page never shows a broken image.
+• The right region first. The cover comes from the game's own region (US, Europe, Japan…), then the other English regions, then Libretro's box art. eShop-only titles, DSiWare and Virtual Console games are covered too. If nothing is found, a plain cover with the game's initials stands in, so the page never shows a broken image.
 
 • Credits on the page. Every image says where it came from: "Art: GameTDB" or "Art: Libretro".
 
@@ -61,7 +67,7 @@ PRIVACY AND PERMISSIONS
 • No analytics, no telemetry, no account, no server of ours.
 • It stores only its cache and your settings, in the browser's own extension storage.
 • Permissions: "storage", plus access to two image hosts only (art.gametdb.com and thumbnails.libretro.com).
-• It runs only on hshop.erista.me title, listing and search pages. No access to any other site.
+• It runs only on hShop's title, listing and search pages (hshop.erista.me). No access to any other site.
 
 OPEN SOURCE
 

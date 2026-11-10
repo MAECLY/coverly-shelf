@@ -14,6 +14,7 @@
 </p>
 
 <p align="center">
+  <a href="https://chromewebstore.google.com/detail/coverly-shelf/ahafjflkfcijeoaggjhjpgekbchjpfie"><img alt="Chrome Web Store" src="https://img.shields.io/chrome-web-store/v/ahafjflkfcijeoaggjhjpgekbchjpfie?style=flat-square&label=chrome%20web%20store&color=0E5E6F&labelColor=1B1E1B"></a>
   <a href="https://github.com/MAECLY/coverly-shelf/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/MAECLY/coverly-shelf?style=flat-square&label=release&color=0E5E6F&labelColor=1B1E1B"></a>
   <a href="https://github.com/MAECLY/coverly-shelf/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/MAECLY/coverly-shelf/total?style=flat-square&color=0E5E6F&labelColor=1B1E1B"></a>
   <a href="https://github.com/MAECLY/coverly-shelf/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/MAECLY/coverly-shelf?style=flat-square&color=0E5E6F&labelColor=1B1E1B"></a>
@@ -26,6 +27,7 @@
 
 <p align="center">
   <a href="https://coverly-shelf.maecly.com/en/"><b>Website</b></a> ·
+  <a href="https://chromewebstore.google.com/detail/coverly-shelf/ahafjflkfcijeoaggjhjpgekbchjpfie"><b>Chrome Web Store</b></a> ·
   <a href="#install">Install</a> ·
   <a href="#how-it-stays-safe">Safety</a> ·
   <a href="#development">Development</a> ·
@@ -142,7 +144,15 @@ a confirmation).
 
 ## Install
 
-Coverly Shelf is not in the Chrome Web Store yet. Install it from a release:
+**[Open Coverly Shelf on the Chrome Web Store](https://chromewebstore.google.com/detail/coverly-shelf/ahafjflkfcijeoaggjhjpgekbchjpfie)** and click
+**Add to Chrome**. It works in Chrome, Edge and Brave (in Edge, first accept
+**Allow extensions from other stores**), and the browser keeps it up to date.
+Then open any game or list on [hShop](https://hshop.erista.me/), for example a
+page under `/t/` or `/c/`.
+
+### Manual install from a release
+
+Every version is also published as a zip, built from the same code:
 
 1. Download `coverly-shelf-<version>-chrome.zip` from the
    [latest release](https://github.com/MAECLY/coverly-shelf/releases/latest)
@@ -153,7 +163,7 @@ Coverly Shelf is not in the Chrome Web Store yet. Install it from a release:
 4. Open any game or list on [hShop](https://hshop.erista.me/), for example a
    page under `/t/` or `/c/`.
 
-To update, unzip the new release over the same folder and press the reload
+To update a manual install, unzip the new release over the same folder and press the reload
 button on the extension's card.
 
 ## Development
