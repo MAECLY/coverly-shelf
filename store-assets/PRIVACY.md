@@ -74,4 +74,5 @@ https://coverly-shelf.maecly.com/en/privacy/
 
 The same policy in Spanish is at `https://coverly-shelf.maecly.com/privacy/`.
 Its source is `site/en/privacy/index.html` and `site/privacy/index.html` in
-[MAECLY/coverly-shelf-landing](https://github.com/MAECLY/coverly-shelf-landing).
+the website repository, which is private. The extension's source is public, in
+this repository.

@@ -1,7 +1,6 @@
 # Coverly Shelf icon: Boxed
 
-These SVGs are copied from the landing repository
-([MAECLY/coverly-shelf-landing `design/icon`](https://github.com/MAECLY/coverly-shelf-landing/tree/main/design/icon)),
+These SVGs are copied from `design/icon` in the landing repository (private),
 which holds the full description of the mark, its geometry and its rules.
 Keep both copies identical: edit the SVGs there first, then copy them here.
 
