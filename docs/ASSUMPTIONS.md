@@ -84,5 +84,5 @@ worth one look in an everyday Chrome with the unpacked build:
   `coverly-shelf-{version}-chrome.zip` (`bun run zip`). The README and the
   landing link to the store first, and to `releases/latest` as the manual
   alternative.
-- The landing ([MAECLY/coverly-shelf-landing](https://github.com/MAECLY/coverly-shelf-landing))
+- The landing (its source is in a private repository)
   is served at `https://coverly-shelf.maecly.com` (Cloudflare CNAME to Vercel).
